@@ -1,0 +1,31 @@
+Package: qgcompint
+Title: Quantile G-Computation Extensions for Effect Measure Modification
+Version: 2.7.1
+Date: 2021-05-26
+Authors@R: 
+    person(given = "Alexander",
+           family = "Keil",
+           role = c("aut", "cre"),
+           email = "akeil@unc.edu")
+Author: Alexander Keil [aut, cre]
+Maintainer: Alexander Keil <akeil@unc.edu>
+Description: G-computation for a set of time-fixed exposures
+    with quantile-based basis functions, possibly under linearity and
+    homogeneity assumptions. Effect measure modification in this method is a way
+    to assess how the effect of the mixture varies by a binary or continuous variable.  
+    Reference: Alexander P. Keil, Jessie P.
+    Buckley, Katie M. OBrien, Kelly K. Ferguson, Shanshan Zhao, and
+    Alexandra J. White (2019) A quantile-based g-computation approach to
+    addressing the effects of exposure mixtures; <doi:10.1289/EHP5838>.
+License: GPL (>= 2)
+Depends: 
+    R (>= 3.5.0)    
+Imports: 
+    qgcomp
+VignetteBuilder: 
+    knitr
+Encoding: UTF-8
+Language: en-US
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
