@@ -129,22 +129,10 @@ qgcomp.emm.noboot <- function(f,
   #' set.seed(50)
   #' # linear model
   #' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
-  #' qfit <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian())
+  #' (qfit <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
   #' # logistic model
-  #' dat2 <- data.frame(y=rbinom(50, 1,0.5), x1=runif(50), x2=runif(50), z=runif(50))
-  #' qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat2, q=2, family=binomial())
-  #' # poisson model
-  #' dat3 <- data.frame(y=rpois(50, .5), x1=runif(50), x2=runif(50), z=runif(50))
-  #' qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat3, q=2, family=poisson())
-  #' # weighted model
-  #' N=5000
-  #' dat4 <- data.frame(y=runif(N), x1=runif(N), x2=runif(N), z=runif(N))
-  #' dat4$w=runif(N)*2
-  #' qdata = quantize(dat4, expnms = c("x1", "x2"))$data
-  #' (qgcfit <- qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4,
-  #'                          family=gaussian(), weights=w))
-  #' qgcfit$fit
-  #' glm(y ~ z + x1 + x2, data = qdata, weights=w)
+  #' dat2 <- data.frame(y=rbinom(50, 1,0.5), x1=runif(50), x2=runif(50), z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
+  #' (qfit2 <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",, expnms = c('x1', 'x2'), data=dat2, q=2, family=binomial()))
   require("qgcomp")
   requireNamespace("qgcomp")
   if (is.null(expnms)) {
@@ -330,7 +318,6 @@ qgcomp.emm.noboot <- function(f,
     res$pval <- c(pvalz, pvalz1)
   }
   attr(res, "class") <- c("qgcompemmfit", "qgcompfit")
-
   res
 }
 
@@ -371,7 +358,7 @@ print.qgcompemmfit <- function(x, showweights=TRUE, ...){
   #' @concept variance mixtures
   #' @export
   emmvar <- x$call$emmvar
-  rnm = c("(Intercept)", 'psi1', emmvar, paste0(emmvar,"*mix"))
+  rnm = c("(Intercept)", 'psi1', emmvar, paste0(emmvar,":mixture"))
   fam <- x$fit$family$family
   if(!is.null(x$pos.size) & showweights) {
     cat(paste0("Scaled effect size (positive direction, sum of positive coefficients = ", signif(x$pos.size, 3) , ")\n"))
@@ -440,7 +427,7 @@ print.qgcompemmfit <- function(x, showweights=TRUE, ...){
     ci <- signif(x$cieff, digits=digits)
     l1 <- paste0("Estimate (CI), ", emmv, "=1: \n")
     l2 <- paste0(eff, " (", ci[1], ", ", ci[2], ")")
-    cat("\n");cat(l1);cat(l2)
+    cat("\n");cat(l1);cat(l2);cat("\n")
   } else if( x$emmlev > 2 ){
     TRUE
   }
