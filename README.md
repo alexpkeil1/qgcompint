@@ -55,8 +55,10 @@
 	> Estimate (CI), z=1: 
 	> -0.0099575 (-0.34389, 0.32398)
 	
-### Current capabilities
-- Linear specifications only (e.g. 	
+### Current package capabilities/limitations
+- Linear specifications only (e.g. only a linear effect of the mixture)
+- Single modifiers only (e.g. interaction terms between a modifier and the mixture can only be estimated for a single modifier at a time) 
+- Binary or continuous modifiers only (not able to do categorical modifiers, and the previous restriction to single modifiers prevents using indicator coded versions of categorical variables)	
 
 ### Interpretation
 - coefficients
