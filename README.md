@@ -46,7 +46,7 @@
 
 	> Mixture slope parameters (Delta method CI):
 
-	> 			Estimate Std. Error Lower CI Upper CI t value  Pr(>|t|)
+	> 			  Estimate Std. Error Lower CI Upper CI t value  Pr(>|t|)
 	> (Intercept)  0.58062    0.11142  0.36224  0.79900  5.2112 4.787e-06
 	> psi1        -0.27807    0.20757 -0.68490  0.12876 -1.3397    0.1872
 	> z           -0.10410    0.15683 -0.41148  0.20329 -0.6637    0.5103
