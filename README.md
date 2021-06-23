@@ -27,6 +27,7 @@
 
    
 
+    > ## Qgcomp weights/partial effects at z = 0
 	> Scaled effect size (positive direction, sum of positive coefficients = 0)
 	> None
 
@@ -34,6 +35,7 @@
 	>    x2    x1 
 	> 0.662 0.338 
 
+    > ## Qgcomp weights/partial effects at z = 1
 	> Scaled effect size (positive direction, sum of positive effects = 0.0028)
 	> x1 
 	>  1 
