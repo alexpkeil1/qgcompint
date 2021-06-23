@@ -2,9 +2,13 @@
 
 S3method(confint,qgcompemmfit)
 S3method(print,qgcompemmfit)
+S3method(print,qgcompemmweights)
 S3method(vcov,qgcompemmfit)
+export(getweightsemm)
+export(qgcomp.emm.cox.noboot)
 export(qgcomp.emm.noboot)
 import(arm)
 import(stats)
+import(survival)
 importFrom(stats,anova)
 importFrom(stats,vcov)
