@@ -51,7 +51,10 @@
 	> z:mixture    0.26811    0.26854 -0.25822  0.79444  0.9984    0.3235
 
 	> Estimate (CI), z=1: 
-	> -0.0099575 (-0.29725, 0.27733)
+	> -0.0099575 (-0.34389, 0.32398)
+	
+### Current capabilities
+- Linear specifications only (e.g. 	
 
 ### Interpretation
 - coefficients
