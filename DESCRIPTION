@@ -22,6 +22,8 @@ Depends:
     R (>= 3.5.0)    
 Imports: 
     qgcomp
+Suggests: 
+    knitr
 VignetteBuilder: 
     knitr
 Encoding: UTF-8
