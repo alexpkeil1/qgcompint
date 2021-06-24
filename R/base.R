@@ -2,12 +2,13 @@
 .intmaker <- function(
   f,
   expnms,
-  emmvar
+  emmvars
 ){
   rightside = as.character(f)[3]
   trms = strsplit(gsub(" ", "", rightside), "+",fixed=TRUE)[[1]]
   expidx <- which(trms %in% expnms)
-  newtrms = paste(paste(trms[expidx], "*", emmvar), collapse = "+")
+  newtrmsl = lapply(emmvars, function(x) paste(paste0(trms[expidx], "*", x), collapse = "+"))
+  newtrms = paste0(newtrmsl, collapse="+")
   newrightside = paste(rightside, "+", newtrms)
   newf <- as.formula(paste0(as.character(f)[2],as.character(f)[1], newrightside))
   newf

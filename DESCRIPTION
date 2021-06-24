@@ -21,7 +21,9 @@ License: GPL (>= 2)
 Depends: 
     R (>= 3.5.0)    
 Imports: 
-    qgcomp
+    qgcomp,
+    arm,
+    survival
 Suggests: 
     knitr
 VignetteBuilder: 
