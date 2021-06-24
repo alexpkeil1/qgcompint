@@ -46,7 +46,8 @@ print.qgcompemmfit <- function(x, showweights=TRUE, ...){
   #' @export
   emmvar <- x$call$emmvar
   isbinemm <- x$emmlev == 2
-  rnm = c("(Intercept)", 'psi1', emmvar, paste0(emmvar,":mixture"))
+  #rnm = c("(Intercept)", 'psi1', emmvar, paste0(emmvar,":mixture"))
+  rnm = names(x$coef)
   fam <- x$fit$family$family
   if(showweights) {
     ww = getweightsemm(x, emmval=0.0)
@@ -77,7 +78,7 @@ print.qgcompemmfit <- function(x, showweights=TRUE, ...){
   if (fam == "cox"){
     cat(paste0("Mixture log(hazard ratio)", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
     testtype = "Z"
-    rnm = rnm[-1]
+    rnm = rnm#[-1]
   }
   plab = ifelse(testtype=="Z", "Pr(>|z|)", "Pr(>|t|)")
   if(is.null(dim(x$ci.coef))){

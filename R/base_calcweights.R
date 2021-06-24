@@ -1,6 +1,15 @@
 .calcstrateffects <- function(x, emmval=1.0){
-  lnx = length(x$expnms)
-  lnxz = length(x$intterms)
+  zvar = x$fit$data[,x$call$emmvar]
+  whichintterms = x$intterms
+  if(is.factor(zvar)){
+    whichlevels = zproc(zvar[which(zvar==emmval)][1])
+    whichvar = names(whichlevels)[which(whichlevels==1)]
+    whichintterms = NULL
+    if(length(whichvar)>0) whichintterms = grep(whichvar, x$intterms, value = TRUE)
+  }
+
+  #lnx = length(x$expnms)
+  #lnxz = length(whichintterms)
   mod = summary(x$fit)
   if( x$fit$family$family=="cox" ){
     covmat = as.matrix(x$fit$var)
@@ -8,16 +17,28 @@
   } else{
     covmat = as.matrix(mod$cov.scaled)
   }
-  stopifnot(lnx == lnxz)
-  indeffects =
-    x$fit$coefficients[x$expnms] +
-    x$fit$coefficients[x$intterms]*emmval
+  #stopifnot(lnx == lnxz)
+  if(is.factor(zvar)){
+    indeffects =
+      x$fit$coefficients[x$expnms]
+    if(!is.null(whichintterms)){
+      indeffects =
+        indeffects +
+        x$fit$coefficients[whichintterms]
+    }
+  } else{
+    indeffects =
+      x$fit$coefficients[x$expnms] +
+      x$fit$coefficients[x$intterms]*emmval
+  }
   effectatZ <- sum(indeffects)
   expidx <- which(colnames(covmat) %in% x$expnms)
-  intidx <- which(colnames(covmat) %in% x$intterms)
+  intidx <- which(colnames(covmat) %in% whichintterms)
   effgrad = 0*x$fit$coefficients
   effgrad[expidx] <- 1
-  effgrad[intidx] <- emmval
+  if(is.factor(zvar)){
+    effgrad[intidx] <- 1.0
+  } else effgrad[intidx] <- emmval
   seatZ <-  se_comb2(c(x$expnms,x$intterms),
                     covmat = covmat,
                     grad = effgrad
@@ -64,9 +85,25 @@ getweightsemm <- function(x, emmval=1.0){
   #addedintsord =  x$intterms
 
   #fit <- x$fit
-  wcoef1 <-
-    x$fit$coefficients[x$expnms] +
-    x$fit$coefficients[x$intterms]*emmval
+  zvar = x$fit$data[,x$call$emmvar]
+  if(!is.factor(zvar)){
+    wcoef1 <-
+      x$fit$coefficients[x$expnms] +
+      x$fit$coefficients[x$intterms]*emmval
+  }
+  if(is.factor(zvar)){
+    whichlevels = zproc(zvar[which(zvar==emmval)][1])
+    whichvar = names(whichlevels)[which(whichlevels==1)]
+    whichintterms = NULL
+    if(length(whichvar)>0) whichintterms = grep(whichvar, x$intterms, value = TRUE)
+    # select only the involved indicator terms
+    wcoef1 <-
+      x$fit$coefficients[x$expnms]
+    if(!is.null(whichintterms))
+      wcoef1 <-
+      wcoef1 +
+      x$fit$coefficients[whichintterms]
+  }
 
   pos.coef1 <- which(wcoef1 > 0)
   neg.coef1 <- which(wcoef1 <= 0)

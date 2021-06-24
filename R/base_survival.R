@@ -17,7 +17,7 @@ qgcomp.emm.cox.noboot <- function (
   #'
   #' @description This function performs quantile g-computation in a survival
   #' setting, , allowing
-  #' effect measure modification by a binary or continuous covariate. This allows
+  #' effect measure modification by a binary, categorical or continuous covariate. This allows
   #' testing of statistical interaction as well as estimation of stratum specific effects.
   #'
   #' @param f R style survival formula, which includes \code{\link[survival]{Surv}}
@@ -25,7 +25,7 @@ qgcomp.emm.cox.noboot <- function (
   #'   terms can be included via \code{Surv(time,event) ~ exposure + offset(z)}
   #' @param data data frame
   #' @param expnms character vector of exposures of interest
-  #' @param emmvar character vector of effect measure modifier
+  #' @param emmvar (character) name of effect measure modifier in dataset (if categorical, must be coded as a factor variable)
   #' @param q NULL or number of quantiles used to create quantile indicator variables
   #' representing the exposure variables. If NULL, then gcomp proceeds with un-transformed
   #' version of exposures in the input datasets (useful if data are already transformed,
@@ -63,9 +63,15 @@ qgcomp.emm.cox.noboot <- function (
   #' f = survival::Surv(time, d)~x1 + x2+z
   #' (fit1 <- survival::coxph(f, data = dat))
   #' (obj <- qgcomp.emm.cox.noboot(f, expnms = expnms, emmvar="z", data = dat))
-  #' f2 = survival::Surv(time, d)~x1*z + x2*z
-  #' (fit2 <- survival::coxph(f2, data = dat))
-  require("qgcomp")
+  #'
+  #' #categorical emm
+  #' dat <- data.frame(time=(tmg <- pmin(.1,rweibull(N, 10, 0.1))),
+  #'                 d=1.0*(tmg<0.1), x1=runif(N), x2=runif(N), z=sample(0:2, N, replace=TRUE))
+  #'  dat$z = as.factor(dat$z)
+  #' expnms=paste0("x", 1:2)
+  #' f = survival::Surv(time, d)~x1 + x2+z
+  #' (obj2 <- qgcomp.emm.cox.noboot(f, expnms = expnms, emmvar="z", data = dat))
+  #'
   requireNamespace("qgcomp")
   if(errcheck){
     # basic argument checks
@@ -78,30 +84,38 @@ qgcomp.emm.cox.noboot <- function (
   }
   allemmvals<- unique(data[,emmvar])
   emmlev <- length(allemmvals)
+  ## process to expand factors if needed
+  zdata = zproc(data[,emmvar])
+  emmvars = names(zdata)
+  data = cbind(data, zdata)
+  ### end new
   # housekeeping
   of <- f
   # keep track of added terms by remembering old model
   newform_oldform <- terms(f, data = data)
-  f = .intmaker(f,expnms,emmvar) # create necessary interaction terms with exposure
+  #f = .intmaker(f,expnms,emmvar) # create necessary interaction terms with exposure
+  (f <- qgcompint:::.intmaker(f,expnms,emmvars)) # create necessary interaction terms with exposure
   newform <- terms(f, data = data)
   class(newform) <- "formula"
   addedterms <- setdiff(attr(newform, "term.labels"), attr(newform_oldform, "term.labels"))
   addedmain <- setdiff(addedterms, grep(":",addedterms, value = TRUE))
   addedints <- setdiff(addedterms, addedmain)
+  addedintsl <- lapply(emmvars, function(x) grep(x, addedints, value = TRUE))
   if (length(addedmain)>0) {
     message(paste0("Adding main term for ",emmvar," to the model\n"))
   }
   oord <- order(expnms)
   # order interaction terms in same order as main terms
-  s0 <- gsub(paste0("^", emmvar,":"), "",
-             gsub(paste0(":", emmvar,"$"), "", addedints))
-  intord = order(s0)
-  equalord = all.equal(oord, intord)
-  if( equalord ) addedintsord = addedints
-  if( !equalord ){
-    neword = match(s0, expnms)
-    addedintsord = addedints[neword]
-  }
+  #s0 <- gsub(paste0("^", emmvar,":"), "",
+  #           gsub(paste0(":", emmvar,"$"), "", addedints))
+  #intord = order(s0)
+  #equalord = all.equal(oord, intord)
+  addedintsord = addedints
+  #if( equalord ) addedintsord = addedints
+  #if( !equalord ){
+  #  neword = match(s0, expnms)
+  #  addedintsord = addedints[neword]
+  #}
   nobs = nrow(data)
   # a convoluted way to handle arguments that correspond to variable names in the data frame
   origcall <- thecall <- match.call(expand.dots = FALSE)
@@ -161,15 +175,24 @@ qgcomp.emm.cox.noboot <- function (
     estb + seb * qnorm(1 -alpha/2)
   )
   # modifier main term, product term
-  estb.prod <- c(
-    mod$coefficients[emmvar, 1],
-    sum(mod$coefficients[addedints,1, drop=TRUE])
-  )
-  names(estb.prod) <- c(emmvar, paste0(emmvar, ":mixture"))
-  seb.prod <- c(
-    sqrt(covMat[emmvar,emmvar]),
-    se_comb2(addedints, covmat = covMat)
-  )
+  estb.prod <- do.call(c, lapply(1:length(emmvars), function(x) c(
+    fit$coefficients[emmvars[x]],
+    sum(mod$coefficients[addedintsl[[x]],1, drop=TRUE])
+  )))
+  names(estb.prod) <- do.call(c, lapply(1:length(emmvars), function(x) c(emmvars[x], paste0(emmvars[x], ":mixture"))))
+  seb.prod <- do.call(c, lapply(1:length(emmvars), function(x) c(
+    sqrt(covMat[emmvars[x],emmvars[x]]),
+    qgcompint:::se_comb2(addedintsl[[x]], covmat = covMat)
+  )))
+  #estb.prod <- c(
+  #  mod$coefficients[emmvar, 1],
+  #  sum(mod$coefficients[addedints,1, drop=TRUE])
+  #)
+  #names(estb.prod) <- c(emmvar, paste0(emmvar, ":mixture"))
+  #seb.prod <- c(
+  #  sqrt(covMat[emmvar,emmvar]),
+  #  se_comb2(addedints, covmat = covMat)
+  #)
   tstat.prod <- estb.prod / seb.prod
   #pval.prod <- 2 - 2 * pt(abs(tstat.prod), df = df)
   pvalz.prod <- 2 - 2 * pnorm(abs(tstat.prod))
@@ -194,13 +217,13 @@ qgcomp.emm.cox.noboot <- function (
   res <- list(
     qx = qx, fit = fit,
     psi = estb,
-    psiint = estb.prod[-1],
+    psiint = estb.prod[2*(1:length(emmvars))],
     var.psi = seb^2,
-    var.psiint = seb.prod[-1] ^ 2,
+    var.psiint = seb.prod[2*(1:length(emmvars))] ^ 2,
     covmat.psi = c('psi1' = seb^2),
-    covmat.psiint=c('psiint' = seb.prod[-1]^2),
+    covmat.psiint=c('psiint' = seb.prod[2*(1:length(emmvars))]^2),
     ci = ci,
-    ciint = ci.prod[-1,],
+    ciint = ci.prod[2*(1:length(emmvars)),],
     coef = c(estb, estb.prod),
     var.coef = c(seb ^ 2, seb.prod ^ 2),
     covmat.coef = seb^2, # todo: fix this

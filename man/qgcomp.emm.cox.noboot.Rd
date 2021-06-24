@@ -28,7 +28,7 @@ terms can be included via \code{Surv(time,event) ~ exposure + offset(z)}}
 
 \item{expnms}{character vector of exposures of interest}
 
-\item{emmvar}{character vector of effect measure modifier}
+\item{emmvar}{(character) name of effect measure modifier in dataset (if categorical, must be coded as a factor variable)}
 
 \item{q}{NULL or number of quantiles used to create quantile indicator variables
 representing the exposure variables. If NULL, then gcomp proceeds with un-transformed
@@ -66,7 +66,7 @@ negative (neg.weights) directions.
 \description{
 This function performs quantile g-computation in a survival
 setting, , allowing
-effect measure modification by a binary or continuous covariate. This allows
+effect measure modification by a binary, categorical or continuous covariate. This allows
 testing of statistical interaction as well as estimation of stratum specific effects.
 }
 \examples{
@@ -78,8 +78,15 @@ expnms=paste0("x", 1:2)
 f = survival::Surv(time, d)~x1 + x2+z
 (fit1 <- survival::coxph(f, data = dat))
 (obj <- qgcomp.emm.cox.noboot(f, expnms = expnms, emmvar="z", data = dat))
-f2 = survival::Surv(time, d)~x1*z + x2*z
-(fit2 <- survival::coxph(f2, data = dat))
+
+#categorical emm
+dat <- data.frame(time=(tmg <- pmin(.1,rweibull(N, 10, 0.1))),
+                d=1.0*(tmg<0.1), x1=runif(N), x2=runif(N), z=sample(0:2, N, replace=TRUE))
+ dat$z = as.factor(dat$z)
+expnms=paste0("x", 1:2)
+f = survival::Surv(time, d)~x1 + x2+z
+(obj2 <- qgcomp.emm.cox.noboot(f, expnms = expnms, emmvar="z", data = dat))
+
 }
 \seealso{
 \code{\link[qgcomp]{qgcomp.cox.boot}}, \code{\link[qgcomp]{qgcomp.boot}},

@@ -49,7 +49,7 @@ qgcomp.emm.noboot <- function(
   #' @param f R style formula
   #' @param data data frame
   #' @param expnms character vector of exposures of interest
-  #' @param emmvar character vector of effect measure modifier
+  #' @param emmvar (character) name of effect measure modifier in dataset (if categorical, must be coded as a factor variable)
   #' @param q NULL or number of quantiles used to create quantile indicator variables
   #' representing the exposure variables. If NULL, then gcomp proceeds with un-transformed
   #' version of exposures in the input datasets (useful if data are already transformed,
@@ -92,6 +92,9 @@ qgcomp.emm.noboot <- function(
   #' # logistic model
   #' dat2 <- data.frame(y=rbinom(50, 1,0.5), x1=runif(50), x2=runif(50), z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
   #' (qfit2 <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",, expnms = c('x1', 'x2'), data=dat2, q=2, family=binomial()))
+  #' # categorical modifier
+  #' dat3 <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=as.factor(sample(0:2, 50,replace=TRUE)), r=rbinom(50,1,0.5))
+  #' (qfit3 <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",, expnms = c('x1', 'x2'), data=dat3, q=2, family=gaussian()))
   require("qgcomp")
   requireNamespace("qgcomp")
   if(errcheck){
@@ -102,42 +105,51 @@ qgcomp.emm.noboot <- function(
     if (is.null(emmvar)) {
       stop("'emmvar' must be specified explicitly\n")
     }
-    if (is.factor(data[,emmvar])) {
-      stop("'emmvar' must be numeric\n")
-    }
+    #if (is.factor(data[,emmvar])) {
+      #stop("'emmvar' must be numeric\n")
+    #}
   }
   # housekeeping
   allemmvals<- unique(data[,emmvar])
   emmlev <- length(allemmvals)
+  ## process to expand factors if needed
+  zdata = zproc(data[,emmvar])
+  emmvars = names(zdata)
+  data = cbind(data, zdata)
+  ### end new
   if(errcheck){
-    if( emmlev == 2 && !all.equal(range(allemmvals), c(0,1))){
-      stop(paste0("Variable ", emmvar, " should only take on 0/1 values"))
-    }
-    if(min(data[,emmvar])>0 || max(data[,emmvar])<0){
-      message(paste0("Note: default weights reported are for exposure effects at ", emmvar, " = 0"))
-    }
+    #if( emmlev == 2 && !all.equal(range(allemmvals), c(0,1))){
+    #  stop(paste0("Variable ", emmvar, " should only take on 0/1 values"))
+    #}
+    #if(min(data[,emmvar])>0 || max(data[,emmvar])<0){
+    #  message(paste0("Note: default weights reported are for exposure effects at ", emmvar, " = 0"))
+    #}
   }
   # keep track of added terms by remembering old model
   newform_oldform <- terms(f, data = data)
-  f = .intmaker(f,expnms,emmvar) # create necessary interaction terms with exposure
+  #f = .intmaker(f,expnms,emmvar) # create necessary interaction terms with exposure
+  (f <- qgcompint:::.intmaker(f,expnms,emmvars)) # create necessary interaction terms with exposure
   newform <- terms(f, data = data)
   addedterms <- setdiff(attr(newform, "term.labels"), attr(newform_oldform, "term.labels"))
   addedmain <- setdiff(addedterms, grep(":",addedterms, value = TRUE))
   addedints <- setdiff(addedterms, addedmain)
-  if (length(addedmain)>0) {
-    message(paste0("Adding main term for ",emmvar," to the model\n"))
-  }
-  oord <- order(expnms)
-  # order interaction terms in same order as main terms
-  s0 <- gsub(paste0("^", emmvar,":"), "",
-        gsub(paste0(":", emmvar,"$"), "", addedints))
-  intord = order(s0)
-  equalord = all.equal(oord, intord)
-  if( equalord ) addedintsord = addedints
-  if( !equalord ){
-    neword = match(s0, expnms)
-    addedintsord = addedints[neword]
-  }
+  addedintsl <- lapply(emmvars, function(x) grep(x, addedints, value = TRUE))
+
+  #if (length(addedmain)>0) {
+  #  message(paste0("Adding main term for ",emmvar," to the model\n"))
+  #}
+  #oord <- order(expnms)
+  ## order interaction terms in same order as main terms
+  #s0 <- gsub(paste0("^", emmvar,":"), "",
+  #      gsub(paste0(":", emmvar,"$"), "", addedints))
+  #intord = order(s0)
+  #equalord = all.equal(oord, intord)
+  addedintsord = addedints
+  #if( equalord ) addedintsord = addedints
+  #if( !equalord ){
+  #  neword = match(s0, expnms)
+  #  addedintsord = addedints[neword]
+  #}
   nobs = nrow(data)
   # a convoluted way to handle arguments that correspond to variable names in the data frame
   origcall <- thecall <- match.call(expand.dots = FALSE)
@@ -207,15 +219,24 @@ qgcomp.emm.noboot <- function(
   )
 
   # modifier main term, product term
-  estb.prod <- c(
-    fit$coefficients[emmvar],
-    sum(mod$coefficients[addedints,1, drop=TRUE])
-  )
-  names(estb.prod) <- c(emmvar, paste0(emmvar, ":mixture"))
-  seb.prod <- c(
-    sqrt(mod$cov.scaled[emmvar,emmvar]),
-    se_comb2(addedints, covmat = mod$cov.scaled)
-    )
+  estb.prod <- do.call(c, lapply(1:length(emmvars), function(x) c(
+    fit$coefficients[emmvars[x]],
+    sum(mod$coefficients[addedintsl[[x]],1, drop=TRUE])
+  )))
+  names(estb.prod) <- do.call(c, lapply(1:length(emmvars), function(x) c(emmvars[x], paste0(emmvars[x], ":mixture"))))
+  seb.prod <- do.call(c, lapply(1:length(emmvars), function(x) c(
+    sqrt(mod$cov.scaled[emmvars[x],emmvars[x]]),
+    qgcompint:::se_comb2(addedintsl[[x]], covmat = mod$cov.scaled)
+  )))
+  #estb.prod <- c(
+  #  fit$coefficients[emmvar],
+  #  sum(mod$coefficients[addedints,1, drop=TRUE])
+  #)
+  #names(estb.prod) <- c(emmvar, paste0(emmvar, ":mixture"))
+  #seb.prod <- c(
+  #  sqrt(mod$cov.scaled[emmvar,emmvar]),
+  #  se_comb2(addedints, covmat = mod$cov.scaled)
+  #  )
   tstat.prod <- estb.prod / seb.prod
   pval.prod <- 2 - 2 * pt(abs(tstat.prod), df = df)
   pvalz.prod <- 2 - 2 * pnorm(abs(tstat.prod))
@@ -239,14 +260,14 @@ qgcomp.emm.noboot <- function(
   res <- list(
     qx = qx,
     fit = fit,
-    psi = estb[-1],
-    psiint = estb.prod[-1],
-    var.psi = seb[-1] ^ 2,
-    var.psiint = seb.prod[-1] ^ 2,
-    covmat.psi=c('psi1' = seb[-1]^2),
-    covmat.psiint=c('psiint' = seb.prod[-1]^2),
-    ci = ci[-1,],
-    ciint = ci.prod[-1,],
+    psi = estb[2],
+    psiint = estb.prod[2*(1:length(emmvars))],
+    var.psi = seb[2] ^ 2,
+    var.psiint = seb.prod[2*(1:length(emmvars))] ^ 2,
+    covmat.psi=c('psi1' = seb[2]^2),
+    covmat.psiint=c('psiint' = seb.prod[2*(1:length(emmvars))]^2),
+    ci = ci[2,],
+    ciint = ci.prod[2*(1:length(emmvars)),],
     coef = c(estb, estb.prod),
     var.coef = c(seb ^ 2, seb.prod ^ 2),
     #covmat.coef=c('(Intercept)' = seb[1]^2, 'psi1' = seb[2]^2),

@@ -16,7 +16,7 @@
   ztype = substr(ztype, 1,2)
   Z = switch(ztype,
              co = rnorm(N, 0, 1),
-             ca = sample(1:4, size=N, replace=TRUE),
+             ca = sample(0:2, size=N, replace=TRUE),
              bi = rbinom(N, 1, 0.5)
   )
   xmaster = sample(rep(0:3, length.out=N), N, replace=FALSE)

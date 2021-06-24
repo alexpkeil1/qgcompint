@@ -1,3 +1,8 @@
+zproc <- function(z){
+  data.frame(model.matrix(~z)[,-1,drop=FALSE])
+}
+
+
 vc_comb <- function (aname = "(Intercept)", expnms, covmat, grad = NULL) {
   if (!is.matrix(covmat)) {
     nm <- names(covmat)

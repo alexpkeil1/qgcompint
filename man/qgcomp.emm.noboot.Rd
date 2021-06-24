@@ -81,6 +81,9 @@ dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=rbinom(50,1,0.5), r
 # logistic model
 dat2 <- data.frame(y=rbinom(50, 1,0.5), x1=runif(50), x2=runif(50), z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
 (qfit2 <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",, expnms = c('x1', 'x2'), data=dat2, q=2, family=binomial()))
+# categorical modifier
+dat3 <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=as.factor(sample(0:2, 50,replace=TRUE)), r=rbinom(50,1,0.5))
+(qfit3 <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",, expnms = c('x1', 'x2'), data=dat3, q=2, family=gaussian()))
 }
 \seealso{
 \code{\link[qgcomp]{qgcomp.noboot}}
