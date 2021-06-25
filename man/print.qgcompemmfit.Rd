@@ -20,6 +20,6 @@ effect (similar to the 'index' effect in weighted quantile sums), as well
 as estimates of the 'weights' (standardized coefficients).
 }
 \seealso{
-\code{\link[qgcomp]{qgcomp.emm.noboot}}, \code{\link[qgcomp]{getweightsemm}}
+\code{\link[qgcomp]{qgcomp.emm.noboot}}, \code{\link[qgcomp]{getstratweights}}
 }
 \concept{variance mixtures}

@@ -1,5 +1,27 @@
+getstrateffects <- function(x, emmval=1.0){
+#' @title Calculate mixture effect at a set value of effect measure modifier
+#'
+#' @description A standard qgcomp fit with effect measure modification
+#' only estimates effects at the referent (0) level of the modifier (psi1).
+#' This function can be used to estimate effects at arbitrary levels of the modifier
+#'
+#'
+#' @param x "qgcompemmfit" object from qgcomp.emm.noboot
+#' function
+#' @param emmval numerical: value of effect measure modifier at which weights are generated
+#' @param ... unused
+#' @seealso \code{\link[qgcompint]{qgcomp.emm.noboot}} \code{\link[qgcompint]{getstratweights}}
+#' @concept variance mixtures
+#' @export
+#expnms = x$expnms
+#addedintsord =  x$intterms  zvar = x$fit$data[,x$call$emmvar]
+  res = .calcstrateffects(x, emmval=emmval)
+  class(res) <- "qgcompemmeffects"
+  res
+}
+
+
 .calcstrateffects <- function(x, emmval=1.0){
-  zvar = x$fit$data[,x$call$emmvar]
   whichintterms = x$intterms
   if(is.factor(zvar)){
     whichlevels = zproc(zvar[which(zvar==emmval)][1])
@@ -66,7 +88,7 @@
 #.calcstrateffects(lst)
 
 
-getweightsemm <- function(x, emmval=1.0){
+getstratweights <- function(x, emmval=1.0){
   #' @title Calculate weights at a set value of effect measure modifier
   #'
   #' @description A standard qgcomp fit with effect measure modification
@@ -78,7 +100,7 @@ getweightsemm <- function(x, emmval=1.0){
   #' function
   #' @param emmval numerical: value of effect measure modifier at which weights are generated
   #' @param ... unused
-  #' @seealso \code{\link[qgcompintf]{qgcomp.emm.noboot}}
+  #' @seealso \code{\link[qgcompint]{qgcomp.emm.noboot}}
   #' @concept variance mixtures
   #' @export
   #expnms = x$expnms

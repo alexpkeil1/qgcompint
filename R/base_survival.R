@@ -247,7 +247,7 @@ qgcomp.emm.cox.noboot <- function (
     emmlev = emmlev
   )
   if(emmlev==2){
-    ww = getweightsemm(res, emmval = 1)
+    ww = getstratweights(res, emmval = 1)
     ff = .calcstrateffects(res, emmval = 1)
     res = c(res,
             list(

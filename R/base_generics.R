@@ -30,6 +30,20 @@ print.qgcompemmweights <- function(x, ...){
   }
 }
 
+print.getstrateffects <- function(x, digits=2){
+  #' @export
+  cat("Independent effects\n")
+  print(x$effectmat)
+
+  cat("Joint effects\n")
+  eff <- signif(x$eff, digits=digits)
+  ci <- signif(x$ci, digits=digits)
+  l1 <- paste0("Estimate (CI) Std. Error, ", x$emmv, "=", x$emmlev, ": \n")
+  l2 <- paste0(eff, " (", ci[1], ", ", ci[2], "), x$se")
+  cat("\n");cat(l1);cat(l2);cat("\n")
+}
+
+
 print.qgcompemmfit <- function(x, showweights=TRUE, ...){
   #' @title Default printing method for a qgcompemmfit object
   #'
@@ -41,7 +55,7 @@ print.qgcompemmfit <- function(x, showweights=TRUE, ...){
   #' function
   #' @param showweights logical: should weights be printed, if estimated?
   #' @param ... unused
-  #' @seealso \code{\link[qgcomp]{qgcomp.emm.noboot}}, \code{\link[qgcomp]{getweightsemm}}
+  #' @seealso \code{\link[qgcomp]{qgcomp.emm.noboot}}, \code{\link[qgcomp]{getstratweights}}
   #' @concept variance mixtures
   #' @export
   emmvar <- x$call$emmvar
@@ -50,12 +64,12 @@ print.qgcompemmfit <- function(x, showweights=TRUE, ...){
   rnm = names(x$coef)
   fam <- x$fit$family$family
   if(showweights) {
-    ww = getweightsemm(x, emmval=0.0)
+    ww = getstratweights(x, emmval=0.0)
     print(ww)
     cat("\n")
   }
   if(!is.null(x$pos.size1) & showweights & isbinemm) {
-    ww = getweightsemm(x, emmval=1.0)
+    ww = getstratweights(x, emmval=1.0)
     print(ww)
     cat("\n")
   }

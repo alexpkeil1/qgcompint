@@ -26,7 +26,7 @@ qgcomp.emm.noboot(
 
 \item{expnms}{character vector of exposures of interest}
 
-\item{emmvar}{character vector of effect measure modifier}
+\item{emmvar}{(character) name of effect measure modifier in dataset (if categorical, must be coded as a factor variable)}
 
 \item{q}{NULL or number of quantiles used to create quantile indicator variables
 representing the exposure variables. If NULL, then gcomp proceeds with un-transformed
@@ -75,15 +75,27 @@ testing of statistical interaction as well as estimation of stratum specific eff
 }
 \examples{
 set.seed(50)
-# linear model
+# linear model, binary modifier
 dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
 (qfit <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
-# logistic model
-dat2 <- data.frame(y=rbinom(50, 1,0.5), x1=runif(50), x2=runif(50), z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
+# logistic model, continuous modifier
+dat2 <- data.frame(y=rbinom(50, 1,0.5), x1=runif(50), x2=runif(50), z=runif(50), r=rbinom(50,1,0.5))
 (qfit2 <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",, expnms = c('x1', 'x2'), data=dat2, q=2, family=binomial()))
-# categorical modifier
+# get weights and stratum specific effects at specific value of Z (note that when Z=0, the effect is equal to psi1)
+qgcompint::getstratweights(qfit2,emmval=0)
+qgcompint:::.calcstrateffects(qfit2,emmval=0)
+qgcompint::getstratweights(qfit2,emmval=0.5)
+qgcompint:::.calcstrateffects(qfit2,emmval=0.5)
+# linear model, categorical modifier
 dat3 <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=as.factor(sample(0:2, 50,replace=TRUE)), r=rbinom(50,1,0.5))
 (qfit3 <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",, expnms = c('x1', 'x2'), data=dat3, q=2, family=gaussian()))
+# get weights and stratum specific effects at each value of Z (note that when Z=0, the effect is equal to psi1)
+qgcompint::getstratweights(qfit3,emmval=0)
+qgcompint:::.calcstrateffects(qfit3,emmval=0)
+qgcompint::getstratweights(qfit3,emmval=1)
+qgcompint:::.calcstrateffects(qfit3,emmval=1)
+qgcompint::getstratweights(qfit3,emmval=2)
+qgcompint:::.calcstrateffects(qfit3,emmval=2)
 }
 \seealso{
 \code{\link[qgcomp]{qgcomp.noboot}}
