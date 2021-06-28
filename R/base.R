@@ -83,30 +83,39 @@ qgcomp.emm.noboot <- function(
   #'  negative (neg.weights) directions.
   #' @concept variance mixtures
   #' @import stats arm
+  #' @importFrom  qgcomp quantize
   #' @export
   #' @examples
   #' set.seed(50)
   #' # linear model, binary modifier
-  #' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
-  #' (qfit <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
+  #' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
+  #'   z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
+  #' (qfit <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",
+  #'   expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
   #' # logistic model, continuous modifier
-  #' dat2 <- data.frame(y=rbinom(50, 1,0.5), x1=runif(50), x2=runif(50), z=runif(50), r=rbinom(50,1,0.5))
-  #' (qfit2 <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",, expnms = c('x1', 'x2'), data=dat2, q=2, family=binomial()))
-  #' # get weights and stratum specific effects at specific value of Z (note that when Z=0, the effect is equal to psi1)
+  #' dat2 <- data.frame(y=rbinom(50, 1,0.5), x1=runif(50), x2=runif(50),
+  #'   z=runif(50), r=rbinom(50,1,0.5))
+  #' (qfit2 <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",
+  #'   expnms = c('x1', 'x2'), data=dat2, q=2, family=binomial()))
+  #' # get weights and stratum specific effects at specific value of Z
+  #' #  (note that when Z=0, the effect is equal to psi1)
   #' qgcompint::getstratweights(qfit2,emmval=0)
-  #' qgcompint:::.calcstrateffects(qfit2,emmval=0)
+  #' qgcompint::getstrateffects(qfit2,emmval=0)
   #' qgcompint::getstratweights(qfit2,emmval=0.5)
-  #' qgcompint:::.calcstrateffects(qfit2,emmval=0.5)
+  #' qgcompint::getstrateffects(qfit2,emmval=0.5)
   #' # linear model, categorical modifier
-  #' dat3 <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=as.factor(sample(0:2, 50,replace=TRUE)), r=rbinom(50,1,0.5))
-  #' (qfit3 <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",, expnms = c('x1', 'x2'), data=dat3, q=2, family=gaussian()))
-  #' # get weights and stratum specific effects at each value of Z (note that when Z=0, the effect is equal to psi1)
+  #' dat3 <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
+  #'   z=as.factor(sample(0:2, 50,replace=TRUE)), r=rbinom(50,1,0.5))
+  #' (qfit3 <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",
+  #'   expnms = c('x1', 'x2'), data=dat3, q=2, family=gaussian()))
+  #' # get weights and stratum specific effects at each value of Z
+  #' #  (note that when Z=0, the effect is equal to psi1)
   #' qgcompint::getstratweights(qfit3,emmval=0)
-  #' qgcompint:::.calcstrateffects(qfit3,emmval=0)
+  #' qgcompint::getstrateffects(qfit3,emmval=0)
   #' qgcompint::getstratweights(qfit3,emmval=1)
-  #' qgcompint:::.calcstrateffects(qfit3,emmval=1)
+  #' qgcompint::getstrateffects(qfit3,emmval=1)
   #' qgcompint::getstratweights(qfit3,emmval=2)
-  #' qgcompint:::.calcstrateffects(qfit3,emmval=2)
+  #' qgcompint::getstrateffects(qfit3,emmval=2)
   require("qgcomp")
   requireNamespace("qgcomp")
   if(errcheck){
@@ -140,7 +149,7 @@ qgcomp.emm.noboot <- function(
   # keep track of added terms by remembering old model
   newform_oldform <- terms(f, data = data)
   #f = .intmaker(f,expnms,emmvar) # create necessary interaction terms with exposure
-  (f <- qgcompint:::.intmaker(f,expnms,emmvars)) # create necessary interaction terms with exposure
+  (f <- .intmaker(f,expnms,emmvars)) # create necessary interaction terms with exposure
   newform <- terms(f, data = data)
   addedterms <- setdiff(attr(newform, "term.labels"), attr(newform_oldform, "term.labels"))
   addedmain <- setdiff(addedterms, grep(":",addedterms, value = TRUE))
@@ -238,7 +247,7 @@ qgcomp.emm.noboot <- function(
   names(estb.prod) <- do.call(c, lapply(1:length(emmvars), function(x) c(emmvars[x], paste0(emmvars[x], ":mixture"))))
   seb.prod <- do.call(c, lapply(1:length(emmvars), function(x) c(
     sqrt(mod$cov.scaled[emmvars[x],emmvars[x]]),
-    qgcompint:::se_comb2(addedintsl[[x]], covmat = mod$cov.scaled)
+    se_comb2(addedintsl[[x]], covmat = mod$cov.scaled)
   )))
   #estb.prod <- c(
   #  fit$coefficients[emmvar],
@@ -306,7 +315,7 @@ qgcomp.emm.noboot <- function(
   # include some extra things by default for binary modifier (convenience only)
   if(emmlev==2){
     ww = getstratweights(res, emmval = 1)
-    ff = .calcstrateffects(res, emmval = 1)
+    ff = getstrateffects(res, emmval = 1)
     res = c(res,
             list(
               pos.weights1 = ww$pos.weights,

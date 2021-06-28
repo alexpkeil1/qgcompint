@@ -81,7 +81,8 @@ f = survival::Surv(time, d)~x1 + x2+z
 
 #categorical emm
 dat <- data.frame(time=(tmg <- pmin(.1,rweibull(N, 10, 0.1))),
-                d=1.0*(tmg<0.1), x1=runif(N), x2=runif(N), z=sample(0:2, N, replace=TRUE))
+                d=1.0*(tmg<0.1), x1=runif(N), x2=runif(N),
+                z=sample(0:2, N, replace=TRUE))
  dat$z = as.factor(dat$z)
 expnms=paste0("x", 1:2)
 f = survival::Surv(time, d)~x1 + x2+z

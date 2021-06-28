@@ -4,7 +4,7 @@
 \alias{getstratweights}
 \title{Calculate weights at a set value of effect measure modifier}
 \usage{
-getstratweights(x, emmval = 1)
+getstratweights(x, emmval = 1, ...)
 }
 \arguments{
 \item{x}{"qgcompemmfit" object from qgcomp.emm.noboot
@@ -20,8 +20,10 @@ only estimates weights at the referent (0) level of the modifier.
 This function can be used to estimate weights at arbitrary levels of the modifier
 }
 \examples{
-dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
-(qfit <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
+dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
+  z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
+(qfit <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",
+  expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
 getstratweights(qfit, emmval = 0)
 getstratweights(qfit, emmval = 1)
 }

@@ -4,7 +4,7 @@
 \alias{getstrateffects}
 \title{Calculate mixture effect at a set value of effect measure modifier}
 \usage{
-getstrateffects(x, emmval = 1)
+getstrateffects(x, emmval = 1, ...)
 }
 \arguments{
 \item{x}{"qgcompemmfit" object from qgcomp.emm.noboot
@@ -20,8 +20,10 @@ only estimates effects at the referent (0) level of the modifier (psi1).
 This function can be used to estimate effects at arbitrary levels of the modifier
 }
 \examples{
-dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
-(qfit <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
+dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
+  z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
+(qfit <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",
+  expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
 getstrateffects(qfit, emmval = 0)
 getstrateffects(qfit, emmval = 1)
 }

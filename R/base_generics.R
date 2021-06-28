@@ -14,9 +14,9 @@ print.qgcompemmweights <- function(x, ...){
   cat("\n")
 }
 
-print.qgcompemmeffects <- function(x, digits = 2){
+print.qgcompemmeffects <- function(x, ..., digits = 2){
 #' @export
-  cat(paste0("Joint effect at ", x$emmvar,"=",x$emmlev,"\n"))
+  cat(paste0("Joint effect at ", x$emmvar,"=", x$emmlev,"\n"))
   zz = x$eff/x$se
   pval <- 2 - 2 * pnorm(abs(zz))
   pdat <- cbind(Estimate=x$eff, "Std. Error"=x$se, "Lower CI"=x$ci[1], "Upper CI"=x$ci[2], "z value"=zz, "Pr(>|z|)"=pval)
@@ -25,7 +25,7 @@ print.qgcompemmeffects <- function(x, digits = 2){
 }
 
 
-.printeffects <- function(x, digits=2){
+.printeffects <- function(x, ..., digits=2){
   emmv = x$call$emmvar
   x$alpha
   if( x$emmlev == 2 ){
@@ -39,7 +39,7 @@ print.qgcompemmeffects <- function(x, digits = 2){
   }
 }
 
-print.getstrateffects <- function(x, digits=2){
+print.getstrateffects <- function(x, ..., digits=2){
   #' @export
   cat("Independent effects\n")
   print(x$effectmat)

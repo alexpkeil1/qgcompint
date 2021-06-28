@@ -1,4 +1,4 @@
-getstrateffects <- function(x, emmval=1.0){
+getstrateffects <- function(x, emmval=1.0, ...){
 #' @title Calculate mixture effect at a set value of effect measure modifier
 #'
 #' @description A standard qgcomp fit with effect measure modification
@@ -14,20 +14,24 @@ getstrateffects <- function(x, emmval=1.0){
 #' @concept variance mixtures
 #' @export
 #' @examples
-#' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
-#' (qfit <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
+#' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
+#'   z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
+#' (qfit <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",
+#'   expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
 #' getstrateffects(qfit, emmval = 0)
 #' getstrateffects(qfit, emmval = 1)
 
 #expnms = x$expnms
 #addedintsord =  x$intterms  zvar = x$fit$data[,x$call$emmvar]
-  res = .calcstrateffects(x, emmval=emmval)
+  zvar = x$fit$data[,x$call$emmvar]
+  res = .calcstrateffects(x,emmval=emmval, zvar=zvar)
   class(res) <- "qgcompemmeffects"
   res
 }
 
 
-.calcstrateffects <- function(x, emmval=1.0){
+.calcstrateffects <- function(x, emmval=1.0, zvar){
+  #x$call$emmvar
   whichintterms = x$intterms
   if(is.factor(zvar)){
     whichlevels = zproc(zvar[which(zvar==emmval)][1])
@@ -94,7 +98,7 @@ getstrateffects <- function(x, emmval=1.0){
 #.calcstrateffects(lst)
 
 
-getstratweights <- function(x, emmval=1.0){
+getstratweights <- function(x, emmval=1.0, ...){
   #' @title Calculate weights at a set value of effect measure modifier
   #'
   #' @description A standard qgcomp fit with effect measure modification
@@ -110,8 +114,10 @@ getstratweights <- function(x, emmval=1.0){
   #' @concept variance mixtures
   #' @export
   #' @examples
-  #' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
-  #' (qfit <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
+  #' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
+  #'   z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
+  #' (qfit <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",
+  #'   expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
   #' getstratweights(qfit, emmval = 0)
   #' getstratweights(qfit, emmval = 1)
 

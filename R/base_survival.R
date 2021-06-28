@@ -52,6 +52,7 @@ qgcomp.emm.cox.noboot <- function (
   #'  negative (neg.weights) directions.
   #' @concept variance mixtures
   #' @import survival
+  #' @importFrom  qgcomp quantize
   #' @export
   #' @examples
   #' set.seed(5)
@@ -65,7 +66,8 @@ qgcomp.emm.cox.noboot <- function (
   #'
   #' #categorical emm
   #' dat <- data.frame(time=(tmg <- pmin(.1,rweibull(N, 10, 0.1))),
-  #'                 d=1.0*(tmg<0.1), x1=runif(N), x2=runif(N), z=sample(0:2, N, replace=TRUE))
+  #'                 d=1.0*(tmg<0.1), x1=runif(N), x2=runif(N),
+  #'                 z=sample(0:2, N, replace=TRUE))
   #'  dat$z = as.factor(dat$z)
   #' expnms=paste0("x", 1:2)
   #' f = survival::Surv(time, d)~x1 + x2+z
@@ -89,11 +91,11 @@ qgcomp.emm.cox.noboot <- function (
   data = cbind(data, zdata)
   ### end new
   # housekeeping
-  of <- f
+  #of <- f
   # keep track of added terms by remembering old model
   newform_oldform <- terms(f, data = data)
   #f = .intmaker(f,expnms,emmvar) # create necessary interaction terms with exposure
-  (f <- qgcompint:::.intmaker(f,expnms,emmvars)) # create necessary interaction terms with exposure
+  (f <- .intmaker(f,expnms,emmvars)) # create necessary interaction terms with exposure
   newform <- terms(f, data = data)
   class(newform) <- "formula"
   addedterms <- setdiff(attr(newform, "term.labels"), attr(newform_oldform, "term.labels"))
@@ -103,7 +105,7 @@ qgcomp.emm.cox.noboot <- function (
   if (length(addedmain)>0) {
     message(paste0("Adding main term for ",emmvar," to the model\n"))
   }
-  oord <- order(expnms)
+  #oord <- order(expnms)
   # order interaction terms in same order as main terms
   #s0 <- gsub(paste0("^", emmvar,":"), "",
   #           gsub(paste0(":", emmvar,"$"), "", addedints))
@@ -136,7 +138,7 @@ qgcomp.emm.cox.noboot <- function (
   lin = .intchecknames(expnms)
   if(!lin) stop("Model appears to be non-linear: this is not yet implemented")
   if (!is.null(q) | !is.null(breaks)) {
-    ql <- quantize(data, expnms, q, breaks)
+    ql <- qgcomp::quantize(data, expnms, q, breaks)
     qdata <- ql$data
     br <- ql$breaks
   }
@@ -181,7 +183,7 @@ qgcomp.emm.cox.noboot <- function (
   names(estb.prod) <- do.call(c, lapply(1:length(emmvars), function(x) c(emmvars[x], paste0(emmvars[x], ":mixture"))))
   seb.prod <- do.call(c, lapply(1:length(emmvars), function(x) c(
     sqrt(covMat[emmvars[x],emmvars[x]]),
-    qgcompint:::se_comb2(addedintsl[[x]], covmat = covMat)
+    se_comb2(addedintsl[[x]], covmat = covMat)
   )))
   #estb.prod <- c(
   #  mod$coefficients[emmvar, 1],
@@ -247,7 +249,7 @@ qgcomp.emm.cox.noboot <- function (
   )
   if(emmlev==2){
     ww = getstratweights(res, emmval = 1)
-    ff = .calcstrateffects(res, emmval = 1)
+    ff = getstrateffects(res, emmval = 1)
     res = c(res,
             list(
               pos.weights1 = ww$pos.weights,
