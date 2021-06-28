@@ -64,7 +64,7 @@ print.qgcompemmfit <- function(x, showweights=TRUE, ...){
   #' function
   #' @param showweights logical: should weights be printed, if estimated?
   #' @param ... unused
-  #' @seealso \code{\link[qgcomp]{qgcomp.emm.noboot}}, \code{\link[qgcomp]{getstratweights}}
+  #' @seealso \code{\link[qgcompint]{qgcomp.emm.noboot}}, \code{\link[qgcompint]{getstratweights}}
   #' @concept variance mixtures
   #' @export
   emmvar <- x$call$emmvar

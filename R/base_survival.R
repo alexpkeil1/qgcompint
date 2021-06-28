@@ -44,8 +44,7 @@ qgcomp.emm.cox.noboot <- function (
   #' @param errcheck (logical, default=TRUE) include some basic error checking. Slightly
   #' faster if set to false (but be sure you understand risks)
   #' @param ... arguments to glm (e.g. family)
-  #' @seealso \code{\link[qgcomp]{qgcomp.cox.boot}}, \code{\link[qgcomp]{qgcomp.boot}},
-  #'   and \code{\link[qgcomp]{qgcomp}}
+  #' @seealso \code{\link[qgcomp]{qgcomp.cox.noboot}}
   #' @return a qgcompfit object, which contains information about the effect
   #'  measure of interest (psi) and associated variance (var.psi), as well
   #'  as information on the model fit (fit) and information on the

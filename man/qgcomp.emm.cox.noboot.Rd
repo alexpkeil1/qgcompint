@@ -89,7 +89,6 @@ f = survival::Surv(time, d)~x1 + x2+z
 
 }
 \seealso{
-\code{\link[qgcomp]{qgcomp.cox.boot}}, \code{\link[qgcomp]{qgcomp.boot}},
-and \code{\link[qgcomp]{qgcomp}}
+\code{\link[qgcomp]{qgcomp.cox.noboot}}
 }
 \concept{variance mixtures}
