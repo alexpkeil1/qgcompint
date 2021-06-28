@@ -13,6 +13,12 @@ getstrateffects <- function(x, emmval=1.0){
 #' @seealso \code{\link[qgcompint]{qgcomp.emm.noboot}} \code{\link[qgcompint]{getstratweights}}
 #' @concept variance mixtures
 #' @export
+#' @examples
+#' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
+#' (qfit <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
+#' getstrateffects(qfit, emmval = 0)
+#' getstrateffects(qfit, emmval = 1)
+
 #expnms = x$expnms
 #addedintsord =  x$intterms  zvar = x$fit$data[,x$call$emmvar]
   res = .calcstrateffects(x, emmval=emmval)
@@ -103,8 +109,11 @@ getstratweights <- function(x, emmval=1.0){
   #' @seealso \code{\link[qgcompint]{qgcomp.emm.noboot}}
   #' @concept variance mixtures
   #' @export
-  #expnms = x$expnms
-  #addedintsord =  x$intterms
+  #' @examples
+  #' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
+  #' (qfit <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
+  #' getstratweights(qfit, emmval = 0)
+  #' getstratweights(qfit, emmval = 1)
 
   #fit <- x$fit
   zvar = x$fit$data[,x$call$emmvar]

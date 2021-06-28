@@ -2,6 +2,7 @@
 
 S3method(confint,qgcompemmfit)
 S3method(print,getstrateffects)
+S3method(print,qgcompemmeffects)
 S3method(print,qgcompemmfit)
 S3method(print,qgcompemmweights)
 S3method(vcov,qgcompemmfit)

@@ -14,6 +14,15 @@ print.qgcompemmweights <- function(x, ...){
   cat("\n")
 }
 
+print.qgcompemmeffects <- function(x, digits = 2){
+#' @export
+  cat(paste0("Joint effect at ", x$emmvar,"=",x$emmlev,"\n"))
+  zz = x$eff/x$se
+  pval <- 2 - 2 * pnorm(abs(zz))
+  pdat <- cbind(Estimate=x$eff, "Std. Error"=x$se, "Lower CI"=x$ci[1], "Upper CI"=x$ci[2], "z value"=zz, "Pr(>|z|)"=pval)
+  rownames(pdat) <- "Mixture"
+  printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
+}
 
 
 .printeffects <- function(x, digits=2){
