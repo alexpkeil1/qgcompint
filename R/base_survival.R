@@ -73,7 +73,6 @@ qgcomp.emm.cox.noboot <- function (
   #' f = survival::Surv(time, d)~x1 + x2+z
   #' (obj2 <- qgcomp.emm.cox.noboot(f, expnms = expnms, emmvar="z", data = dat))
   #'
-  requireNamespace("qgcomp")
   if(errcheck){
     # basic argument checks
     if (is.null(expnms)) {

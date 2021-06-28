@@ -116,8 +116,6 @@ qgcomp.emm.noboot <- function(
   #' qgcompint::getstrateffects(qfit3,emmval=1)
   #' qgcompint::getstratweights(qfit3,emmval=2)
   #' qgcompint::getstrateffects(qfit3,emmval=2)
-  require("qgcomp")
-  requireNamespace("qgcomp")
   if(errcheck){
     # basic argument checks
     if (is.null(expnms)) {
@@ -207,7 +205,7 @@ qgcomp.emm.noboot <- function(
                         ...)
   if(bayes){
     requireNamespace("arm")
-    fit <- bayesglm(newform, data = qdata,
+    fit <- arm::bayesglm(newform, data = qdata,
                     weights=weights,
                     ...)
   }
