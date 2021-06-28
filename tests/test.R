@@ -12,11 +12,11 @@ dat <- data.frame(y=runif(50),
 (qfitemmb <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, bayes=TRUE, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
 # check
 getstratweights(qfitemm, emmval=0.0)
-#qgcompint:::.calcstrateffects(qfitemm, emmval=0.0)
+getstrateffects(qfitemm, emmval=0.0)
 getstratweights(qfitemm, emmval=1.0)
-#qgcompint:::.calcstrateffects(qfitemm, emmval=1.0)
+getstrateffects(qfitemm, emmval=1.0)
 getstratweights(qfitemmb, emmval=1.0)
-#qgcompint:::.calcstrateffects(qfitemmb, emmval=1.0)
+getstrateffects(qfitemmb, emmval=1.0)
 
 dat$z=as.factor(dat$z)
 (qfitemmf <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
@@ -47,9 +47,9 @@ dat <- data.frame(y=runif(50),
 (qfitemmb <- qgcomp.emm.noboot(f=y ~ x1 + x2, bayes=TRUE, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
 # check
 getstratweights(qfitemm, emmval=0.0)
-#qgcompint:::.calcstrateffects(qfitemm, emmval=0.0)
+getstrateffects(qfitemm, emmval=0.0)
 getstratweights(qfitemm, emmval=1.0)
-#qgcompint:::.calcstrateffects(qfitemm, emmval=1.0)
+getstrateffects(qfitemm, emmval=1.0)
 getstratweights(qfitemmb, emmval=1.0)
 
 
@@ -72,10 +72,10 @@ qfitemm$fit
 getstratweights(qfitemm, emmval=0.0)
 getstratweights(qfitemm, emmval=1.0)
 getstratweights(qfitemm, emmval=2.0)
-#qgcompint:::.calcstrateffects(qfitemm, emmval=0.0)
-#qgcompint:::.calcstrateffects(qfitemmb, emmval=1.0)
+getstrateffects(qfitemm, emmval=0.0)
+getstrateffects(qfitemmb, emmval=1.0)
 getstratweights(qfitemm, emmval=-2.0)
-qgcompint:::.calcstrateffects(qfitemmb, emmval=-2.0)
+getstrateffects(qfitemmb, emmval=-2.0)
 
 
 # -----------------------------------
