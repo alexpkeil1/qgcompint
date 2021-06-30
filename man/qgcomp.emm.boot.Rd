@@ -57,6 +57,16 @@ errors via bootstrapping.}
 
 \item{alpha}{alpha level for confidence limit calculation}
 
+\item{B}{integer: number of bootstrap iterations (this should typically be >=200,
+though it is set lower in examples to improve run-time).}
+
+\item{rr}{logical: if using binary outcome and rr=TRUE, qgcomp.boot will
+estimate risk ratio rather than odds ratio}
+
+\item{degree}{polynomial bases for marginal model (e.g. degree = 2
+allows that the relationship between the whole exposure mixture and the outcome
+is quadratic (default = 1).}
+
 \item{seed}{integer or NULL: random number seed for replicable bootstrap results}
 
 \item{bayes}{use underlying Bayesian model (\code{arm} package defaults). Results

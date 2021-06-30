@@ -173,6 +173,13 @@ qgcomp.emm.boot <- function(
   #' @param weights "case weights" - passed to the "weight" argument of
   #' \code{\link[stats]{glm}} or \code{\link[arm]{bayesglm}}
   #' @param alpha alpha level for confidence limit calculation
+  #' @param B integer: number of bootstrap iterations (this should typically be >=200,
+  #'  though it is set lower in examples to improve run-time).
+  #' @param rr logical: if using binary outcome and rr=TRUE, qgcomp.boot will
+  #'   estimate risk ratio rather than odds ratio
+  #' @param degree polynomial bases for marginal model (e.g. degree = 2
+  #'  allows that the relationship between the whole exposure mixture and the outcome
+  #'  is quadratic (default = 1).
   #' @param seed integer or NULL: random number seed for replicable bootstrap results
   #' @param bayes use underlying Bayesian model (`arm` package defaults). Results
   #' in penalized parameter estimation that can help with very highly correlated
@@ -197,6 +204,8 @@ qgcomp.emm.boot <- function(
   #' @concept variance mixtures
   #' @import stats arm
   #' @importFrom  qgcomp quantize
+  #' @importFrom future plan
+  #' @importFrom future.apply future_lapply
   #' @export
   #' @examples
   #' set.seed(50)
