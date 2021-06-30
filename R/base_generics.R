@@ -68,16 +68,17 @@ print.qgcompemmfit <- function(x, showweights=TRUE, ...){
   #' @concept variance mixtures
   #' @export
   emmvar <- x$call$emmvar
+  isboot <- x$bootstrap
   isbinemm <- x$emmlev == 2
   #rnm = c("(Intercept)", 'psi1', emmvar, paste0(emmvar,":mixture"))
   rnm = names(x$coef)
   fam <- x$fit$family$family
-  if(showweights) {
+  if(showweights & !isboot) {
     ww = getstratweights(x, emmval=0.0)
     print(ww)
     cat("\n")
   }
-  if(!is.null(x$pos.size1) & showweights & isbinemm) {
+  if(!is.null(x$pos.size1) & showweights & isbinemm & !isboot) {
     ww = getstratweights(x, emmval=1.0)
     print(ww)
     cat("\n")
@@ -113,12 +114,13 @@ print.qgcompemmfit <- function(x, showweights=TRUE, ...){
   colnames(pdat)[which(colnames(pdat)=="pval")] = eval(paste(plab))
   rownames(pdat) <- rnm
   printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
-  if( isbinemm ) .printeffects(x, digits=5)
+  if( isbinemm  & !isboot) .printeffects(x, digits=5)
   invisible(x)
 }
 
 
 ##### generics ######
+
 vcov.qgcompemmfit <- function(object, ...){
   #' @importFrom stats vcov
   #' @export
@@ -132,4 +134,10 @@ confint.qgcompemmfit <- function(object, ...){
   #' @export
   message("not yet implemented")
   anova(object$fit)
+}
+
+coef.qgcompemmfit <- function(object, ...){
+  #' @importFrom stats coef
+  #' @export
+  object$coef
 }

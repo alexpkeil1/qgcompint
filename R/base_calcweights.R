@@ -23,6 +23,7 @@ getstrateffects <- function(x, emmval=1.0, ...){
 
 #expnms = x$expnms
 #addedintsord =  x$intterms  zvar = x$fit$data[,x$call$emmvar]
+  if(x$bootstrap) stop("This method does not work for bootstrapped fits. If using a linear parameterization, then stratified effects can be estimated using non-bootstrapped methods.")
   zvar = x$fit$data[,x$call$emmvar]
   res = .calcstrateffects(x,emmval=emmval, zvar=zvar)
   class(res) <- "qgcompemmeffects"
@@ -120,6 +121,7 @@ getstratweights <- function(x, emmval=1.0, ...){
   #'   expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
   #' getstratweights(qfit, emmval = 0)
   #' getstratweights(qfit, emmval = 1)
+  if(x$bootstrap) stop("This method does not work for bootstrapped fits. If using a linear parameterization, then weights can be estimated using non-bootstrapped methods.")
 
   #fit <- x$fit
   zvar = x$fit$data[,x$call$emmvar]
