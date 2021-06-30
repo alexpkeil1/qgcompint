@@ -114,6 +114,15 @@ dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
 (qfit2 <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
   degree = 1,
   expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian()))
+# categorical modifier
+dat2 <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
+  z=sample(0:2, 50,replace=TRUE), r=rbinom(50,1,0.5))
+dat2$z = as.factor(dat2$z)
+(qfit3 <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",
+  expnms = c('x1', 'x2'), data=dat2, q=4, family=gaussian()))
+(qfit4 <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
+  degree = 1,
+  expnms = c('x1', 'x2'), data=dat2, q=4, family=gaussian()))
 }
 \seealso{
 \code{\link[qgcomp]{qgcomp.noboot}}

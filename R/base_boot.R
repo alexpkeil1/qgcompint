@@ -81,7 +81,7 @@ msm.emm.fit <- function(f,
   newexpnms <- paste0("psi",1:degree)
   names(polydat) <- newexpnms
   msmdat <- cbind(msmdat, polydat)
-  msmf <- paste0("Ya ~ ", paste0(newexpnms, collapse = "+"))
+  msmf <- paste0("Ya ~ ", paste0(c(newexpnms, emmvars), collapse = "+"))
   # TODO: categorical Z
   newmsmform <- .intmaker(as.formula(msmf), expnms = newexpnms, emmvars = emmvars)
   class(newmsmform) <- "formula"
@@ -112,10 +112,13 @@ msm.emm.fit <- function(f,
     # upper cut-point as first quantile)
   }
   newterms <- terms(newmsmform)
-  prodterms <- do.call(c, lapply(1:length(emmvars), function(x) c(emmvars[x], paste0(emmvars[x], ":mixture"))))
+  #prodterms <- do.call(c, lapply(1:length(emmvars), function(x) c(emmvars[x], paste0(emmvars[x], ":mixture"))))
   newtermlabels <- attr(newterms, "term.labels")
-  newtermlabels[(degree+1):length(newtermlabels)] <- prodterms
-  res
+  #newtermlabels[(degree+1):length(newtermlabels)] <- prodterms
+  for(emmv in emmvars){
+    newtermlabels <- gsub(paste0("psi([0-9]):", emmv), paste0(emmv,":","mixture", "^\\1"), newtermlabels)
+  }
+  newtermlabels <- gsub("\\^1", "", newtermlabels)
   attr(res, "term.labels") <- newtermlabels
   res
 }
@@ -217,6 +220,15 @@ qgcomp.emm.boot <- function(
   #' (qfit2 <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
   #'   degree = 1,
   #'   expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian()))
+  #' # categorical modifier
+  #' dat2 <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
+  #'   z=sample(0:2, 50,replace=TRUE), r=rbinom(50,1,0.5))
+  #' dat2$z = as.factor(dat2$z)
+  #' (qfit3 <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",
+  #'   expnms = c('x1', 'x2'), data=dat2, q=4, family=gaussian()))
+  #' (qfit4 <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
+  #'   degree = 1,
+  #'   expnms = c('x1', 'x2'), data=dat2, q=4, family=gaussian()))
   oldq = NULL
   if(is.null(seed)) seed = round(runif(1, min=0, max=1e8))
 
