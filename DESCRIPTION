@@ -23,7 +23,9 @@ Depends:
 Imports: 
     qgcomp,
     arm,
-    survival
+    survival,
+    future,
+    future.apply
 Suggests: 
     knitr
 VignetteBuilder: 

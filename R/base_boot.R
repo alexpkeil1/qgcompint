@@ -214,7 +214,7 @@ qgcomp.emm.boot <- function(
   #'   z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
   #' (qfit <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",
   #'   expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian()))
-  #' (qfit2 <- qgcompint:::qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
+  #' (qfit2 <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
   #'   degree = 1,
   #'   expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian()))
   oldq = NULL
