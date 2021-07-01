@@ -38,11 +38,12 @@ checkres <- function(qfitemm){
 
 
 # categorical modifier
-dat <- data.frame(y=runif(50),
-                  x1=runif(50),
-                  x2=runif(50),
-                  z=as.factor(sample(1:3, 50,replace=TRUE)),
-                  r=rbinom(50,1,0.5))
+n <- 100
+dat <- data.frame(y=runif(n),
+                  x1=runif(n),
+                  x2=runif(n),
+                  z=as.factor(sample(c("a","b","m"), n,replace=TRUE)),
+                  r=rbinom(n,1,0.5))
 (qfit <- qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
 (qfitemm <- qgcomp.emm.noboot(f=y ~ x1 + x2, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian()))
 (qfitemmboot <- qgcomp.emm.boot(f=y ~ x1 + x2, degree=1, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian()))
