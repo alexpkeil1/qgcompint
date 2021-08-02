@@ -2,14 +2,15 @@ msm.emm.fit <- function(f,
                     qdata,
                     intvals,
                     expnms,
-                    emmvars,
+                    emmvar, # original z variable
+                    emmvars, #  z variable possibly split into indicator variables
                     rr=TRUE,
                     main=TRUE,
                     degree=1,
                     id=NULL,
                     weights,
                     bayes=FALSE,
-                    MCsize=nrow(qdata), ...){
+                    MCsize=nrow(qdata), hasintercept=TRUE, ...){
 
   newform <- terms(f, data = qdata)
   nobs = nrow(qdata)
@@ -81,25 +82,27 @@ msm.emm.fit <- function(f,
   newexpnms <- paste0("psi",1:degree)
   names(polydat) <- newexpnms
   msmdat <- cbind(msmdat, polydat)
-  msmf <- paste0("Ya ~ ", paste0(c(newexpnms, emmvars), collapse = "+"))
+  msmf <- paste0("Ya ~ ",
+                 ifelse(hasintercept, "1 +", "-1 +"),
+                 paste0(c(newexpnms, emmvars), collapse = "+"))
   # TODO: categorical Z
-  newmsmform <- .intmaker(as.formula(msmf), expnms = newexpnms, emmvars = emmvars)
-  class(newmsmform) <- "formula"
+  msmform <- .intmaker(as.formula(msmf), expnms = newexpnms, emmvars = emmvars)
+  class(msmform) <- "formula"
 
   # to do: allow functional form variations for the MSM via specifying the model formula
   if(bayes){
-    if(!rr) suppressWarnings(msmfit <- bayesglm(newmsmform, data=msmdat,
+    if(!rr) suppressWarnings(msmfit <- bayesglm(msmform, data=msmdat,
                                                 weights=weights, x=TRUE,
                                                 ...))
-    if(rr)  suppressWarnings(msmfit <- bayesglm(newmsmform, data=msmdat,
+    if(rr)  suppressWarnings(msmfit <- bayesglm(msmform, data=msmdat,
                                                 family=binomial(link='log'), start=rep(-0.0001, degree+1),
                                                 weights=weights, x=TRUE))
   }
   if(!bayes){
-    if(!rr) suppressWarnings(msmfit <- glm(newmsmform, data=msmdat,
+    if(!rr) suppressWarnings(msmfit <- glm(msmform, data=msmdat,
                                            weights=weights, x=TRUE,
                                            ...))
-    if(rr)  suppressWarnings(msmfit <- glm(newmsmform, data=msmdat,
+    if(rr)  suppressWarnings(msmfit <- glm(msmform, data=msmdat,
                                            family=binomial(link='log'), start=rep(-0.0001, degree+1),
                                            weights=weights, x=TRUE))
   }
@@ -109,9 +112,10 @@ msm.emm.fit <- function(f,
     res$Yamsm <- as.numeric(predict(msmfit, type='response'))
     res$Yamsml <- as.numeric(predict(msmfit, type="link"))
     res$A <- msmdat$psi # joint exposure (0 = all exposures set category with
+    res[[emmvar]] <- do.call(c, lapply(intvals, function(x) newdata[,emmvar]))
     # upper cut-point as first quantile)
   }
-  newterms <- terms(newmsmform)
+  newterms <- terms(msmform)
   #prodterms <- do.call(c, lapply(1:length(emmvars), function(x) c(emmvars[x], paste0(emmvars[x], ":mixture"))))
   newtermlabels <- attr(newterms, "term.labels")
   #newtermlabels[(degree+1):length(newtermlabels)] <- prodterms
@@ -142,6 +146,7 @@ qgcomp.emm.boot <- function(
   bayes=FALSE,
   MCsize=nrow(data),
   parallel=FALSE,
+  parplan = FALSE,
   errcheck=FALSE,
   ...){
   #' @title EMM for Quantile g-computation for continuous, binary, and count outcomes under linearity/additivity
@@ -195,6 +200,7 @@ qgcomp.emm.boot <- function(
   #'  error at a given value of MCsize). This likely won't matter much in linear models, but may
   #'  be important with binary or count outcomes.
   #' @param parallel use (safe) parallel processing from the future and future.apply packages
+  #' @param parplan (logical, default=FALSE) automatically set future::plan to plan(multisession) (and set to plan(transparent) after bootstrapping)
   #' @param errcheck (logical, default=TRUE) include some basic error checking. Slightly
   #' faster if set to false (but be sure you understand risks)
   #' @param ... arguments to glm (e.g. family)
@@ -244,7 +250,7 @@ qgcomp.emm.boot <- function(
   # housekeeping
   allemmvals<- unique(data[,emmvar])
   emmlev <- length(allemmvals)
-  zdata = zproc(data[,emmvar])
+  zdata = zproc(data[,emmvar], znm = emmvar)
   emmvars = names(zdata)
   data = cbind(data, zdata)
   data = data[,unique(names(data)),drop=FALSE]
@@ -252,11 +258,13 @@ qgcomp.emm.boot <- function(
     # placeholder
   }
   # keep track of added terms by remembering old model
-  newform_oldform <- terms(f, data = data)
+  originalform <- terms(f, data = data)
+  hasintercept = as.logical(attr(originalform, "intercept"))
+
   #f = .intmaker(f,expnms,emmvar) # create necessary interaction terms with exposure
   (f <- .intmaker(f,expnms,emmvars)) # create necessary interaction terms with exposure
   newform <- terms(f, data = data)
-  addedterms <- setdiff(attr(newform, "term.labels"), attr(newform_oldform, "term.labels"))
+  addedterms <- setdiff(attr(newform, "term.labels"), attr(originalform, "term.labels"))
   addedmain <- setdiff(addedterms, grep(":",addedterms, value = TRUE))
   addedints <- setdiff(addedterms, addedmain)
   addedintsl <- lapply(emmvars, function(x) grep(x, addedints, value = TRUE))
@@ -334,7 +342,7 @@ qgcomp.emm.boot <- function(
     qdata$id__ <- seq_len(dim(qdata)[1])
   }
   ###
-  msmfit <- msm.emm.fit(newform, qdata, intvals, emmvars=emmvars, expnms=expnms, rr, main=TRUE,degree=degree, id=id,
+  msmfit <- msm.emm.fit(newform, qdata, intvals, emmvar=emmvar, emmvars=emmvars, expnms=expnms, rr, main=TRUE,degree=degree, id=id,
                     weights,
                     bayes,
                     MCsize=MCsize,
@@ -346,7 +354,7 @@ qgcomp.emm.boot <- function(
   nobs <- dim(qdata)[1]
   nids <- length(unique(qdata[,id, drop=TRUE]))
   starttime = Sys.time()
-  psi.emm.only <- function(i=1, f=f, qdata=qdata, intvals=intvals, emmvars=emmvars, expnms=expnms, rr=rr, degree=degree,
+  psi.emm.only <- function(i=1, f=f, qdata=qdata, intvals=intvals, emmvar=emmvar, emmvars=emmvars, expnms=expnms, rr=rr, degree=degree,
                        nids=nids, id=id,
                        weights,MCsize=MCsize,
                        ...){
@@ -359,7 +367,7 @@ qgcomp.emm.boot <- function(
     )))
     names(bootids) <- id
     qdata_ <- merge(qdata,bootids, by=id, all.x=FALSE, all.y=TRUE)
-    ft = msm.emm.fit(f, qdata_, intvals=intvals, expnms=expnms, emmvars=emmvars, rr, main=FALSE, degree, id, weights=weights, bayes, MCsize=MCsize,
+    ft = msm.emm.fit(f, qdata_, intvals=intvals, expnms=expnms, emmvar=emmvar, emmvars=emmvars, rr, main=FALSE, degree, id, weights=weights, bayes, MCsize=MCsize,
                  ...)
     yhatty = data.frame(yhat=predict(ft$msmfit), psi=ft$msmfit$data[,"psi"])
     as.numeric(
@@ -373,17 +381,17 @@ qgcomp.emm.boot <- function(
   set.seed(seed)
   if(parallel){
     #Sys.setenv(R_FUTURE_SUPPORTSMULTICORE_UNSTABLE="quiet")
-    future::plan(strategy = future::multisession)
+    if(parplan) future::plan(strategy = future::multisession)
     bootsamps <- future.apply::future_lapply(X=seq_len(B), FUN=psi.emm.only,f=f, qdata=qdata, intvals=intvals,
-                                             emmvars=emmvars, expnms=expnms, rr=rr, degree=degree, nids=nids, id=id,
+                                             emmvar=emmvar, emmvars=emmvars, expnms=expnms, rr=rr, degree=degree, nids=nids, id=id,
                                              weights=qdata$weights,MCsize=MCsize,
                                              future.seed=TRUE,
                                              ...)
 
-    future::plan(strategy = future::transparent)
+    if(parplan) future::plan(strategy = future::transparent)
   }else{
     bootsamps <- lapply(X=seq_len(B), FUN=psi.emm.only,f=f, qdata=qdata, intvals=intvals,
-                        emmvars=emmvars, expnms=expnms, rr=rr, degree=degree, nids=nids, id=id,
+                        emmvar=emmvar, emmvars=emmvars, expnms=expnms, rr=rr, degree=degree, nids=nids, id=id,
                         weights=weights, MCsize=MCsize,
                         ...)
 
@@ -398,11 +406,11 @@ qgcomp.emm.boot <- function(
   bootsamps = bootsamps[-hatidx,]
   #rownames(bootsamps) = msmcoefnames
   seb <- apply(bootsamps, 1, sd)
-  covmat <- cov(t(bootsamps))
+  covmat.coef <- cov(t(bootsamps))
   #print(msmcoefnames)
   #print(names(estb))
   #print(rownames(bootsamps))
-  colnames(covmat) <- rownames(covmat) <- names(estb) <- c("(Intercept)", msmcoefnames)
+  colnames(covmat.coef) <- rownames(covmat.coef) <- names(estb) <- c("(Intercept)", msmcoefnames)
   #colnames(covmat) <- rownames(covmat) <- names(estb) <- c("(intercept)", paste0("psi", seq_len(nrow(bootsamps)-1)))
 
   tstat <- estb / seb
@@ -415,19 +423,23 @@ qgcomp.emm.boot <- function(
   if (!is.null(oldq)){
     q = oldq
   }
+  psidx = 1:(hasintercept+1)
   qx <- qdata[, expnms]
-  res <- list(
+  res <- .qgcompemm_object(
     qx = qx, fit = msmfit$fit, msmfit = msmfit$msmfit,
     psi = estb[-1],
     var.psi = seb[-1] ^ 2,
-    covmat.psi=covmat[-1,-1, drop=FALSE], ci = ci[-1,],
-    coef = estb, var.coef = seb ^ 2, covmat.coef=covmat, ci.coef = ci,
+    covmat.psi=covmat.coef["psi1", "psi1"],
+    covmat.psiint=covmat.coef[grep("mixture", colnames(covmat.coef)), grep("mixture", colnames(covmat.coef))], # to fix
+    ci = ci[-1,],
+    coef = estb, var.coef = seb ^ 2, covmat.coef=covmat.coef, ci.coef = ci,
     expnms=expnms,
     intterms = addedintsord,
     q=q, breaks=br, degree=degree,
     pos.psi = NULL, neg.psi = NULL,
     pos.weights = NULL, neg.weights = NULL, pos.size = NULL,neg.size = NULL, bootstrap=TRUE,
     y.expected=msmfit$Ya, y.expectedmsm=msmfit$Yamsm, index=msmfit$A,
+    emmvar.msm = msmfit[[emmvar]],
     bootsamps = bootsamps,
     cov.yhat=cov.yhat,
     alpha=alpha,
@@ -443,6 +455,5 @@ qgcomp.emm.boot <- function(
     res$zstat <- tstat
     res$pval <- pvalz
   }
-  attr(res, "class") <- "qgcompemmfit"
   res
 }

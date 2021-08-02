@@ -16,7 +16,7 @@ print.qgcompemmweights <- function(x, ...){
 
 print.qgcompemmeffects <- function(x, ..., digits = 2){
 #' @export
-  cat(paste0("Joint effect at ", x$emmvar,"=", x$emmlev,"\n"))
+  cat(paste0("Joint effect at ", x$emmvar,"=", x$emmval,"\n"))
   zz = x$eff/x$se
   pval <- 2 - 2 * pnorm(abs(zz))
   pdat <- cbind(Estimate=x$eff, "Std. Error"=x$se, "Lower CI"=x$ci[1], "Upper CI"=x$ci[2], "z value"=zz, "Pr(>|z|)"=pval)
@@ -124,7 +124,6 @@ print.qgcompemmfit <- function(x, showweights=TRUE, ...){
 vcov.qgcompemmfit <- function(object, ...){
   #' @importFrom stats vcov
   #' @export
-  stop("not implemented")
   object$covmat.coef
 }
 

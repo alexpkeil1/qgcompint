@@ -1,6 +1,6 @@
 Package: qgcompint
 Title: Quantile G-Computation Extensions for Effect Measure Modification
-Version:  0.3.0
+Version:  0.4.0
 Date: 2021-05-26
 Authors@R: 
     person(given = "Alexander",
@@ -25,9 +25,12 @@ Imports:
     arm,
     survival,
     future,
-    future.apply
+    future.apply,
+    ggplot2,
+    gridExtra
 Suggests: 
-    knitr
+    knitr,
+    markdown
 VignetteBuilder: 
     knitr
 Encoding: UTF-8

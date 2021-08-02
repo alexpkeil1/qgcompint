@@ -85,19 +85,19 @@ qgcomp.emm.cox.noboot <- function (
   allemmvals<- unique(data[,emmvar])
   emmlev <- length(allemmvals)
   ## process to expand factors if needed
-  zdata = zproc(data[,emmvar])
+  zdata = zproc(data[,emmvar], znm = emmvar)
   emmvars = names(zdata)
   data = cbind(data, zdata)
   ### end new
   # housekeeping
   #of <- f
   # keep track of added terms by remembering old model
-  newform_oldform <- terms(f, data = data)
+  originalform <- terms(f, data = data)
   #f = .intmaker(f,expnms,emmvar) # create necessary interaction terms with exposure
   (f <- .intmaker(f,expnms,emmvars)) # create necessary interaction terms with exposure
   newform <- terms(f, data = data)
   class(newform) <- "formula"
-  addedterms <- setdiff(attr(newform, "term.labels"), attr(newform_oldform, "term.labels"))
+  addedterms <- setdiff(attr(newform, "term.labels"), attr(originalform, "term.labels"))
   addedmain <- setdiff(addedterms, grep(":",addedterms, value = TRUE))
   addedints <- setdiff(addedterms, addedmain)
   addedintsl <- lapply(emmvars, function(x) grep(x, addedints, value = TRUE))
@@ -213,20 +213,25 @@ qgcomp.emm.cox.noboot <- function (
   neg.psi <- sum(wcoef[negcoef])
   qx <- qdata[, expnms]
   names(qx) <- paste0(names(qx), "_q")
+  covmat.coef = vc_multiscomb(inames = NULL, emmvars=emmvars,
+                              expnms=expnms,addedintsl=addedintsl, covmat=covMat, grad = NULL
+  )
+  colnames(covmat.coef) <- rownames(covmat.coef) <- names(c(estb, estb.prod))
+
   #
-  res <- list(
+  res <- .qgcompemm_object(
     qx = qx, fit = fit,
     psi = estb,
     psiint = estb.prod[2*(1:length(emmvars))],
     var.psi = seb^2,
     var.psiint = seb.prod[2*(1:length(emmvars))] ^ 2,
-    covmat.psi = c('psi1' = seb^2),
-    covmat.psiint=c('psiint' = seb.prod[2*(1:length(emmvars))]^2),
+    covmat.psi=covmat.coef["psi1", "psi1"],
+    covmat.psiint=covmat.coef[grep("mixture", colnames(covmat.coef)), grep("mixture", colnames(covmat.coef))], # to fix
     ci = ci,
     ciint = ci.prod[2*(1:length(emmvars)),],
     coef = c(estb, estb.prod),
     var.coef = c(seb ^ 2, seb.prod ^ 2),
-    covmat.coef = seb^2, # todo: fix this
+    covmat.coef = covmat.coef,
     ci.coef = rbind(ci, ci.prod),
     expnms = expnms,
     intterms = addedintsord,
@@ -249,6 +254,7 @@ qgcomp.emm.cox.noboot <- function (
   if(emmlev==2){
     ww = getstratweights(res, emmval = 1)
     ff = getstrateffects(res, emmval = 1)
+    cl = class(res)
     res = c(res,
             list(
               pos.weights1 = ww$pos.weights,
@@ -264,7 +270,8 @@ qgcomp.emm.cox.noboot <- function (
               cieffect = ff$ci
             )
     )
+    class(res) = cl
   }
-  attr(res, "class") <- c( "survqgcompemmfit", "qgcompemmfit", "survqgcompfit", "qgcompfit")
+  attr(res, "class") <- c( "survqgcompemmfit", "survqgcompfit", attr(res, "class"))
   res
 }

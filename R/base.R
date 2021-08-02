@@ -132,7 +132,7 @@ qgcomp.emm.noboot <- function(
   allemmvals<- unique(data[,emmvar])
   emmlev <- length(allemmvals)
   ## process to expand factors if needed
-  zdata = zproc(data[,emmvar])
+  zdata = zproc(data[,emmvar], znm = emmvar)
   emmvars = names(zdata)
   data = cbind(data, zdata)
   ### end new
@@ -145,11 +145,12 @@ qgcomp.emm.noboot <- function(
     #}
   }
   # keep track of added terms by remembering old model
-  newform_oldform <- terms(f, data = data)
+  originalform <- terms(f, data = data)
+  hasintercept = as.logical(attr(originalform, "intercept"))
   #f = .intmaker(f,expnms,emmvar) # create necessary interaction terms with exposure
   (f <- .intmaker(f,expnms,emmvars)) # create necessary interaction terms with exposure
   newform <- terms(f, data = data)
-  addedterms <- setdiff(attr(newform, "term.labels"), attr(newform_oldform, "term.labels"))
+  addedterms <- setdiff(attr(newform, "term.labels"), attr(originalform, "term.labels"))
   addedmain <- setdiff(addedterms, grep(":",addedterms, value = TRUE))
   addedints <- setdiff(addedterms, addedmain)
   addedintsl <- lapply(emmvars, function(x) grep(x, addedints, value = TRUE))
@@ -219,15 +220,16 @@ qgcomp.emm.noboot <- function(
            ")
   }
   # intercept, main effect term
-  estb <- c(
-    fit$coefficients[1],
-    sum(mod$coefficients[expnms,1, drop=TRUE])
-  )
-  names(estb) <- c('(Intercept)', "psi1")
-  seb <- c(
-    sqrt(mod$cov.scaled[1,1]),
-    se_comb2(expnms, covmat = mod$cov.scaled)
-  )
+  estb <- sum(mod$coefficients[expnms,1, drop=TRUE])
+  seb <- se_comb2(expnms, covmat = mod$cov.scaled)
+  if(hasintercept){
+    estb <- c(fit$coefficients[1], estb)
+    seb <- c(sqrt(mod$cov.scaled[1,1]), seb)
+  }
+  #seb <- c(
+  #  sqrt(mod$cov.scaled[1,1]),
+  #  se_comb2(expnms, covmat = mod$cov.scaled)
+  #)
   tstat <- estb / seb
   df <- mod$df.null - length(expnms) - length(addedints) - 1
   pval <- 2 - 2 * pt(abs(tstat), df = df)
@@ -247,15 +249,6 @@ qgcomp.emm.noboot <- function(
     sqrt(mod$cov.scaled[emmvars[x],emmvars[x]]),
     se_comb2(addedintsl[[x]], covmat = mod$cov.scaled)
   )))
-  #estb.prod <- c(
-  #  fit$coefficients[emmvar],
-  #  sum(mod$coefficients[addedints,1, drop=TRUE])
-  #)
-  #names(estb.prod) <- c(emmvar, paste0(emmvar, ":mixture"))
-  #seb.prod <- c(
-  #  sqrt(mod$cov.scaled[emmvar,emmvar]),
-  #  se_comb2(addedints, covmat = mod$cov.scaled)
-  #  )
   tstat.prod <- estb.prod / seb.prod
   pval.prod <- 2 - 2 * pt(abs(tstat.prod), df = df)
   pvalz.prod <- 2 - 2 * pnorm(abs(tstat.prod))
@@ -276,21 +269,34 @@ qgcomp.emm.noboot <- function(
   neg.psi <- sum(wcoef[neg.coef])
   qx <- qdata[, expnms]
   names(qx) <- paste0(names(qx), "_q")
-  res <- list(
+  psiidx = 1+hasintercept
+  #names(estb)[psiidx] <- c("psi1")
+  cnms = "psi1"
+  inames = NULL
+  if(hasintercept){
+    inames= "(Intercept)"
+    cnms = c(inames, cnms)
+  }
+  covmat.coef = vc_multiscomb(inames = inames, emmvars=emmvars,
+          expnms=expnms,addedintsl=addedintsl, covmat=mod$cov.scaled, grad = NULL
+  )
+  names(estb) <- cnms
+  colnames(covmat.coef) <- rownames(covmat.coef) <- names(c(estb, estb.prod))
+  res <- .qgcompemm_object(
     qx = qx,
     fit = fit,
-    psi = estb[2],
+    psi = estb[psiidx],
     psiint = estb.prod[2*(1:length(emmvars))],
-    var.psi = seb[2] ^ 2,
+    var.psi = seb[psiidx] ^ 2,
     var.psiint = seb.prod[2*(1:length(emmvars))] ^ 2,
-    covmat.psi=c('psi1' = seb[2]^2),
-    covmat.psiint=c('psiint' = seb.prod[2*(1:length(emmvars))]^2),
-    ci = ci[2,],
+    covmat.psi=covmat.coef["psi1", "psi1"],
+    covmat.psiint=covmat.coef[grep("mixture", colnames(covmat.coef)), grep("mixture", colnames(covmat.coef))], # to fix
+    ci = ci[psiidx,],
     ciint = ci.prod[2*(1:length(emmvars)),],
     coef = c(estb, estb.prod),
     var.coef = c(seb ^ 2, seb.prod ^ 2),
     #covmat.coef=c('(Intercept)' = seb[1]^2, 'psi1' = seb[2]^2),
-    covmat.coef=vc_comb(aname="(Intercept)", expnms=expnms, covmat = mod$cov.scaled), # todo: fix this
+    covmat.coef=covmat.coef, # todo: fix this
     ci.coef = rbind(ci, ci.prod),
     #ci.coefint = ci1,
     expnms=expnms,
@@ -314,6 +320,7 @@ qgcomp.emm.noboot <- function(
   if(emmlev==2){
     ww = getstratweights(res, emmval = 1)
     ff = getstrateffects(res, emmval = 1)
+    cl = class(res)
     res = c(res,
             list(
               pos.weights1 = ww$pos.weights,
@@ -329,6 +336,7 @@ qgcomp.emm.noboot <- function(
               cieffect = ff$ci
             )
     )
+    class(res) = cl
   }
   if(fit$family$family=='gaussian'){
     res$tstat <- c(tstat, tstat.prod)
@@ -339,7 +347,6 @@ qgcomp.emm.noboot <- function(
     res$zstat <- c(tstat, tstat.prod)
     res$pval <- c(pvalz, pvalz.prod)
   }
-  attr(res, "class") <- c("qgcompemmfit", "qgcompfit")
   res
 }
 

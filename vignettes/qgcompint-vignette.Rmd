@@ -1,0 +1,158 @@
+---
+title: "The qgcompint package: g-computation with statistical interaction"
+author: "Alexander Keil"
+date: "`r Sys.Date()`"
+#output: rmarkdown::pdf_document 
+output: rmarkdown::html_vignette  
+vignette: >
+  %\VignetteIndexEntry{The qgcompint package: basics}
+  %\VignetteEngine{knitr::knitr}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+### binary modifier
+```{r intro gen, include=TRUE}
+ library(qgcompint)
+ set.seed(42)
+ dat1 <- simdata_quantized_emm(
+  outcometype="continuous",
+# sample size
+  n = 100,
+# correlation between x1 and x2,x3,...
+  corr=c(0.8,0.6,0.3,-0.3,-0.3,-0.3),    
+# model intercept
+  b0=0,
+# linear model coefficients for x1,x2,... at referent level of interacting variable
+  mainterms=c(0.3,-0.1,0.1,0.0,0.3,0.1,0.1), 
+# linear model coefficients for product terms between x1,x2,... and interacting variable  
+  prodterms = c(1.0,0.0,0.0,0.0,0.2,0.2,0.2),
+# type of interacting variable
+  ztype = "binary",                        
+# number of levels of exposure
+  q = 4,                                   
+# residual variance of y
+  yscale = 2.0                            
+)
+
+head(dat1)
+cor(dat1[,paste0("x",1:7)])
+```
+### fitting a model with a modifier
+
+```{r first step fit, include=TRUE}
+qfit1 <- qgcomp.emm.noboot(y~x1+x2+x3+x4+x5+x6+x7,
+  data = dat1,
+  expnms = paste0("x",1:7),
+  emmvar = "z",
+  q = 4)
+qfit1
+```
+
+### getting bounds for pointwise comparisons
+```{r first step bound, include=TRUE}
+pointwisebound(qfit1, emmval=0)
+pointwisebound(qfit1, emmval=1)
+```
+
+# plotting weights (weights are at referent level of modifier)
+```{r first step plot, include=TRUE}
+plot(qfit1)
+```
+```{r first step boot, include=TRUE}
+qfit1b <- qgcomp.emm.boot(y~x1+x2+x3+x4+x5+x6+x7,
+  data=dat1,
+  expnms = paste0("x",1:7),
+  emmvar = "z",
+  q = 4)
+qfit1b
+```
+
+#### plotting (not yet working!)
+```{r first step boot plot, include=TRUE}
+#plot(qfit1b)  # not working
+```
+
+
+### categorical modifier, binary outcome
+```{r catmod gen, include=TRUE}
+ set.seed(23)
+ dat2 <- simdata_quantized_emm(
+  outcometype="logistic",
+# sample size
+  n = 100,
+# correlation between x1 and x2,x3,...
+  corr=c(0.8,0.6,0.3,-0.3,-0.3,-0.3),    
+# model intercept
+  b0=-2,
+# linear model coefficients for x1,x2,... at referent level of interacting variable
+  mainterms=c(0.3,-0.1,0.1,0.0,0.3,0.1,0.1), 
+# linear model coefficients for product terms between x1,x2,... and interacting variable  
+  prodterms = c(1.0,0.0,0.0,0.0,0.2,0.2,0.2),
+# type of interacting variable
+  ztype = "categorical",                        
+# number of levels of exposure
+  q = 4,                                   
+# residual variance of y
+  yscale = 2.0                            
+)
+
+head(dat2)
+table(dat2$z)
+table(dat2$y)
+cor(dat2[,paste0("x",1:7)])
+```
+
+### wrong way to fit
+```{r cat mod fit wrong, include=TRUE}
+qfit.wrong <- qgcomp.emm.noboot(y~x1+x2+x3+x4+x5+x6+x7,
+  data = dat2,
+  expnms = paste0("x",1:7),
+  emmvar = "z",
+  q = 4)
+qfit.wrong
+```
+
+### right way to fit with categorical modifier (use `as.factor()`)
+```{r cat mod fit, include=TRUE}
+dat2$zfactor = as.factor(dat2$z)
+qfit2 <- qgcomp.emm.noboot(y~x1+x2+x3+x4+x5+x6+x7,
+  data = dat2,
+  expnms = paste0("x",1:7),
+  emmvar = "zfactor",
+  q = 4)
+qfit2b <- qgcomp.emm.boot(y~x1+x2+x3+x4+x5+x6+x7,
+  data = dat2,
+  expnms = paste0("x",1:7),
+  emmvar = "zfactor",
+  q = 4)
+qfit2
+qfit2b
+```
+
+### getting bounds for pointwise comparisons
+```{r cat mod bound, include=TRUE}
+getstratweights(qfit2, emmval=0)
+pointwisebound(qfit2, emmval=0)
+plot(qfit2, emmval=0)
+
+getstrateffects(qfit2, emmval=2)
+getstratweights(qfit2, emmval=2)
+pointwisebound(qfit2, emmval=2)
+plot(qfit2, emmval=2)
+
+getstrateffects(qfit2b, emmval=2)
+pointwisebound(qfit2b, emmval=2)
+modelbound(qfit2b, emmval=2)
+
+#plot(qfit2b, emmval=2)
+
+
+pointwisebound(qfit2b, emmval=0)
+pointwisebound(qfit2, emmval=1)
+pointwisebound(qfit2, emmval=2)
+```

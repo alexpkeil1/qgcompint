@@ -4,3 +4,6 @@
 .Ruserdata
 .DS_Store
 test/test.R
+vignettes/*.R
+vignettes/*.md
+vignettes/*.html
