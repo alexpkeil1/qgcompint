@@ -4,3 +4,4 @@ inst/docs
 inst/examples
 ^.gi*
 ^cran-comments\.md$
+^CRAN-RELEASE$
