@@ -149,7 +149,7 @@ qgcomp.emm.cox.noboot <- function (
   environment(newform) <- list2env(list(qdata=qdata))
   #newform = Surv(time, d) ~ x1 + x2 + x1 * z + x2 * z
   fit <- coxph(newform, data = qdata,
-               weights=weights, x=TRUE,y=TRUE,
+               weights=weights, x=FALSE,y=FALSE,
                #cluster=cluster,
                ...)
   fit$data = data.frame(qdata)
