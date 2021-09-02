@@ -38,7 +38,7 @@
 
 .plot.rr.smooth.line <- .plot.linear.smooth.line
 
-.plot.or.smooth.line <- function(x){
+.plot.or.smooth.line <- function(x, emmval = 0){
   ymin <- ymax <- v <- w <- y <- NULL
   emmvar = x$emmvar.msm
   # this will work for binary
@@ -60,7 +60,7 @@
 
 
 
-.plot.linear.line <- function(x, emmval){
+.plot.linear.line <- function(x, emmval = 0){
   ymin <- ymax <- v <- w <- y <- NULL
   emmvar = x$emmvar.msm
   # this will work for binary
@@ -81,7 +81,7 @@
 
 .plot.loglin.line <- .plot.linear.line
 
-.plot.logitlin.line <- function(x){
+.plot.logitlin.line <- function(x, emmval = 0){
   ymin <- ymax <- v <- w <- y <- NULL
   emmvar = x$emmvar.msm
   # this will work for binary
