@@ -152,7 +152,7 @@ qgcomp.emm.cox.noboot <- function (
                weights=weights, x=TRUE,y=TRUE,
                #cluster=cluster,
                ...)
-  fit$data = data.frame(fit$x,fit$y)
+  fit$data = data.frame(qdata)
   coxfam = list(family='cox', link='log', linkfun=log)
   class(coxfam) = "family"
   fit[['family']] = coxfam # kludge for print function

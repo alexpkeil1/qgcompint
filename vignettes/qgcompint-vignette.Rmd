@@ -401,16 +401,15 @@ As with standard `qgcomp`, the `qgcompint` package allows assessment of effect m
 # linear model coefficients for product terms between x1,x2,... and interacting variable  
   prodterms = c(0.1,0.0,0.0,0.0,-0.2,-0.2,-0.2),
 # type of interacting variable
-  ztype = "continuous",                        
+  ztype = "categorical",                        
 # number of levels of exposure
   q = 4,                                   
 # residual variance of y
   yscale = 2.0                            
 )
-names(dat4)[which(names(dat4)=="z")] = "CoM"
-
+dat4$zfactor = as.factor(dat4$z)
 head(dat4)
-summary(dat4$CoM)
+summary(dat4$zfactor)
 summary(dat4$time)
 table(dat4$d) # 30 censored
 
@@ -422,7 +421,7 @@ Fitting a Cox model with a fully linear/additive specification is very similar t
 qfit4 <- qgcomp.emm.cox.noboot(survival::Surv(time, d)~x1+x2+x3+x4+x5+x6+x7,
   data = dat4,
   expnms = paste0("x",1:7),
-  emmvar = "CoM",
+  emmvar = "zfactor",
   q = 4)
 
 qfit4
