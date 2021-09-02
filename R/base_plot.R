@@ -3,6 +3,7 @@
 
 
 .plot.md.mod.bounds <- function(x,alpha, emmval=0){
+  # working
   ymin <- ymax <- v <- w <- y <- NULL
   modbounds = modelbound(x, emmval=emmval, pwonly = TRUE, alpha = alpha)
   geom_ribbon(aes(x=x,ymin=ymin,ymax=ymax,
@@ -15,54 +16,97 @@
 .plot.rr.mod.bounds <- .plot.md.mod.bounds
 .plot.or.mod.bounds <- .plot.md.mod.bounds
 
-.plot.linear.smooth.line <- function(x){
+.plot.linear.smooth.line <- function(x, emmval = 0){
   ymin <- ymax <- v <- w <- y <- NULL
-  geom_smooth(aes(x=x,y=y, color="Smooth conditional fit"),se = FALSE,
-              method = "gam", formula = y ~ s(x, k=length(table(x$index))-1, bs = "cs"),
-              data=data.frame(y=x$y.expected, x=(x$index+0.5)/max(x$index+1)))
+  emmvar = x$emmvar.msm
+  # this will work for binary
+  emmidx = which(emmvar==emmval)
+  yexp = x$y.expected[emmidx]
+  ind = x$index[emmidx]
+  #predict(x$msmfit, newdata = data.frame(M=0))
+  #
+  if(length(emmdidx)<5){
+    message("Too few observed values at emmval, suppressing smooth fit")
+    ret = theme()
+  } else{
+    ret = geom_smooth(aes(x=x,y=y, color="Smooth conditional fit"),se = FALSE,
+                method = "gam", formula = y ~ s(x, k=length(table(ind))-1, bs = "cs"),
+                data=data.frame(y=yexp, x=(ind+0.5)/max(ind+1)))
+  }
+  ret
 }
 
-.plot.rr.smooth.line <- function(x){
-  ymin <- ymax <- v <- w <- y <- NULL
-  geom_smooth(aes(x=x,y=y, color="Smooth conditional fit"),se = FALSE,
-              method = "gam", formula = y ~ s(x, k=length(table(x$index))-1, bs = "cs"),
-              data=data.frame(y=(x$y.expected), x=(x$index+0.5)/max(x$index+1)))
-}
+.plot.rr.smooth.line <- .plot.linear.smooth.line
 
 .plot.or.smooth.line <- function(x){
   ymin <- ymax <- v <- w <- y <- NULL
-  geom_smooth(aes(x=x,y=y, color="Smooth conditional fit"),se = FALSE,
-              method = "gam", formula = y ~ s(x, k=length(table(x$index))-1, bs = "cs"),
-              data=data.frame(y=(x$y.expected)/(1-x$y.expected), x=(x$index+0.5)/max(x$index+1)))
+  emmvar = x$emmvar.msm
+  # this will work for binary
+  emmidx = which(emmvar==emmval)
+  yexp = x$y.expected[emmidx]
+  ind = x$index[emmidx]
+  #predict(x$msmfit, newdata = data.frame(M=0))
+  #
+  if(length(emmdidx)<5){
+    message("Too few observed values at emmval, suppressing smooth fit")
+    ret = theme()
+  } else{
+    ret = geom_smooth(aes(x=x,y=y, color="Smooth conditional fit"),se = FALSE,
+              method = "gam", formula = y ~ s(x, k=length(table(yexp))-1, bs = "cs"),
+              data=data.frame(y=(yexp)/(1-yexp), x=(yexp+0.5)/max(yexp+1)))
+  }
+  ret
 }
 
 
 
-.plot.linear.line <- function(x){
+.plot.linear.line <- function(x, emmval){
   ymin <- ymax <- v <- w <- y <- NULL
-  geom_line(aes(x=x,y=y, color="MSM fit"),
-            data=data.frame(y=x$y.expectedmsm, x=(x$index+0.5)/max(x$index+1)))
+  emmvar = x$emmvar.msm
+  # this will work for binary
+  emmidx = which(emmvar==emmval)
+  yexp = x$y.expectedmsm[emmidx]
+  ind = x$index[emmidx]
+  #predict(x$msmfit, newdata = data.frame(M=0))
+  #
+  if(length(emmdidx)<5){
+    message("Too few observed values at emmval, suppressing linear fit")
+    ret = theme()
+  } else{
+    ret = geom_line(aes(x=x,y=y, color="MSM fit"),
+            data=data.frame(y=yexp, x=(ind+0.5)/max(ind+1)))
+  }
+  ret
 }
 
-.plot.loglin.line <- function(x){
-  ymin <- ymax <- v <- w <- y <- NULL
-  geom_line(aes(x=x,y=y, color="MSM fit"),
-            data=data.frame(y=(x$y.expectedmsm), x=(x$index+0.5)/max(x$index+1)))
-}
+.plot.loglin.line <- .plot.linear.line
 
 .plot.logitlin.line <- function(x){
   ymin <- ymax <- v <- w <- y <- NULL
-  geom_line(aes(x=x,y=y, color="MSM fit"),
-            data=data.frame(y=(x$y.expectedmsm/(1-x$y.expectedmsm)), x=(x$index+0.5)/max(x$index+1)))
+  emmvar = x$emmvar.msm
+  # this will work for binary
+  emmidx = which(emmvar==emmval)
+  yexp = x$y.expectedmsm[emmidx]
+  ind = x$index[emmidx]
+  #predict(x$msmfit, newdata = data.frame(M=0))
+  #
+  if(length(emmdidx)<5){
+    message("Too few observed values at emmval, suppressing linear fit")
+    ret = theme()
+  } else{
+    ret = geom_line(aes(x=x,y=y, color="MSM fit"),
+            data=data.frame(y=(yexp/(1-yexp)), x=(ind+0.5)/max(ind+1)))
+  }
+  ret
 }
 
 
 
-.plot.md.pw.boot <- function(x, alpha, pointwiseref){
+.plot.md.pw.boot <- function(x, alpha, pointwiseref, emmval=0){
   ymin <- ymax <- v <- w <- y <- NULL
   # plot actual risk or odds bounds
-  pwbdat = pointwisebound(x, alpha=alpha, pointwiseref=pointwiseref)
-  py = pwbdat$linpred
+  pwbdat = pointwisebound(x, alpha=alpha, pointwiseref=pointwiseref, emmval=emmval)
+  py = pwbdat$hx
   ll = pwbdat$ll.linpred
   ul = pwbdat$ul.linpred
   list(
@@ -75,10 +119,10 @@
   )
 }
 
-.plot.rr.pw.boot <- function(x, alpha, pointwiseref){
+.plot.rr.pw.boot <- function(x, alpha, pointwiseref, emmval=0){
   ymin <- ymax <- v <- w <- y <- NULL
   # plot actual risk or odds bounds
-  pwbdat = pointwisebound(x, alpha=alpha, pointwiseref=pointwiseref)
+  pwbdat = pointwisebound(x, alpha=alpha, pointwiseref=pointwiseref, emmval=emmval)
   py = exp(pwbdat$linpred)
   ll = exp(pwbdat$ll.linpred)
   ul = exp(pwbdat$ul.linpred)
@@ -99,56 +143,57 @@
   grid::grid.draw(plt)
 }
 
-.plot.boot.gaussian <- function(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref=1, alpha=0.05){
+.plot.boot.gaussian <- function(p, x, modelband=FALSE, flexfit=FALSE, modelfitline=FALSE, pointwisebars=TRUE, pointwiseref=1, alpha=0.05, emmval=0){
   if(!(x$msmfit$family$link == "identity")) stop("Plotting not implemented for this link function")
   p <- p + labs(x = "Joint exposure quantile", y = "Y") + lims(x=c(0,1))
   #
-  if(modelband)     p <- p + .plot.md.mod.bounds(x,alpha=alpha) # : add alpha to main function
-  if(flexfit)       p <- p + .plot.linear.smooth.line(x)
-  if(modelfitline)  p <- p + .plot.linear.line(x)
-  if(pointwisebars) p <- p + .plot.md.pw.boot(x,alpha,pointwiseref)
+  if(modelband)     p <- p + .plot.md.mod.bounds(x,alpha=alpha, emmval=emmval) # : add alpha to main function
+  if(flexfit)       p <- p + .plot.linear.smooth.line(x, emmval=emmval)
+  if(modelfitline)  p <- p + .plot.linear.line(x, emmval=emmval)
+  if(pointwisebars) p <- p + .plot.md.pw.boot(x,alpha,pointwiseref, emmval=emmval)
   p
 }
 
 
-.plot.boot.binomial <- function(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref=1, alpha=0.05){
+.plot.boot.binomial <- function(p, x, modelband=FALSE, flexfit=FALSE, modelfitline=FALSE, pointwisebars=TRUE, pointwiseref=1, alpha=0.05, emmval=0){
   if(!(x$msmfit$family$link %in% c("log", "logit"))) stop("Plotting not implemented for this link function")
   #
   p <- p + scale_y_log10()
   if(x$msmfit$family$link == "logit"){
     p <- p + labs(x = "Joint exposure quantile", y = "Odds(Y=1)") + lims(x=c(0,1))
-    if(modelband) p <- p + .plot.or.mod.bounds(x,alpha)
-    if(flexfit)   p <- p + .plot.or.smooth.line(x)
-    if(modelfitline) p <- p + .plot.logitlin.line(x)
-    if(pointwisebars) p <- p + .plot.or.pw.boot(x,alpha,pointwiseref)
+    if(modelband) p <- p + .plot.or.mod.bounds(x,alpha, emmval=emmval)
+    if(flexfit)   p <- p + .plot.or.smooth.line(x, emmval=emmval)
+    if(modelfitline) p <- p + .plot.logitlin.line(x, emmval=emmval)
+    if(pointwisebars) p <- p + .plot.or.pw.boot(x,alpha,pointwiseref, emmval=emmval)
   } else if(x$msmfit$family$link=="log"){
     p <- p + labs(x = "Joint exposure quantile", y = "Pr(Y=1)") + lims(x=c(0,1))
-    if(modelband) p <- p + .plot.rr.mod.bounds(x,alpha)
-    if(flexfit)   p <- p + .plot.rr.smooth.line(x)
-    if(modelfitline) p <- p + .plot.loglin.line(x)
-    if(pointwisebars) p <- p + .plot.rr.pw.boot(x,alpha,pointwiseref)
+    if(modelband) p <- p + .plot.rr.mod.bounds(x,alpha, emmval=emmval)
+    if(flexfit)   p <- p + .plot.rr.smooth.line(x, emmval=emmval)
+    if(modelfitline) p <- p + .plot.loglin.line(x, emmval=emmval)
+    if(pointwisebars) p <- p + .plot.rr.pw.boot(x,alpha,pointwiseref, emmval=emmval)
   }
   p
 }
 
 
-.plot.boot.poisson <- function(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref=1, alpha=0.05){
+.plot.boot.poisson <- function(p, x, modelband=FALSE, flexfit=FALSE, modelfitline=FALSE, pointwisebars=TRUE, pointwiseref=1, alpha=0.05, emmval=0){
   if(!(x$msmfit$family$link == "log")) stop("Plotting not implemented for this link function")
   p <- p + scale_y_log10()
   if(x$msmfit$family$link == "log"){
     p <- p + labs(x = "Joint exposure quantile", y = "E(Y)") + lims(x=c(0,1))
-    if(modelband) p <- p + .plot.rr.mod.bounds(x,alpha)
-    if(flexfit)   p <- p + .plot.rr.smooth.line(x)
-    if(modelfitline) p <- p + .plot.loglin.line(x)
-    if(pointwisebars) p <- p + .plot.rr.pw.boot(x,alpha,pointwiseref)
+    if(modelband) p <- p + .plot.rr.mod.bounds(x,alpha, emmval=emmval)
+    if(flexfit)   p <- p + .plot.rr.smooth.line(x, emmval=emmval)
+    if(modelfitline) p <- p + .plot.loglin.line(x, emmval=emmval)
+    if(pointwisebars) p <- p + .plot.rr.pw.boot(x,alpha,pointwiseref, emmval=emmval)
   }
   p
 }
 
-.plot.boot.cox <- function(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref=1, alpha=0.05){
+.plot.boot.cox <- function(p, x, modelband=FALSE, flexfit=FALSE, modelfitline=FALSE, pointwisebars=TRUE, pointwiseref=1, alpha=0.05, emmval=emmval){
   # : make the plot more configurable
   surv <- NULL
-  scl = qgcomp.survcurve.boot(x)
+  stop("Not yet implemented for survival models")
+  scl = qgcomp.survcurve.boot(x, emmval=emmval)
   cdf0 = scl$cdfq[scl$cdfq$q==1,]
   cdfmax = scl$cdfq[scl$cdfq$q==x$q,]
   mdf0 = scl$mdfq[scl$mdfq$q==1,]
@@ -187,7 +232,7 @@
 #'   (default = FALSE)
 #' @param ... unused
 #' @seealso \code{\link[qgcomp]{qgcomp.noboot}}, \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
-#' @import ggplot2 grid gridExtra
+#' @import ggplot2 grid gridExtra qgcomp
 #' @importFrom grDevices gray
 #' @export
 #' @examples
@@ -202,11 +247,12 @@ plot.qgcompemmfit <- function(x,emmval=0.0, suppressprint=FALSE,...){
     x$pos.psi <- zwts$pos.psi
     x$neg.psi <- zwts$neg.psi
     class(x) <- setdiff(class(x), "qgcompemmfit")
-    p <- plot(x, suppressprint=TRUE, ...)
+    # this should plot from the qgcomp package
+    p <- plot(x, suppressprint=suppressprint, ...)
   }
 
   if(x$bootstrap){
-    stop("not yet implemented")
+    #stop("not yet implemented")
     # TODO: implement some qgcomp defaults
     # variance based on delta method and knowledge that non-linear
     #functions will always be polynomials in qgcomp
@@ -215,17 +261,17 @@ plot.qgcompemmfit <- function(x,emmval=0.0, suppressprint=FALSE,...){
     if(is.null(x$msmfit$family)) {
       # ZI model
       stop("Not implemented for this model")
-      #p <- .plot.boot.zi(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref, alpha=0.05)
+      #p <- .plot.boot.zi(p, x, modelband=FALSE, flexfit=FALSE, modelfitline=FALSE, pointwisebars=TRUE, pointwiseref, alpha=0.05)
     } else{
       # Cox model or standard GLM
       if(x$msmfit$family$family=='cox') p <-
-          .plot.boot.cox(p, x, ..., alpha=x$alpha)
+          .plot.boot.cox(p, x, ..., alpha=x$alpha, emmval=emmval)
       if(x$msmfit$family$family=='gaussian') p <-
-          .plot.boot.gaussian(p, x, ..., alpha=x$alpha)
+          .plot.boot.gaussian(p, x, ..., alpha=x$alpha, emmval=emmval)
       if(x$msmfit$family$family=='binomial') p <-
-          .plot.boot.binomial(p, x, ..., alpha=x$alpha)
+          .plot.boot.binomial(p, x, ..., alpha=x$alpha, emmval=emmval)
       if(x$msmfit$family$family=='poisson') p <-
-          .plot.boot.poisson(p, x, ..., alpha=x$alpha)
+          .plot.boot.poisson(p, x, ..., alpha=x$alpha, emmval=emmval)
     }
 
     p <- p + scale_fill_grey(name="", start=.9) +
