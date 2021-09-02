@@ -4,7 +4,7 @@
 #
 ###############################################################################
 
-.pointwise.lin <- function(q, py, se.diff, alpha, pwr){
+.pointwise.ident <- function(q, py, se.diff, alpha, pwr){
   # mean, mean differences
   data.frame(quantile= (seq_len(q)) - 1,
              quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
@@ -45,8 +45,8 @@
 }
 
 
-.pointwise.lin.boot <- function(q, py, se.diff, alpha, pwr){
-  pw = .pointwise.lin(q, py, se.diff, alpha, pwr)
+.pointwise.ident.boot <- function(q, py, se.diff, alpha, pwr){
+  pw = .pointwise.ident(q, py, se.diff, alpha, pwr)
   pw$ll.linpred = pw$hx - pw$mean.diff + pw$ll.diff
   pw$ul.linpred = pw$hx - pw$mean.diff + pw$ul.diff
   pw
@@ -67,7 +67,9 @@
 }
 
 .makenewdesign <- function(x, qvals, emmval=0.0, degree=1,...){
-  expnms = x$expnms
+  coxmod = FALSE
+  if(class(x$fit)[1]=="coxph") coxmod = TRUE
+  #expnms = x$expnms
   emmvar = x$call$emmvar
   zvar = x$fit$data[,emmvar]
   if(is.factor(zvar))
@@ -86,6 +88,7 @@
   ff <- as.formula(paste(cfi, collapse="+"))
   df <- model.frame(formula=ff,data = data.frame(q=qvals, zinmodel))
   res <- model.matrix.default(ff, data = df)
+  #if(coxmod) res = res[,,drop=FALSE]
   row.names(res) <- NULL
   res
 }
@@ -135,8 +138,9 @@
 #' pointwisebound(qfit3, pointwiseref = 2, emmval = 0)
 #' pointwisebound(qfit3, pointwiseref = 2, emmval = 1)
 #' pointwisebound(qfit3, pointwiseref = 2, emmval = 2)
-pointwisebound <- function(x, alpha = 0.05, pointwiseref = 1, emmval=0.0, ...)
+pointwisebound <- function(x, alpha = 0.05, pointwiseref = 1, emmval=0.0, ...){
   UseMethod("pointwisebound")
+}
 
 
 
@@ -153,6 +157,8 @@ pointwisebound.qgcompemmfit <- function (x, alpha = 0.05, pointwiseref = 1, emmv
   vc = vcov(x)
   coefnm = colnames(vc)
   cfi <- gsub("psi1|mixture", "q", coefnm)
+  for(int in 2:5) cfi <- gsub(paste0("psi",int), paste0("q^",int, ""), cfi)
+  cfi <- gsub("q\\^([2-5])", "I\\(q^\\1\\)", cfi)
   rownames(vc) <- colnames(vc) <- cfi
   vcord = 1:dim(vc)[1]
   designnm = names(designdf)
@@ -183,19 +189,22 @@ pointwisebound.qgcompemmfit <- function (x, alpha = 0.05, pointwiseref = 1, emmv
 
   #x$fit$data
   #####
-  py = as.matrix(designdf) %*% coef(x)
+  py = as.matrix(designdf) %*% coef(x) # actual predicted outcome
   if(!x$bootstrap){
     res = switch(link,
-                 identity = .pointwise.lin(x$q, py, se.diff,alpha, pointwiseref),
+                 identity = .pointwise.ident(x$q, py, se.diff,alpha, pointwiseref),
                  log = .pointwise.log(x$q, py, se.diff,alpha, pointwiseref),
                  logit = .pointwise.logit(x$q, py, se.diff, alpha, pointwiseref))
   }
   if(x$bootstrap){
-    if(x$degree>1) stop("not implemented for non-linear fits")
+    #if(x$degree>1) stop("not implemented for non-linear fits")
     res = switch(link,
-                 identity = .pointwise.lin.boot(x$q, py, se.diff,alpha, pointwiseref),
+                 identity = .pointwise.ident.boot(x$q, py, se.diff,alpha, pointwiseref),
                  log = .pointwise.log.boot(x$q, py, se.diff,alpha, pointwiseref),
                  logit = .pointwise.logit.boot(x$q, py, se.diff, alpha, pointwiseref))
+  }
+  if(family(x)$family=="cox"){
+    names(res) = gsub("rr", "hr", names(res))
   }
   res$emm_level = emmval
   attr(res, "link") = link
@@ -306,7 +315,7 @@ modelbound.qgcompemmfit <- function(x, emmval=0.0, alpha=0.05, pwonly=FALSE, ...
   if(!x$bootstrap || inherits(x, "survqgcompfit")){
     stop("This function does not work with this type of qgcomp fit")
   }
-  if(x$degree>1) stop("not implemented for non-linear fits")
+  #if(x$degree>1) stop("not implemented for non-linear fits")
   link = x$fit$family$link
     qvals = c(1:x$q)-1
     designmat = .makenewdesign(x, qvals, emmval=emmval)

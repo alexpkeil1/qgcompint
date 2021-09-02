@@ -355,17 +355,28 @@ qfit3bnl <- qgcomp.emm.boot(y~x1+x2+x3+x4+x5+x6+x7 + x1*(x2 + x3 + x4 + x5 + x6 
   emmvar = "CoM",
   q = 8, degree= 2)
 qfit3bnl
-
 ```
 
-Plotting and other effect estimation tools are not yet enabled for non-linear fits and will produce an error, but we can look at a few aspects of the fit. Here you can see that the regression line is expected to be steeper at higher levels of the modifier, as in previous fits. We can approximate the effect (point estimate only) at a specific value of z by plotting a smooth fit limited a narrow range of the modifier (< -1 or > 1). Here we see that the joint effect of exposures does appear to differ across values of the modifier, but there is little suggestion of non-linearity at either low or high values of the modifier. This informal assessment agrees with intuition based on the estimated coefficients.
+
+Some effect estimation tools are not all enabled for non-linear fits and will produce an error. However, as with previous fits, we can estimate pointwise differences along the quantiles, and plot the marginal structural model regression line at various values of the joint quantized exposures. Here you can see that the regression line is expected to be steeper at higher levels of the modifier, as in previous fits. We can explictly ask for model confidence bands (which are given by the `modelbound` function), which pull in confidence limits for the regression line based on the bootstrap distribution of estimates.
+```{r cont mod nl plot base, include=TRUE, fig.width=6,fig.height=4}
+print(pointwisebound(qfit3bnl, emmval=-1))
+print(pointwisebound(qfit3bnl, emmval=-1))
+print(pointwisebound(qfit3bnl, emmval=1))
+plot(qfit3bnl, emmval=-1, modelband=TRUE, pointwiseref=4)
+plot(qfit3bnl, emmval=1, modelband=TRUE, pointwiseref=4)
+```
+
+We can look at this fit another way, too, by plotting predictions from the marginal structural model at all observed values of the modifier, which gives a more complete picture of the model than the plots at single values of the modifier. We can create smoothed scatter plot lines (LOESS) at binned values of the modifier to informally look at how the regression line might change over values of the modifier. We can approximate the effect (point estimate only) at a specific value of z by plotting a smooth fit limited a narrow range of the modifier (< -1 or > 1). Here we see that the joint effect of exposures does appear to differ across values of the modifier, but there is little suggestion of non-linearity at either low or high values of the modifier. This informal assessment agrees with intuition based on the estimated coefficients and the standard plots from the `qgcompint` package.
 ```{r cont mod nl plot, include=TRUE, fig.width=6,fig.height=4}
 library(ggplot2)
 plotdata = data=data.frame(q=qfit3bnl$index, ey=qfit3bnl$y.expected, modifier=qfit3bnl$emmvar.msm)
 ggplot() + 
          geom_point(aes(x=q, y=ey, color=modifier), data=plotdata) + 
-         geom_smooth(aes(x=q, y=ey), se=FALSE, color="black", data=plotdata[plotdata$modifier>1,]) + 
-         geom_smooth(aes(x=q, y=ey), se=FALSE, color="red", data=plotdata[plotdata$modifier < -1,]) + 
+         geom_point(aes(x=q, y=ey), color="purple", data=plotdata[plotdata$modifier>1,], pch=1, cex=3) + 
+         geom_smooth(aes(x=q, y=ey), se=FALSE, color="purple", data=plotdata[plotdata$modifier>1,], method = 'loess', formula='y ~ x') + 
+         geom_smooth(aes(x=q, y=ey), se=FALSE, color="red", data=plotdata[plotdata$modifier < -1,], method = 'loess', formula='y ~ x') + 
+         geom_point(aes(x=q, y=ey), color="red", data=plotdata[plotdata$modifier < -1,], pch=1, cex=3) + 
   theme_classic() + 
   labs(y="Expected outcome", x="Quantile score value (0 to q-1)") + 
   scale_color_continuous(name="Value\nof\nmodifier")
@@ -373,8 +384,56 @@ ggplot() +
 
 ```
 
+# Survival analysis
+As with standard `qgcomp`, the `qgcompint` package allows assessment of effect measure modification for a Cox proportional hazards model. The `simdata_quantized_emm` function allows simulation of right censored survival data.
+```{r survmod gen, include=TRUE}
+ set.seed(23)
+ dat4 <- simdata_quantized_emm(
+  outcometype="survival",
+# sample size
+  n = 200,
+# correlation between x1 and x2,x3,...
+  corr=c(0.8,0.6,0.3,-0.3,-0.3,-0.3),    
+# model intercept
+  b0=-2,
+# linear model coefficients for x1,x2,... at referent level of interacting variable
+  mainterms=c(0.0,-0.1,0.1,0.0,0.3,0.1,0.1), 
+# linear model coefficients for product terms between x1,x2,... and interacting variable  
+  prodterms = c(0.1,0.0,0.0,0.0,-0.2,-0.2,-0.2),
+# type of interacting variable
+  ztype = "continuous",                        
+# number of levels of exposure
+  q = 4,                                   
+# residual variance of y
+  yscale = 2.0                            
+)
+names(dat4)[which(names(dat4)=="z")] = "CoM"
+
+head(dat4)
+summary(dat4$CoM)
+summary(dat4$time)
+table(dat4$d) # 30 censored
+
+cor(dat4[,paste0("x",1:7)])
+```
+
+Fitting a Cox model with a fully linear/additive specification is very similar to other `qgcomp` "noboot" models, and the same plots/weight estimation/effect estimation functions work on these objects. For now, bootstrapped versions of this model are not available.
+```{r, include=TRUE}
+qfit4 <- qgcomp.emm.cox.noboot(survival::Surv(time, d)~x1+x2+x3+x4+x5+x6+x7,
+  data = dat4,
+  expnms = paste0("x",1:7),
+  emmvar = "CoM",
+  q = 4)
+
+qfit4
+plot(qfit4, emmval=0)
+getstratweights(qfit4, emmval=2)
+getstrateffects(qfit4, emmval=2)
+pointwisebound(qfit4, emmval=1)
+```
 
 
 
 ### Multiple modifiers
 There is currently no simple way to implement multiple, simultaneous modifiers in the `qgcompint` package. For binary/categorical modifiers, it is straightforward to create a single modifier with distinct value for every unique combination of the modifiers. 
+

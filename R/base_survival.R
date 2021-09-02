@@ -149,9 +149,10 @@ qgcomp.emm.cox.noboot <- function (
   environment(newform) <- list2env(list(qdata=qdata))
   #newform = Surv(time, d) ~ x1 + x2 + x1 * z + x2 * z
   fit <- coxph(newform, data = qdata,
-               weights=weights,
+               weights=weights, x=TRUE,y=TRUE,
                #cluster=cluster,
                ...)
+  fit$data = data.frame(fit$x,fit$y)
   coxfam = list(family='cox', link='log', linkfun=log)
   class(coxfam) = "family"
   fit[['family']] = coxfam # kludge for print function
@@ -272,6 +273,7 @@ qgcomp.emm.cox.noboot <- function (
     )
     class(res) = cl
   }
+  res$hasintercept = FALSE
   attr(res, "class") <- c( "survqgcompemmfit", "survqgcompfit", attr(res, "class"))
   res
 }

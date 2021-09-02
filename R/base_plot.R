@@ -25,7 +25,7 @@
   ind = x$index[emmidx]
   #predict(x$msmfit, newdata = data.frame(M=0))
   #
-  if(length(emmdidx)<5){
+  if(length(emmidx)<5){
     message("Too few observed values at emmval, suppressing smooth fit")
     ret = theme()
   } else{
@@ -47,7 +47,7 @@
   ind = x$index[emmidx]
   #predict(x$msmfit, newdata = data.frame(M=0))
   #
-  if(length(emmdidx)<5){
+  if(length(emmidx)<5){
     message("Too few observed values at emmval, suppressing smooth fit")
     ret = theme()
   } else{
@@ -69,7 +69,7 @@
   ind = x$index[emmidx]
   #predict(x$msmfit, newdata = data.frame(M=0))
   #
-  if(length(emmdidx)<5){
+  if(length(emmidx)<5){
     message("Too few observed values at emmval, suppressing linear fit")
     ret = theme()
   } else{
@@ -90,7 +90,7 @@
   ind = x$index[emmidx]
   #predict(x$msmfit, newdata = data.frame(M=0))
   #
-  if(length(emmdidx)<5){
+  if(length(emmidx)<5){
     message("Too few observed values at emmval, suppressing linear fit")
     ret = theme()
   } else{
