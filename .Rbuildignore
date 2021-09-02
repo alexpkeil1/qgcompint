@@ -1,2 +1,6 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
+inst/docs
+inst/examples
+^.gi*
+^cran-comments\.md$
