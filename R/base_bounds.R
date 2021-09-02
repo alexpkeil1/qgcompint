@@ -191,6 +191,7 @@ pointwisebound.qgcompemmfit <- function (x, alpha = 0.05, pointwiseref = 1, emmv
                  logit = .pointwise.logit(x$q, py, se.diff, alpha, pointwiseref))
   }
   if(x$bootstrap){
+    if(x$degree>1) stop("not implemented for non-linear fits")
     res = switch(link,
                  identity = .pointwise.lin.boot(x$q, py, se.diff,alpha, pointwiseref),
                  log = .pointwise.log.boot(x$q, py, se.diff,alpha, pointwiseref),
@@ -203,7 +204,7 @@ pointwisebound.qgcompemmfit <- function (x, alpha = 0.05, pointwiseref = 1, emmv
 
 ###############################################################################
 #
-# Model bounds/ confidence bounds on regression lines #
+# Model bounds/ confidence bounds on regression lines # ----
 #
 ###############################################################################
 
@@ -305,6 +306,7 @@ modelbound.qgcompemmfit <- function(x, emmval=0.0, alpha=0.05, pwonly=FALSE, ...
   if(!x$bootstrap || inherits(x, "survqgcompfit")){
     stop("This function does not work with this type of qgcomp fit")
   }
+  if(x$degree>1) stop("not implemented for non-linear fits")
   link = x$fit$family$link
     qvals = c(1:x$q)-1
     designmat = .makenewdesign(x, qvals, emmval=emmval)

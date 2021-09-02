@@ -24,6 +24,7 @@ getstrateffects <- function(x, emmval=1.0, ...){
 #expnms = x$expnms
 #addedintsord =  x$intterms  zvar = x$fit$data[,x$call$emmvar]
   #if(x$bootstrap) stop("This method does not work for bootstrapped fits. If using a linear parameterization, then stratified effects can be estimated using non-bootstrapped methods.")
+  if(x$degree>1) stop("not implemented for non-linear fits")
   zvar = x$fit$data[,x$call$emmvar]
   res = .calcstrateffects(x,emmval=emmval, zvar=zvar)
   class(res) <- "qgcompemmeffects"

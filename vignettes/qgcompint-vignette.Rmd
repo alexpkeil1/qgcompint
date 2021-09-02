@@ -76,9 +76,15 @@ In this example $X_1$ is positively correlated with $X_2-X_4$ ($\rho=0.8,0.6,0.3
 # residual variance of y
   yscale = 2.0                            
 )
-
-head(dat1)
 names(dat1)[which(names(dat1)=="z")] = "M"
+
+print("data")
+head(dat1)
+print("modifier")
+table(dat1$M)
+print("outcome")
+summary(dat1$y)
+print("exposure correlation")
 cor(dat1[,paste0("x",1:7)])
 ```
 ### fitting a model with a modifier
@@ -143,21 +149,24 @@ p2 + ggplot2::coord_cartesian(ylim=c(0,10))
 
 
 ### categorical modifier, binary outcome
-Now we can simulated data under a categorical modifier
+Now we can simulate data under a categorical modifier, and the `simdata_quantized_emm` function will pick some convenient defaults. We will also use a binary outcome with N=300 to allow that use of a categorical modifier with a rare binary outcome will be subject to low power and potential for bootstrapping to fail due to empty strata in some bootstrap samples.
+
+#### Simulated data defaults
+Here is a good place to note that `simdata_quantized_emm` is provided mainly as a learning tool. While it could potentially be used for simulations in a scientific publication, it likely has too many defaults that are not user controllable that may be useful to be able to change. Some of the underlying code that may serve as inspiration for more comprehensive simulations can be explored via the "hidden" (non-exported) functions `qgcompint:::.quantized_design_emm`,`qgcompint:::.dgm_quantized_linear_emm`,  `qgcompint:::.dgm_quantized_logistic_emm`, and `qgcompint:::.dgm_quantized_survival_emm`.
 ```{r catmod gen, include=TRUE}
  set.seed(23)
  dat2 <- simdata_quantized_emm(
   outcometype="logistic",
 # sample size
-  n = 100,
+  n = 300,
 # correlation between x1 and x2,x3,...
-  corr=c(0.8,0.6,0.3,-0.3,-0.3,-0.3),    
+  corr=c(0.6,0.5,0.3,-0.3,-0.3,0.0),    
 # model intercept
   b0=-2,
 # linear model coefficients for x1,x2,... at referent level of interacting variable
-  mainterms=c(0.3,-0.1,0.1,0.0,0.3,0.1,0.1), 
+  mainterms=c(0.1,-0.1,0.1,0.0,0.1,0.1,0.1), 
 # linear model coefficients for product terms between x1,x2,... and interacting variable  
-  prodterms = c(1.0,0.0,0.0,0.0,0.2,0.2,0.2),
+  prodterms = c(0.2,0.0,0.0,0.0,0.2,-0.2,0.2),
 # type of interacting variable
   ztype = "categorical",                        
 # number of levels of exposure
@@ -166,25 +175,29 @@ Now we can simulated data under a categorical modifier
   yscale = 2.0                            
 )
 
+print("data")
 head(dat2)
+print("modifier")
 table(dat2$z)
+print("outcome")
 table(dat2$y)
+print("exposure correlation")
 cor(dat2[,paste0("x",1:7)])
 ```
 
 ### wrong way to fit
-Note if you fit the model like this, where your categorical modifier is not the proper data type, `qgcomp.emm.noboot` will assume you have a continuous modifier.
+Below is one way to fit `qgcomp.emm.noboot` with a categorical modifier that exactly follows the previous code. This approach to categorical modifiers is incorrect, in this case, due to the format of these data. Note if you fit the model like this, where your categorical modifier is not the proper data type, `qgcomp.emm.noboot` will assume you have a continuous modifier.
 ```{r cat mod fit wrong, include=TRUE}
 qfit.wrong <- qgcomp.emm.noboot(y~x1+x2+x3+x4+x5+x6+x7,
   data = dat2,
   expnms = paste0("x",1:7),
   emmvar = "z",
-  q = 4)
+  q = 4, family=binomial())
 qfit.wrong
 ```
 
-### right way to fit with categorical modifier (use `as.factor()`)
-Instead, you should convert each categorical modifier to a "factor" prior to fitting the model. Here you can see the output for both the non-bootstrapped fit and the fit with bootstrapped confidence intervals (since there are no other covariates in the model, these two approaches estimate the same marginal effect and parameter estimates will be identical).
+### The right way to fit with categorical modifier (use `as.factor()`)
+Instead, you should convert each categorical modifier to a "factor" prior to fitting the model. Here you can see the output for both the non-bootstrapped fit and the fit with bootstrapped confidence intervals (since there are no other covariates in the model, these two approaches estimate the same marginal effect and parameter log-odds ratio estimates will be identical). Here we see that we get a unique interaction term and main effect for each level of the modifier z.
 ```{r cat mod fit, include=TRUE}
 dat2$zfactor = as.factor(dat2$z)
 # using asymptotic-based confidence intervals
@@ -192,13 +205,14 @@ qfit2 <- qgcomp.emm.noboot(y~x1+x2+x3+x4+x5+x6+x7,
   data = dat2,
   expnms = paste0("x",1:7),
   emmvar = "zfactor",
-  q = 4)
-# using bootstrap based confidence intervals
+  q = 4, family=binomial())
+# using bootstrap based confidence intervals (estimate a)
+set.seed(12312)
 qfit2b <- qgcomp.emm.boot(y~x1+x2+x3+x4+x5+x6+x7,
   data = dat2,
   expnms = paste0("x",1:7),
   emmvar = "zfactor",
-  q = 4)
+  q = 4, family=binomial(), rr = FALSE)
 qfit2
 qfit2b
 ```
@@ -232,6 +246,134 @@ print("Plot pointwise comparisons at Z=2 from bootstrapped fit")
 plot(qfit2b, emmval=2)
 
 ```
+
+
+# Continuous modifiers
+Here we simulate some data, similar to prior datasets, where we use a continuous modifier.
+```{r contmod gen, include=TRUE}
+ set.seed(23)
+ dat3 <- simdata_quantized_emm(
+  outcometype="continuous",
+# sample size
+  n = 100,
+# correlation between x1 and x2,x3,...
+  corr=c(0.8,0.6,0.3,-0.3,-0.3,-0.3),    
+# model intercept
+  b0=-2,
+# linear model coefficients for x1,x2,... at referent level of interacting variable
+  mainterms=c(0.3,-0.1,0.1,0.0,0.3,0.1,0.1), 
+# linear model coefficients for product terms between x1,x2,... and interacting variable  
+  prodterms = c(1.0,0.0,0.0,0.0,0.2,0.2,0.2),
+# type of interacting variable
+  ztype = "continuous",                        
+# number of levels of exposure
+  q = 4,                                   
+# residual variance of y
+  yscale = 2.0                            
+)
+names(dat3)[which(names(dat3)=="z")] = "CoM"
+
+head(dat3)
+summary(dat3$CoM)
+summary(dat3$y)
+cor(dat3[,paste0("x",1:7)])
+```
+
+```{r cont mod fit, include=TRUE}
+qfit3 <- qgcomp.emm.noboot(y~x1+x2+x3+x4+x5+x6+x7,
+  data = dat3,
+  expnms = paste0("x",1:7),
+  emmvar = "CoM",
+  q = 4)
+qfit3
+qfit3b <- qgcomp.emm.boot(y~x1+x2+x3+x4+x5+x6+x7,
+  data = dat3,
+  expnms = paste0("x",1:7),
+  emmvar = "CoM",
+  q = 4)
+qfit3b
+```
+
+
+### Getting point wise comparisons at specific values of a continuous confounder
+Point-wise comparisons are available for non-bootstrapped fits
+```{r cont mod bound, include=TRUE,fig.width=5,fig.height=4}
+print("output/plot the weights at CoM=0")
+getstratweights(qfit3, emmval=0)
+plot(qfit3, emmval=0)
+
+print("output stratum specific joint effect estimate for the mixture at CoM=0")
+print(getstrateffects(qfit3, emmval=0))
+
+print("output pointwise comparisons at CoM=0")
+print(pointwisebound(qfit3, emmval=0))
+
+
+print("output/plot the weights at the 80%ile of CoM")
+getstratweights(qfit3, emmval=quantile(dat3$CoM, .8))
+plot(qfit3, emmval=quantile(dat3$CoM, .8))
+
+
+print("output stratum specific joint effect estimate for the mixture at the 80%ile of CoM")
+print(getstrateffects(qfit3, emmval=quantile(dat3$CoM, .8)))
+
+print("output pointwise comparisons at at the 80%ile of CoM")
+print(pointwisebound(qfit3, emmval=quantile(dat3$CoM, .8)))
+
+```
+Point-wise comparisons are variably available for bootstrapped fits (work in progress)
+```{r cont mod bound boot, include=TRUE,fig.width=5,fig.height=4}
+print("plot the pointwise effects at CoM=0")
+plot(qfit3b, emmval=0)
+
+print("output stratum specific joint effect estimate for the mixture at CoM=0")
+print(getstrateffects(qfit3b, emmval=0))
+
+print("output pointwise comparisons at CoM=0")
+print(pointwisebound(qfit3b, emmval=0))
+
+
+print("plot the pointwise effects at the 80%ile of CoM")
+plot(qfit3b, emmval=quantile(dat3$CoM, .8))
+
+
+print("output stratum specific joint effect estimate for the mixture at the 80%ile of CoM")
+print(getstrateffects(qfit3b, emmval=quantile(dat3$CoM, .8)))
+
+print("output pointwise comparisons at at the 80%ile of CoM")
+print(pointwisebound(qfit3b, emmval=quantile(dat3$CoM, .8)))
+
+```
+
+# Non-linear fits
+Non-linear joint effects of a mixture will tend to occur when independent effects of individual exposures are non-linear or when there is interaction on the model scale between exposures. Here is a toy example of allowing a quadratic overall joint effect with an underlying set of interaction terms between x1 and all other exposures. q is set to 8 for this example for reasons described in the `qgcomp` package vignette. This approach adds an interaction term for both the "main effect" of the mixture and the squared term of the mixture. The coefficients can be intererpreted as any other quadratic/interaction terms (which is to say, with some difficulty). Informally, the CoM:mixture^2 term can be interpreted as the magnitude of the change in the non-linearity of the slope due to a one unit increase in the continuous modifier. 
+
+```{r cont mod nlfit, include=TRUE}
+qfit3bnl <- qgcomp.emm.boot(y~x1+x2+x3+x4+x5+x6+x7 + x1*(x2 + x3 + x4 + x5 + x6 +x7),
+  data = dat3,
+  expnms = paste0("x",1:7),
+  emmvar = "CoM",
+  q = 8, degree= 2)
+qfit3bnl
+
+```
+
+Plotting and other effect estimation tools are not yet enabled for non-linear fits and will produce an error, but we can look at a few aspects of the fit. Here you can see that the regression line is expected to be steeper at higher levels of the modifier, as in previous fits. We can approximate the effect (point estimate only) at a specific value of z by plotting a smooth fit limited a narrow range of the modifier (< -1 or > 1). Here we see that the joint effect of exposures does appear to differ across values of the modifier, but there is little suggestion of non-linearity at either low or high values of the modifier. This informal assessment agrees with intuition based on the estimated coefficients.
+```{r cont mod nl plot, include=TRUE, fig.width=6,fig.height=4}
+library(ggplot2)
+plotdata = data=data.frame(q=qfit3bnl$index, ey=qfit3bnl$y.expected, modifier=qfit3bnl$emmvar.msm)
+ggplot() + 
+         geom_point(aes(x=q, y=ey, color=modifier), data=plotdata) + 
+         geom_smooth(aes(x=q, y=ey), se=FALSE, color="black", data=plotdata[plotdata$modifier>1,]) + 
+         geom_smooth(aes(x=q, y=ey), se=FALSE, color="red", data=plotdata[plotdata$modifier < -1,]) + 
+  theme_classic() + 
+  labs(y="Expected outcome", x="Quantile score value (0 to q-1)") + 
+  scale_color_continuous(name="Value\nof\nmodifier")
+         
+
+```
+
+
 
 
 ### Multiple modifiers

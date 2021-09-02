@@ -123,7 +123,7 @@
   ymin <- ymax <- v <- w <- y <- NULL
   # plot actual risk or odds bounds
   pwbdat = pointwisebound(x, alpha=alpha, pointwiseref=pointwiseref, emmval=emmval)
-  py = exp(pwbdat$linpred)
+  py = exp(pwbdat$hx)
   ll = exp(pwbdat$ll.linpred)
   ul = exp(pwbdat$ul.linpred)
   list(
