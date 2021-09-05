@@ -98,10 +98,10 @@
 #' @description
 #' Calculates: expected outcome (on the link scale), mean difference (link scale) and the standard error of the mean difference (link scale) for pointwise comparisons
 #' @details The comparison of interest following a qgcomp fit is often comparisons of model predictions at various values of the joint-exposures (e.g. expected outcome at all exposures at the 1st quartile vs. the 3rd quartile). The expected outcome at a given joint exposure and at a given level of non-exposure covariates (W) is given as E(Y|S,W=w), where S takes on integer values 0 to q-1. Thus, comparisons are of the type E(Y|S=s,W=w) - E(Y|S=s2,W=w) where s and s2 are two different values of the joint exposures (e.g. 0 and 2). This function yields E(Y|S,W=w) as well as E(Y|S=s,W=w) - E(Y|S=p,W=w) where s is any value of S and p is the value chosen via "pointwise ref" - e.g. for binomial variables this will equal the risk/ prevalence difference at all values of S, with the referent category S=p-1. For the non-boostrapped version of quantile g-computation (under a linear model)
-#' Note that function only works with standard "qgcompfit" objects from qgcomp.noboot (so it doesn't work with zero inflated, hurdle, or Cox models)
+#' Note that function only works with standard "qgcompint" objects from qgcomp.emm.noboot (so it doesn't work with zero inflated, hurdle, or Cox models)
 #' Variance for the overall effect estimate is given by: \eqn{transpose(G) Cov(\beta) G}
 #' Where the "gradient vector" G is given by
-#' \deqn{G = [\partial(f(\beta))/\partial\beta_1 = 1, ..., \partial(f(β))/\partial\beta_3k= 1]}
+#' \deqn{G = [\partial(f(\beta))/\partial\beta_1 = 1, ..., \partial(f(\beta))/\partial\beta_3= 1]}
 #' \eqn{f(\beta) = \sum_i^p \beta_i, and \partial y/ \partial x} denotes the partial derivative/gradient. The vector G takes on values that equal the difference in quantiles of S for each pointwise comparison (e.g. for a comparison of the 3rd vs the 5th category, G is a vector of 2s)
 #' This variance is used to create pointwise confidence intervals via a normal approximation: (e.g. upper 95% CI = psi + variance*1.96)
 #'
