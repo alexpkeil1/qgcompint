@@ -64,6 +64,7 @@ print.qgcompemmfit <- function(x, showweights=TRUE, ...){
   #' function
   #' @param showweights logical: should weights be printed, if estimated?
   #' @param ... unused
+  #' @return Invisibly returns x. Called primarily for side effects.
   #' @seealso \code{\link[qgcompint]{qgcomp.emm.noboot}}, \code{\link[qgcompint]{getstratweights}}
   #' @concept variance mixtures
   #' @export

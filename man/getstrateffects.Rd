@@ -14,6 +14,11 @@ function}
 
 \item{...}{unused}
 }
+\value{
+An object of class "qgcompemmeffects", which inherits from "qgcompemmfit" and "list"
+
+This class contains the \code{emmval}-stratum specific effect estimates of the mixture. By default, this prints a coefficient table, similar to objects of type "qgcompemmfit" which displays the stratum specific joint effects from a "qgcompemmfit" model.
+}
 \description{
 A standard qgcomp fit with effect measure modification
 only estimates effects at the referent (0) level of the modifier (psi1).
@@ -25,7 +30,8 @@ dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
 (qfit <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",
   expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
 getstrateffects(qfit, emmval = 0)
-getstrateffects(qfit, emmval = 1)
+strateffects = getstrateffects(qfit, emmval = 1)
+
 }
 \seealso{
 \code{\link[qgcompint]{qgcomp.emm.noboot}} \code{\link[qgcompint]{getstratweights}}

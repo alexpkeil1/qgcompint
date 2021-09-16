@@ -14,18 +14,25 @@ function}
 
 \item{...}{unused}
 }
+\value{
+An object of class "qgcompemmweights", which is just a special R list
+
+This class contains the \code{emmval}-stratum specific weights of components of the mixture. By default, this prints a list of "weights", similar to objects of type "qgcompemmfit" which displays the stratum specific weights from a "qgcompemmfit" model (if it is run without bootstrapping).
+}
 \description{
 A standard qgcomp fit with effect measure modification
 only estimates weights at the referent (0) level of the modifier.
 This function can be used to estimate weights at arbitrary levels of the modifier
 }
 \examples{
+set.seed(1231)
 dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
   z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
 (qfit <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",
   expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
 getstratweights(qfit, emmval = 0)
-getstratweights(qfit, emmval = 1)
+weights1 = getstratweights(qfit, emmval = 1)
+weights1$pos.weights
 }
 \seealso{
 \code{\link[qgcompint]{qgcomp.emm.noboot}}

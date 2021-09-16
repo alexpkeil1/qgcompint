@@ -230,13 +230,44 @@
 #'   by default (it can be saved as a ggplot2 object (or list of ggplot2 objects if x is from a zero-
 #'   inflated model) and used programmatically)
 #'   (default = FALSE)
+#' @return
+#'
+#' If suppressprint=FALSE, then this function prints a plot specific to a "qgcompemmfit" object.
+#' If no bootstrapping is used, it will print a butterfly plot of the weights at the specified value of the modifier (set via `emmval` parameter)
+#' If bootstrapping is used, it will print a joint regression line for all exposures at the specified value of the modifier (set via `emmval` parameter)
+#'
+#'  If suppressprint=TRUE, then this function returns a "gg" or "gtable" object (from ggplot2 package), which can be used to print a ggplot figure and modify either of the above figures (see example below)
+#'
 #' @param ... unused
 #' @seealso \code{\link[qgcomp]{qgcomp.noboot}}, \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
 #' @import ggplot2 grid gridExtra qgcomp
 #' @importFrom grDevices gray
 #' @export
 #' @examples
-#' set.seed(12)
+#' set.seed(50)
+#' # linear model, binary modifier
+#' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
+#' z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
+#' (qfit <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",
+#' expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
+#' plot(qfit, emmval = 1)
+#' #
+#' library(ggplot2)
+#' library(grid)
+#' library(gridExtra)
+#' pp <- plot(qfit, emmval = 1, suppressprint=TRUE)
+#' grid.draw(pp)
+#'
+#' # example with bootstrapping
+#' dat2 <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
+#' z=sample(0:2, 50,replace=TRUE), r=rbinom(50,1,0.5))
+#' dat2$z = as.factor(dat2$z)
+#' (qfit4 <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
+#'                           degree = 1,
+#'                          expnms = c('x1', 'x2'), data=dat2, q=4, family=gaussian()))
+#' plot(qfit4)
+#' pp = plot(qfit4, emmval=2, suppressprint=TRUE)
+#' pp + theme_linedraw() # can use with other ggplot functions
 #' \dontrun{
 #' }
 plot.qgcompemmfit <- function(x,emmval=0.0, suppressprint=FALSE,...){

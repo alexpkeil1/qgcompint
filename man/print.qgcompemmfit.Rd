@@ -14,6 +14,9 @@ function}
 
 \item{...}{unused}
 }
+\value{
+Invisibly returns x. Called primarily for side effects.
+}
 \description{
 Prints output depending for \code{qgcomp.emm.noboot} will output final estimate of joint exposure
 effect (similar to the 'index' effect in weighted quantile sums), as well

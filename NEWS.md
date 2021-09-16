@@ -1,6 +1,7 @@
+
 # qgcompint: quantile g-computation with statistical interaction
 
-# v0.6.1
+# v0.6.2
 ## Minor changes
 - implementing data output for survival models
 - Improved vignette

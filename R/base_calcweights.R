@@ -12,6 +12,11 @@ getstrateffects <- function(x, emmval=1.0, ...){
 #' @param ... unused
 #' @seealso \code{\link[qgcompint]{qgcomp.emm.noboot}} \code{\link[qgcompint]{getstratweights}}
 #' @concept variance mixtures
+#' @return
+#' An object of class "qgcompemmeffects", which inherits from "qgcompemmfit" and "list"
+#'
+#' This class contains the `emmval`-stratum specific effect estimates of the mixture. By default, this prints a coefficient table, similar to objects of type "qgcompemmfit" which displays the stratum specific joint effects from a "qgcompemmfit" model.
+#'
 #' @export
 #' @examples
 #' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
@@ -19,7 +24,8 @@ getstrateffects <- function(x, emmval=1.0, ...){
 #' (qfit <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",
 #'   expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
 #' getstrateffects(qfit, emmval = 0)
-#' getstrateffects(qfit, emmval = 1)
+#' strateffects = getstrateffects(qfit, emmval = 1)
+#'
 
 #expnms = x$expnms
 #addedintsord =  x$intterms  zvar = x$fit$data[,x$call$emmvar]
@@ -114,15 +120,23 @@ getstratweights <- function(x, emmval=1.0, ...){
   #' @param emmval numerical: value of effect measure modifier at which weights are generated
   #' @param ... unused
   #' @seealso \code{\link[qgcompint]{qgcomp.emm.noboot}}
+  #' @return
+  #' An object of class "qgcompemmweights", which is just a special R list
+  #'
+  #' This class contains the `emmval`-stratum specific weights of components of the mixture. By default, this prints a list of "weights", similar to objects of type "qgcompemmfit" which displays the stratum specific weights from a "qgcompemmfit" model (if it is run without bootstrapping).
+  #'
+  #'
   #' @concept variance mixtures
   #' @export
   #' @examples
+  #' set.seed(1231)
   #' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
   #'   z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
   #' (qfit <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",
   #'   expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
   #' getstratweights(qfit, emmval = 0)
-  #' getstratweights(qfit, emmval = 1)
+  #' weights1 = getstratweights(qfit, emmval = 1)
+  #' weights1$pos.weights
   if(x$bootstrap) stop("This method does not work for bootstrapped fits. If using a linear parameterization, then weights can be estimated using non-bootstrapped methods.")
 
   #fit <- x$fit
