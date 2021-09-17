@@ -236,7 +236,7 @@
 #' If no bootstrapping is used, it will print a butterfly plot of the weights at the specified value of the modifier (set via `emmval` parameter)
 #' If bootstrapping is used, it will print a joint regression line for all exposures at the specified value of the modifier (set via `emmval` parameter)
 #'
-#'  If suppressprint=TRUE, then this function returns a "gg" or "gtable" object (from ggplot2 package), which can be used to print a ggplot figure and modify either of the above figures (see example below)
+#'  If suppressprint=TRUE, then this function returns a "gg" (regression line) or "gtable" (butterfly plot) object (from ggplot2 package or gtable/grid packages), which can be used to print a ggplot figure and modify either of the above figures (see example below)
 #'
 #' @param ... unused
 #' @seealso \code{\link[qgcomp]{qgcomp.noboot}}, \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
@@ -253,22 +253,28 @@
 #' plot(qfit, emmval = 1)
 #' #
 #' library(ggplot2)
-#' library(grid)
-#' library(gridExtra)
-#' pp <- plot(qfit, emmval = 1, suppressprint=TRUE)
-#' grid.draw(pp)
 #'
 #' # example with bootstrapping
 #' dat2 <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
 #' z=sample(0:2, 50,replace=TRUE), r=rbinom(50,1,0.5))
 #' dat2$z = as.factor(dat2$z)
 #' (qfit4 <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
-#'                           degree = 1,
+#'                           degree = 1, B = 20,
 #'                          expnms = c('x1', 'x2'), data=dat2, q=4, family=gaussian()))
 #' plot(qfit4)
 #' pp = plot(qfit4, emmval=2, suppressprint=TRUE)
 #' pp + theme_linedraw() # can use with other ggplot functions
+#'
 #' \dontrun{
+#' library(gtable) # may need to separately install gtable
+#' # example with no bootstrapping, adding object from bootstrapped fit
+#' pp2 <- plot(qfit, emmval = 1, suppressprint=TRUE)
+#' grid.draw(pp2)
+#' # insert row on top that is 1/2 height of existing plot
+#' pp2b = gtable::gtable_add_rows(pp2, heights=unit(0.5, 'null') ,pos = 0)
+#' # add plot to that row
+#' pp3 = gtable::gtable_add_grob(pp2b, ggplot2::ggplotGrob(pp), t=1,l=1,r=2)
+#' grid.draw(pp3)
 #' }
 plot.qgcompemmfit <- function(x,emmval=0.0, suppressprint=FALSE,...){
   if(!x$bootstrap){

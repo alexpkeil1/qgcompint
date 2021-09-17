@@ -5,6 +5,7 @@
 ## Minor changes
 - implementing data output for survival models
 - Improved vignette
+- added examples to `plot` documentation for manipulating plots
 
 ## Bug fixes
 - Typos in plotting
