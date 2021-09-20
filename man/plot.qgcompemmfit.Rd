@@ -53,10 +53,27 @@ dat2$z = as.factor(dat2$z)
                           degree = 1, B = 20,
                          expnms = c('x1', 'x2'), data=dat2, q=4, family=gaussian()))
 plot(qfit4)
-pp = plot(qfit4, emmval=2, suppressprint=TRUE)
-pp + theme_linedraw() # can use with other ggplot functions
+pp0 = plot(qfit4, emmval=0, suppressprint=TRUE)
+pp1 = plot(qfit4, emmval=1, suppressprint=TRUE)
+pp2 = plot(qfit4, emmval=2, suppressprint=TRUE)
+pp1 + theme_linedraw() # can use with other ggplot functions
+
+# overlay (fussy to work with)
+ppom <- ggplot_build(pp0 + pp1[2] + pp2[[2]] + scale_color_discrete(guide="none"))
+ppom$data[[1]]$colour <- ppom$data[[2]]$colour <- "gray40" # emmval = 0 -> dark gray
+ppom$data[[3]]$colour <- ppom$data[[4]]$colour <- "gray80" # emmval = 1 -> light gray
+ppom$data[[5]]$colour <- ppom$data[[6]]$colour <- "black" # emmval = 2 -> black
+xincrement = 0.025
+ppom$data[[1]]$x <- ppom$data[[2]]$x <- ppom$data[[1]]$x - xincrement
+ppom$data[[2]]$xmin <- ppom$data[[2]]$xmin - xincrement
+ppom$data[[2]]$xmax <- ppom$data[[2]]$xmax - xincrement
+ppom$data[[5]]$x <- ppom$data[[6]]$x <- ppom$data[[5]]$x + xincrement
+ppom$data[[6]]$xmin <- ppom$data[[6]]$xmin + xincrement
+ppom$data[[6]]$xmax <- ppom$data[[6]]$xmax + xincrement
+plot(ggplot_gtable(ppom))
 
 \dontrun{
+library(gtable) # may need to separately install gtable
 # example with no bootstrapping, adding object from bootstrapped fit
 pp2 <- plot(qfit, emmval = 1, suppressprint=TRUE)
 grid.draw(pp2)

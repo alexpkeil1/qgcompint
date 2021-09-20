@@ -8,3 +8,7 @@
 0 errors | 0 warnings | 1 note
 
 * This is a new release.
+
+## Developer comments
+* \value tag added to getstrateffects.Rd, getstratweights.Rd, plot.qgcompemmfit.Rd, print.qgcompemmfit.Rd to address submission comment from Gregor Seyer
+
