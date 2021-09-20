@@ -233,7 +233,7 @@ pointwisebound.qgcompemmfit <- function (x, alpha = 0.05, pointwiseref = 1, emmv
 }
 
 .modelwise.log <- function(q, py, se.diff, alpha, ll, ul){
-  # risk
+  # risk (expects log py, se.diff = se of log difference)
   data.frame(quantile= (seq_len(q)) - 1,
              quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
              hx = py, # log risk
@@ -302,8 +302,40 @@ pointwisebound.qgcompemmfit <- function (x, alpha = 0.05, pointwiseref = 1, emmv
 #' @seealso \code{\link[qgcompint]{qgcomp.emm.boot}}
 #' @export
 #' @examples
-#' set.seed(12)
 #' \dontrun{
+#' set.seed(50)
+# linear model, binary modifier
+#' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
+#'                   z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
+#' (qfit <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",
+#'                            expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian()))
+#' (qfit2 <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
+#'                           degree = 1,
+#'                           expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian()))
+#' # modelbound(qfit) # this will error (only works with bootstrapped objects)
+#'  modelbound(qfit2)
+#' # logistic model
+#' set.seed(200)
+#' dat2 <- data.frame(y=rbinom(200, 1, 0.3), x1=runif(200), x2=runif(200),
+#'                   z=rbinom(200,1,0.5))
+#' (qfit3 <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
+#'                           degree = 1,
+#'                           expnms = c('x1', 'x2'), data=dat2, q=4, rr = FALSE, family=binomial()))
+#' modelbound(qfit3)
+#' # risk ratios instead (check for upper bound > 1.0, indicating implausible risk)
+#' (qfit3b <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
+#'                           degree = 1,
+#'                           expnms = c('x1', 'x2'), data=dat2, q=4, rr = TRUE, family=binomial()))
+#' modelbound(qfit3b)
+#' # categorical modifier
+#' set.seed(50)
+#' dat3 <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
+#'    z=sample(0:2, 50,replace=TRUE), r=rbinom(50,1,0.5))
+#' dat3$z = as.factor(dat3$z)
+#' (qfit4 <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
+#'                           degree = 1,
+#'                           expnms = c('x1', 'x2'), data=dat3, q=4, family=gaussian()))
+#' modelbound(qfit4, emmval=2)
 #' }
 modelbound <- function(x, emmval=0.0, alpha=0.05, pwonly=FALSE, ...){
   UseMethod("modelbound")
@@ -316,7 +348,8 @@ modelbound.qgcompemmfit <- function(x, emmval=0.0, alpha=0.05, pwonly=FALSE, ...
     stop("This function does not work with this type of qgcomp fit")
   }
   #if(x$degree>1) stop("not implemented for non-linear fits")
-  link = x$fit$family$link
+  #link = x$fit$family$link
+  link = x$msmfit$family$link
     qvals = c(1:x$q)-1
     designmat = .makenewdesign(x, qvals, emmval=emmval)
     coef.boot = x$bootsamps
@@ -347,8 +380,8 @@ modelbound.qgcompemmfit <- function(x, emmval=0.0, alpha=0.05, pwonly=FALSE, ...
   }
   res = switch(link,
                identity = .modelwise.lin(x$q, py, sqrt(pw.vars), alpha, ll, ul),
-               log = .modelwise.log(x$q, log(py), sqrt(pw.vars), alpha, ll, ul),
-               logit = .modelwise.logit(x$q, .logit(py), sqrt(pw.vars), alpha, ll, ul)
+               log =      .modelwise.log(x$q, py, sqrt(pw.vars), alpha, ll, ul),
+               logit =  .modelwise.logit(x$q, py, sqrt(pw.vars), alpha, ll, ul)
                #,
                #zi = .modelwise.zi(x$q, py, NULL, alpha, ll, ul, bootY)
   )

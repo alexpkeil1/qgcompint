@@ -88,6 +88,9 @@ msm.emm.fit <- function(f,
   # TODO: categorical Z
   msmform <- .intmaker(as.formula(msmf), expnms = newexpnms, emmvars = emmvars)
   class(msmform) <- "formula"
+  newterms <- terms(msmform)
+  nterms = length(attr(newterms, "term.labels"))
+  nterms = nterms + attr(newterms, "intercept")
 
   # to do: allow functional form variations for the MSM via specifying the model formula
   if(bayes){
@@ -95,7 +98,7 @@ msm.emm.fit <- function(f,
                                                 weights=weights, x=TRUE,
                                                 ...))
     if(rr)  suppressWarnings(msmfit <- bayesglm(msmform, data=msmdat,
-                                                family=binomial(link='log'), start=rep(-0.0001, degree+1),
+                                                family=binomial(link='log'), start=rep(-0.0001, nterms),
                                                 weights=weights, x=TRUE))
   }
   if(!bayes){
@@ -103,7 +106,7 @@ msm.emm.fit <- function(f,
                                            weights=weights, x=TRUE,
                                            ...))
     if(rr)  suppressWarnings(msmfit <- glm(msmform, data=msmdat,
-                                           family=binomial(link='log'), start=rep(-0.0001, degree+1),
+                                           family=binomial(link='log'), start=rep(-0.0001, nterms),
                                            weights=weights, x=TRUE))
   }
   res <- list(fit=fit, msmfit=msmfit)
@@ -115,7 +118,7 @@ msm.emm.fit <- function(f,
     res[[emmvar]] <- do.call(c, lapply(intvals, function(x) newdata[,emmvar]))
     # upper cut-point as first quantile)
   }
-  newterms <- terms(msmform)
+  #newterms <- terms(msmform)
   #prodterms <- do.call(c, lapply(1:length(emmvars), function(x) c(emmvars[x], paste0(emmvars[x], ":mixture"))))
   newtermlabels <- attr(newterms, "term.labels")
   #newtermlabels[(degree+1):length(newtermlabels)] <- prodterms

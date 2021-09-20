@@ -1,6 +1,15 @@
 
 # qgcompint: quantile g-computation with statistical interaction
 
+# v0.6.3
+## Minor changes
+- NA
+
+## Bug fixes
+- correcting calculations in 'modelbound' function
+- correcting starting values in bootstrap fits for binary outcomes when rr = TRUE
+
+
 # v0.6.2
 ## Minor changes
 - implementing data output for survival models
