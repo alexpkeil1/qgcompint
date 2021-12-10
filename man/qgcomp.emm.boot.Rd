@@ -84,7 +84,7 @@ be important with binary or count outcomes.}
 
 \item{parallel}{use (safe) parallel processing from the future and future.apply packages}
 
-\item{parplan}{(logical, default=FALSE) automatically set future::plan to plan(multisession) (and set to plan(transparent) after bootstrapping)}
+\item{parplan}{(logical, default=FALSE) automatically set future::plan to plan(multisession) (and set to existing plan after bootstrapping)}
 
 \item{errcheck}{(logical, default=TRUE) include some basic error checking. Slightly
 faster if set to false (but be sure you understand risks)}

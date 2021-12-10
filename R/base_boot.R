@@ -203,7 +203,7 @@ qgcomp.emm.boot <- function(
   #'  error at a given value of MCsize). This likely won't matter much in linear models, but may
   #'  be important with binary or count outcomes.
   #' @param parallel use (safe) parallel processing from the future and future.apply packages
-  #' @param parplan (logical, default=FALSE) automatically set future::plan to plan(multisession) (and set to plan(transparent) after bootstrapping)
+  #' @param parplan (logical, default=FALSE) automatically set future::plan to plan(multisession) (and set to existing plan after bootstrapping)
   #' @param errcheck (logical, default=TRUE) include some basic error checking. Slightly
   #' faster if set to false (but be sure you understand risks)
   #' @param ... arguments to glm (e.g. family)
@@ -387,7 +387,7 @@ qgcomp.emm.boot <- function(
     if (parplan) {
         oplan <- future::plan(strategy = future::multisession)
         on.exit(future::plan(oplan), add = TRUE)
-      }
+    }
 
     bootsamps <- future.apply::future_lapply(X=seq_len(B), FUN=psi.emm.only,f=f, qdata=qdata, intvals=intvals,
                                              emmvar=emmvar, emmvars=emmvars, expnms=expnms, rr=rr, degree=degree, nids=nids, id=id,
@@ -395,7 +395,7 @@ qgcomp.emm.boot <- function(
                                              future.seed=TRUE,
                                              ...)
 
-    
+
   }else{
     bootsamps <- lapply(X=seq_len(B), FUN=psi.emm.only,f=f, qdata=qdata, intvals=intvals,
                         emmvar=emmvar, emmvars=emmvars, expnms=expnms, rr=rr, degree=degree, nids=nids, id=id,
