@@ -1,4 +1,4 @@
-### qgcompint: quantile g-computation with effect measure modification (a work in progress)
+### qgcompint: quantile g-computation with effect measure modification 
 
 ### Quick start
     devtools::install_github("alexpkeil1/qgcompint")

@@ -138,6 +138,19 @@
 #' pointwisebound(qfit3, pointwiseref = 2, emmval = 0)
 #' pointwisebound(qfit3, pointwiseref = 2, emmval = 1)
 #' pointwisebound(qfit3, pointwiseref = 2, emmval = 2)
+#' # linear model, categorical modifier, bootstrapped
+#' (qfit3b <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
+#' expnms = c('x1', 'x2'), data=dat3, q=5, family=gaussian()))
+#' pointwisebound(qfit3b, pointwiseref = 2, emmval = 0)
+#' pointwisebound(qfit3b, pointwiseref = 2, emmval = 1)
+#' pointwisebound(qfit3b, pointwiseref = 2, emmval = 2)
+#' # logistic model, binary modifier
+#' dat4 <- data.frame(y=rbinom(50, 1, 0.3), x1=runif(50), x2=runif(50),
+#'   z=as.factor(sample(0:1, 50,replace=TRUE)), r=rbinom(50,1,0.5))
+#' (qfit4 <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
+#' expnms = c('x1', 'x2'), data=dat4, q=5, family=binomial()))
+#' pointwisebound(qfit4, pointwiseref = 2, emmval = 0) # reverts to odds ratio
+#'
 pointwisebound <- function(x, alpha = 0.05, pointwiseref = 1, emmval=0.0, ...){
   UseMethod("pointwisebound")
 }
@@ -152,7 +165,7 @@ pointwisebound.qgcompemmfit <- function (x, alpha = 0.05, pointwiseref = 1, emmv
   #}
   link = x$fit$family$link
   qvals = c(1:x$q)-1
-  designdf = as.data.frame(.makenewdesign(x, qvals, emmval=emmval))
+  designdf = as.data.frame(.makenewdesign(x, qvals, emmval=emmval)) # saturated design matrix
 
   vc = vcov(x)
   coefnm = colnames(vc)
@@ -189,7 +202,7 @@ pointwisebound.qgcompemmfit <- function (x, alpha = 0.05, pointwiseref = 1, emmv
 
   #x$fit$data
   #####
-  py = as.matrix(designdf) %*% coef(x) # actual predicted outcome
+  py = as.matrix(designdf) %*% coef(x) # actual predicted outcome (from msm in case of bootstrapped version)
   if(!x$bootstrap){
     res = switch(link,
                  identity = .pointwise.ident(x$q, py, se.diff,alpha, pointwiseref),
@@ -198,6 +211,7 @@ pointwisebound.qgcompemmfit <- function (x, alpha = 0.05, pointwiseref = 1, emmv
   }
   if(x$bootstrap){
     #if(x$degree>1) stop("not implemented for non-linear fits")
+    link = x$msmfit$family$link
     res = switch(link,
                  identity = .pointwise.ident.boot(x$q, py, se.diff,alpha, pointwiseref),
                  log = .pointwise.log.boot(x$q, py, se.diff,alpha, pointwiseref),

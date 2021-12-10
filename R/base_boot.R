@@ -384,14 +384,18 @@ qgcomp.emm.boot <- function(
   set.seed(seed)
   if(parallel){
     #Sys.setenv(R_FUTURE_SUPPORTSMULTICORE_UNSTABLE="quiet")
-    if(parplan) future::plan(strategy = future::multisession)
+    if (parplan) {
+        oplan <- future::plan(strategy = future::multisession)
+        on.exit(future::plan(oplan), add = TRUE)
+      }
+
     bootsamps <- future.apply::future_lapply(X=seq_len(B), FUN=psi.emm.only,f=f, qdata=qdata, intvals=intvals,
                                              emmvar=emmvar, emmvars=emmvars, expnms=expnms, rr=rr, degree=degree, nids=nids, id=id,
                                              weights=qdata$weights,MCsize=MCsize,
                                              future.seed=TRUE,
                                              ...)
 
-    if(parplan) future::plan(strategy = future::transparent)
+    
   }else{
     bootsamps <- lapply(X=seq_len(B), FUN=psi.emm.only,f=f, qdata=qdata, intvals=intvals,
                         emmvar=emmvar, emmvars=emmvars, expnms=expnms, rr=rr, degree=degree, nids=nids, id=id,
