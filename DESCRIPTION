@@ -1,6 +1,6 @@
 Package: qgcompint
 Title: Quantile G-Computation Extensions for Effect Measure Modification
-Version: 0.6.4
+Version: 0.6.5
 Date: 2021-09-02
 Authors@R: 
     person(given = "Alexander",
@@ -9,6 +9,8 @@ Authors@R:
            email = "akeil@unc.edu")
 Author: Alexander Keil [aut, cre]
 Maintainer: Alexander Keil <akeil@unc.edu>
+URL: https://github.com/alexpkeil1/qgcomp/
+BugReports: https://github.com/alexpkeil1/qgcomp/issues
 Description: G-computation for a set of time-fixed exposures
     with quantile-based basis functions, possibly under linearity and
     homogeneity assumptions. Effect measure modification in this method is a way
