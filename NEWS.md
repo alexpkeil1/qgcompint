@@ -1,9 +1,11 @@
 
 # qgcompint: quantile g-computation with statistical interaction
 
-# v0.6.3
+# v0.6.6
 ## Minor changes
-- NA
+- Documentation changes
+- Handling of parallel processing through futures: bringing in line with package recommendations and planned deprecations.
+- Reduce help example times
 
 ## Bug fixes
 - correcting calculations in 'modelbound' function

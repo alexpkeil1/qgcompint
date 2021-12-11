@@ -1,5 +1,5 @@
 ## Test environments
-* local R installation, R 4.1.1
+* local R installation (MacOS 11.6), R 4.1.1
 * ubuntu 16.04 (on travis-ci), R 4.1.1
 * win-builder (devel)
 
@@ -10,5 +10,5 @@
 * This is a new release.
 
 ## Developer comments
-* \value tag added to getstrateffects.Rd, getstratweights.Rd, plot.qgcompemmfit.Rd, print.qgcompemmfit.Rd to address submission comment from Gregor Seyer
+* minor changes to meet recommendations of dependency package and avoid future deprecated functions
 

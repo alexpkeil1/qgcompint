@@ -226,18 +226,20 @@ qgcomp.emm.boot <- function(
   #'   z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
   #' (qfit <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",
   #'   expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian()))
+  #' # set B larger for real examples
   #' (qfit2 <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
   #'   degree = 1,
-  #'   expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian()))
+  #'   expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian(), B=10))
   #' # categorical modifier
   #' dat2 <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
   #'   z=sample(0:2, 50,replace=TRUE), r=rbinom(50,1,0.5))
   #' dat2$z = as.factor(dat2$z)
   #' (qfit3 <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",
   #'   expnms = c('x1', 'x2'), data=dat2, q=4, family=gaussian()))
+  #' # set B larger for real examples
   #' (qfit4 <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
   #'   degree = 1,
-  #'   expnms = c('x1', 'x2'), data=dat2, q=4, family=gaussian()))
+  #'   expnms = c('x1', 'x2'), data=dat2, q=4, family=gaussian(), B=10))
   oldq = NULL
   if(is.null(seed)) seed = round(runif(1, min=0, max=1e8))
 
