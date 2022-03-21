@@ -1,6 +1,13 @@
 
 # qgcompint: quantile g-computation with statistical interaction
 
+# v0.7.0
+## Minor changes
+- Added "getjointeffects" function to get mixture effects at values of an interacting variable versus a common referent level of exposure and the interacting variable
+
+## Bug fixes
+- n/a
+
 # v0.6.6
 ## Minor changes
 - Documentation changes

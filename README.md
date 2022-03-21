@@ -56,8 +56,8 @@
 	> -0.0099575 (-0.34389, 0.32398)
 	
 ### Current package capabilities/limitations
-- Linear specifications only (e.g. only a linear effect of the mixture)
-- Single modifiers only (e.g. interaction terms between a modifier and the mixture can only be estimated for a single modifier at a time) 
+- Single modifiers only (e.g. interaction terms between a modifier and the mixture can only be estimated for a single modifier at a time). This also implies that no interaction terms between the modifier and other covariates can be considered.
+- linear only specifications (i.e. linear effects of a mixture, but not covariates) for Cox model
 
 ### Interpretation
 - coefficients

@@ -128,3 +128,16 @@ se_comb2 <- function (expnms, covmat, grad = NULL) {
   res
 }
 
+.qgc.require <- function (package, message = paste("loading required package (",
+                                                   package, ") failed", sep = "")){
+  if (!requireNamespace(package, quietly = FALSE)) {
+    stop(message, call. = FALSE)
+  }
+  invisible(TRUE)
+}
+
+.devinstall <- function (...)
+{
+  .qgc.require("devtools")
+  devtools::install_github("alexpkeil1/qgcompint", ...)
+}
