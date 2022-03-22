@@ -1,7 +1,9 @@
 ## Test environments
-* local R installation (MacOS 11.6), R 4.1.1
-* ubuntu 16.04 (on travis-ci), R 4.1.1
-* win-builder (devel)
+* local R installation (MacOS 12.2), R 4.1.1
+* ubuntu 20.04 (github actions, release)
+* ubuntu 20.04 (github actions, devel)
+* win-latest (github actions, release)
+* win-latest (github actions, devel)
 
 ## R CMD check results
 
@@ -10,5 +12,5 @@
 * This is a new release.
 
 ## Developer comments
-* minor changes to meet recommendations of dependency package and avoid future deprecated functions
+* single function addition for user needs
 
