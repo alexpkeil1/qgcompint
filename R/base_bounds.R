@@ -71,7 +71,7 @@
   if(class(x$fit)[1]=="coxph") coxmod = TRUE
   #expnms = x$expnms
   emmvar = x$call$emmvar
-  zvar = x$fit$data[,emmvar]
+  zvar = x$fit$data[,emmvar,drop=TRUE]
   if(is.factor(zvar))
     zdat = zproc(zvar[zvar==emmval], znm = emmvar)
   if(!is.factor(zvar))

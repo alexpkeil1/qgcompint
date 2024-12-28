@@ -115,7 +115,7 @@ msm.emm.fit <- function(f,
     res$Yamsm <- as.numeric(predict(msmfit, type='response'))
     res$Yamsml <- as.numeric(predict(msmfit, type="link"))
     res$A <- msmdat$psi # joint exposure (0 = all exposures set category with
-    res[[emmvar]] <- do.call(c, lapply(intvals, function(x) newdata[,emmvar]))
+    res[[emmvar]] <- do.call(c, lapply(intvals, function(x) newdata[,emmvar,drop=TRUE]))
     # upper cut-point as first quantile)
   }
   #newterms <- terms(msmform)
@@ -253,7 +253,7 @@ qgcomp.emm.boot <- function(
     }
   }
   # housekeeping
-  allemmvals<- unique(data[,emmvar])
+  allemmvals<- unique(data[,emmvar,drop=TRUE])
   emmlev <- length(allemmvals)
   zdata = zproc(data[,emmvar], znm = emmvar)
   emmvars = names(zdata)

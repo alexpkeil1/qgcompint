@@ -129,10 +129,10 @@ qgcomp.emm.noboot <- function(
     #}
   }
   # housekeeping
-  allemmvals<- unique(data[,emmvar])
+  allemmvals<- unique(data[,emmvar,drop=TRUE])
   emmlev <- length(allemmvals)
   ## process to expand factors if needed
-  zdata = zproc(data[,emmvar], znm = emmvar)
+  zdata = zproc(data[,emmvar,drop=TRUE], znm = emmvar)
   emmvars = names(zdata)
   data = cbind(data, zdata)
   ### end new

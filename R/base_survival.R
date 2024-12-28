@@ -82,7 +82,7 @@ qgcomp.emm.cox.noboot <- function (
       stop("'emmvar' must be specified explicitly\n")
     }
   }
-  allemmvals<- unique(data[,emmvar])
+  allemmvals<- unique(data[,emmvar,drop=TRUE])
   emmlev <- length(allemmvals)
   ## process to expand factors if needed
   zdata = zproc(data[,emmvar], znm = emmvar)
