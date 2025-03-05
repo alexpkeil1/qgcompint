@@ -321,7 +321,7 @@ qgcomp.emm.boot <- function(
     intvals <- (seq_len(nvals))-1
   } else {
     # if( is.null(breaks) & is.null(q)) # also includes NA
-    qdata <- data[unique(names(data)),]
+    qdata <- data[,unique(names(data)),drop=FALSE]
     # if no transformation is made (no quantiles, no breaks given)
     # then draw distribution values from quantiles of all the exposures
     # pooled together

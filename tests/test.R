@@ -11,6 +11,8 @@ dat <- data.frame(y=runif(50),
 (qfitemm <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
 (qfitemmboot <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
 (qfitemmb <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, bayes=TRUE, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
+(qfitemmboot <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=NULL, family=gaussian()))
+(qfitemmb <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, bayes=TRUE, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=NULL, family=gaussian()))
 # check
 getstratweights(qfitemm, emmval=0.0)
 getstrateffects(qfitemm, emmval=0.0)
