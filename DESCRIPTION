@@ -1,6 +1,6 @@
 Package: qgcompint
 Title: Quantile G-Computation Extensions for Effect Measure Modification
-Version: 0.7.1
+Version: 0.7.2
 Date: 2022-03-22
 Authors@R: 
     person(given = "Alexander",
