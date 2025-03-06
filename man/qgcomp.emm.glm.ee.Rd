@@ -121,8 +121,28 @@ dat2 <- data.frame(y=rbinom(50, 1,0.5), x1=runif(50), x2=runif(50),
   z=runif(50), r=rbinom(50,1,0.5))
 (qfit2 <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2, emmvar="z",
   expnms = c('x1', 'x2'), data=dat2, q=2, family=binomial()))
-# get weights and stratum specific effects at specific value of Z
-#  (note that when Z=0, the effect is equal to psi1)
+(qfit2ee <- qgcomp.emm.glm.ee(f=y ~ z + x1 + x2, emmvar="z",
+  expnms = c('x1', 'x2'), data=dat2, q=2, family=binomial(), rr=FALSE))
+# Note under rr = TRUE that the risk ratio will be reported in the MSM results
+(qfit2eerr <- qgcomp.emm.glm.ee(f=y ~ z + x1 + x2, emmvar="z",
+  expnms = c('x1', 'x2'), data=dat2, q=2, family=binomial(), rr=TRUE))
+# linear model, factor modifier
+dat <- data.frame(y=runif(150), x1=runif(150), x2=runif(150),
+  r=rbinom(150,1,0.5), z=sample(c(1,2,3), 150, replace=TRUE))
+#note need to declare factor
+dat$zfact = as.factor(dat$z)
+# this can fail if the model is unidentified (e.g. z and zfact are included in the model)
+(qfit <- qgcomp.emm.glm.noboot(f=y ~ zfact + x1 + x2, emmvar="zfact",
+  expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
+(qfitee <- qgcomp.emm.glm.ee(f=y ~ zfact + x1 + x2, emmvar="zfact",
+  expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
+library(qgcomp)
+(qfitee_noemm <- qgcomp.glm.ee(f=y ~ zfact + x1 + x2, emmvar="zfact",
+  expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
+# global test for interaction
+anova(qfitee, qfitee_noemm)
+# note this does not work:
+getstrateffects(qfitee, emmval=2)
 }
 \seealso{
 \code{\link[qgcomp]{qgcomp.noboot}}

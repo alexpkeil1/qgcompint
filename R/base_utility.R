@@ -386,11 +386,11 @@ getstrateffects <- function(x, emmval=1.0, ...){
   #stopifnot(lnx == lnxz)
   if(is.factor(zvar)){
     indeffects =
-      x$fit$coefficients[x$expnms]
+      coef(x$fit)[x$expnms]
     if(!is.null(whichintterms)){
       indeffects =
         indeffects +
-        x$fit$coefficients[whichintterms]
+        coef(x$fit)[whichintterms]
     }
   } else{
     indeffects =
