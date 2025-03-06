@@ -133,8 +133,10 @@
 #'   expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
 #' # global test for interaction
 #' anova(qfitee, qfitee_noemm)
-#' # note this does not work:
+#' # get stratified effect estimates:
+#' getstrateffects(qfitee, emmval=1)
 #' getstrateffects(qfitee, emmval=2)
+#' getstrateffects(qfitee, emmval=3)
 qgcomp.emm.glm.ee <- function(
     f,
     data,
