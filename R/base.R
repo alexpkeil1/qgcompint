@@ -1,32 +1,6 @@
 
-.intmaker <- function(
-  f,
-  expnms,
-  emmvars
-){
-  rightside = as.character(f)[3]
-  trms = strsplit(gsub(" ", "", rightside), "+",fixed=TRUE)[[1]]
-  expidx <- which(trms %in% expnms)
-  newtrmsl = lapply(emmvars, function(x) paste(paste0(trms[expidx], "*", x), collapse = "+"))
-  newtrms = paste0(newtrmsl, collapse="+")
-  newrightside = paste(rightside, "+", newtrms)
-  newf <- as.formula(paste0(as.character(f)[2],as.character(f)[1], newrightside))
-  newf
-}
 
-.intchecknames <- function(terms,emmvar){
-  #nonlin <- ifelse(sum(grep("\\(|\\:|\\^", terms)) > 0, TRUE,
-  #                 FALSE)
-  nonlin <- any(attr(terms,"order")>1)
-  if (nonlin) {
-    return(FALSE)
-  }
-  else {
-    return(TRUE)
-  }
-}
-
-qgcomp.emm.noboot <- function(
+qgcomp.emm.glm.noboot <- function(
   f,
   data,
   expnms=NULL,
@@ -90,12 +64,12 @@ qgcomp.emm.noboot <- function(
   #' # linear model, binary modifier
   #' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
   #'   z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
-  #' (qfit <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",
+  #' (qfit <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2, emmvar="z",
   #'   expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
   #' # logistic model, continuous modifier
   #' dat2 <- data.frame(y=rbinom(50, 1,0.5), x1=runif(50), x2=runif(50),
   #'   z=runif(50), r=rbinom(50,1,0.5))
-  #' (qfit2 <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",
+  #' (qfit2 <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2, emmvar="z",
   #'   expnms = c('x1', 'x2'), data=dat2, q=2, family=binomial()))
   #' # get weights and stratum specific effects at specific value of Z
   #' #  (note that when Z=0, the effect is equal to psi1)
@@ -106,7 +80,7 @@ qgcomp.emm.noboot <- function(
   #' # linear model, categorical modifier
   #' dat3 <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
   #'   z=as.factor(sample(0:2, 50,replace=TRUE)), r=rbinom(50,1,0.5))
-  #' (qfit3 <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",
+  #' (qfit3 <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2, emmvar="z",
   #'   expnms = c('x1', 'x2'), data=dat3, q=2, family=gaussian()))
   #' # get weights and stratum specific effects at each value of Z
   #' #  (note that when Z=0, the effect is equal to psi1)
@@ -148,7 +122,7 @@ qgcomp.emm.noboot <- function(
   originalform <- terms(f, data = data)
   hasintercept = as.logical(attr(originalform, "intercept"))
   #f = .intmaker(f,expnms,emmvar) # create necessary interaction terms with exposure
-  (f <- .intmaker(f,expnms,emmvars)) # create necessary interaction terms with exposure
+  (f <- .intmaker(f,expnms,emmvars, emmvar)) # create necessary interaction terms with exposure
   newform <- terms(f, data = data)
   addedterms <- setdiff(attr(newform, "term.labels"), attr(originalform, "term.labels"))
   addedmain <- setdiff(addedterms, grep(":",addedterms, value = TRUE))
@@ -188,6 +162,7 @@ qgcomp.emm.noboot <- function(
   lin = .intchecknames(expnms)
   if(!lin) stop("Model appears to be non-linear: this is not yet implemented")
   if (!is.null(q) | !is.null(breaks)){
+  # TODO: expand error checking here from qgcomp package
     ql <- quantize(data, expnms, q, breaks)
     qdata <- ql$data
     br <- ql$breaks
@@ -242,7 +217,7 @@ qgcomp.emm.noboot <- function(
   # modifier main term, product term
   estb.prod <- do.call(c, lapply(1:length(emmvars), function(x) c(
     fit$coefficients[emmvars[x]],
-    sum(mod$coefficients[addedintsl[[x]],1, drop=TRUE])
+    sum(mod$coefficients[addedintsl[[x]],1, drop=TRUE]) # this is needed to catch dropped terms
   )))
   names(estb.prod) <- do.call(c, lapply(1:length(emmvars), function(x) c(emmvars[x], paste0(emmvars[x], ":mixture"))))
   seb.prod <- do.call(c, lapply(1:length(emmvars), function(x) c(
@@ -351,7 +326,6 @@ qgcomp.emm.noboot <- function(
 }
 
 
-
-
-
-
+#' @rdname qgcomp.emm.glm.noboot
+#' @export
+qgcomp.emm.noboot <- qgcomp.emm.glm.noboot

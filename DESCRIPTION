@@ -1,7 +1,7 @@
 Package: qgcompint
 Title: Quantile G-Computation Extensions for Effect Measure Modification
-Version: 0.7.2
-Date: 2022-03-22
+Version: 0.8.0
+Date: 2025-03-06
 Authors@R: 
     person(given = "Alexander",
            family = "Keil",
@@ -40,4 +40,4 @@ Encoding: UTF-8
 Language: en-US
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.2
+RoxygenNote: 7.3.2

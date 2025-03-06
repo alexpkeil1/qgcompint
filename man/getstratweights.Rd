@@ -7,7 +7,7 @@
 getstratweights(x, emmval = 1, ...)
 }
 \arguments{
-\item{x}{"qgcompemmfit" object from qgcomp.emm.noboot
+\item{x}{"qgcompemmfit" object from qgcomp.emm.glm.noboot
 function}
 
 \item{emmval}{numerical: value of effect measure modifier at which weights are generated}
@@ -28,13 +28,13 @@ This function can be used to estimate weights at arbitrary levels of the modifie
 set.seed(1231)
 dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
   z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
-(qfit <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",
+(qfit <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2, emmvar="z",
   expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
 getstratweights(qfit, emmval = 0)
 weights1 = getstratweights(qfit, emmval = 1)
 weights1$pos.weights
 }
 \seealso{
-\code{\link[qgcompint]{qgcomp.emm.noboot}}
+\code{\link[qgcompint]{qgcomp.emm.glm.noboot}}
 }
 \concept{variance mixtures}

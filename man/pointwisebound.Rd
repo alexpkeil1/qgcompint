@@ -7,7 +7,7 @@
 pointwisebound(x, alpha = 0.05, pointwiseref = 1, emmval = 0, ...)
 }
 \arguments{
-\item{x}{qgcompemmfit object from qgcomp.emm.noboot}
+\item{x}{qgcompemmfit object from qgcomp.emm.glm.noboot}
 
 \item{alpha}{alpha level for confidence intervals}
 
@@ -33,7 +33,7 @@ Calculates: expected outcome (on the link scale), mean difference (link scale) a
 }
 \details{
 The comparison of interest following a qgcomp fit is often comparisons of model predictions at various values of the joint-exposures (e.g. expected outcome at all exposures at the 1st quartile vs. the 3rd quartile). The expected outcome at a given joint exposure and at a given level of non-exposure covariates (W) is given as E(Y|S,W=w), where S takes on integer values 0 to q-1. Thus, comparisons are of the type E(Y|S=s,W=w) - E(Y|S=s2,W=w) where s and s2 are two different values of the joint exposures (e.g. 0 and 2). This function yields E(Y|S,W=w) as well as E(Y|S=s,W=w) - E(Y|S=p,W=w) where s is any value of S and p is the value chosen via "pointwise ref" - e.g. for binomial variables this will equal the risk/ prevalence difference at all values of S, with the referent category S=p-1. For the non-boostrapped version of quantile g-computation (under a linear model)
-Note that function only works with standard "qgcompint" objects from qgcomp.emm.noboot (so it doesn't work with zero inflated, hurdle, or Cox models)
+Note that function only works with standard "qgcompint" objects from qgcomp.emm.glm.noboot (so it doesn't work with zero inflated, hurdle, or Cox models)
 Variance for the overall effect estimate is given by: \eqn{transpose(G) Cov(\beta) G}
 Where the "gradient vector" G is given by
 \deqn{G = [\partial(f(\beta))/\partial\beta_1 = 1, ..., \partial(f(\beta))/\partial\beta_3= 1]}
@@ -45,13 +45,13 @@ set.seed(50)
 # linear model, binary modifier
 dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
 z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
-(qfit <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",
+(qfit <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2, emmvar="z",
   expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian()))
 pointwisebound(qfit, pointwiseref = 2, emmval = 0.1)
 # linear model, categorical modifier
 dat3 <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
 z=as.factor(sample(0:2, 50,replace=TRUE)), r=rbinom(50,1,0.5))
-(qfit3 <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",
+(qfit3 <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2, emmvar="z",
 expnms = c('x1', 'x2'), data=dat3, q=5, family=gaussian()))
 pointwisebound(qfit3, pointwiseref = 2, emmval = 0)
 pointwisebound(qfit3, pointwiseref = 2, emmval = 1)
@@ -72,5 +72,5 @@ pointwisebound(qfit4, pointwiseref = 2, emmval = 0) # reverts to odds ratio
 
 }
 \seealso{
-\code{\link[qgcompint]{qgcomp.emm.noboot}}, \code{\link[qgcomp]{pointwisebound.noboot}}
+\code{\link[qgcompint]{qgcomp.emm.glm.noboot}}, \code{\link[qgcomp]{pointwisebound.noboot}}
 }

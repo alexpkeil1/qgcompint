@@ -14,7 +14,6 @@ qgcomp.emm.cox.noboot <- function (
 ) {
   #' @title EMM for Quantile g-computation with survival outcomes under linearity/additivity
   #'
-  #'
   #' @description This function performs quantile g-computation in a survival
   #' setting, , allowing
   #' effect measure modification by a binary, categorical or continuous covariate. This allows
@@ -94,7 +93,7 @@ qgcomp.emm.cox.noboot <- function (
   # keep track of added terms by remembering old model
   originalform <- terms(f, data = data)
   #f = .intmaker(f,expnms,emmvar) # create necessary interaction terms with exposure
-  (f <- .intmaker(f,expnms,emmvars)) # create necessary interaction terms with exposure
+  (f <- .intmaker(f,expnms,emmvars, emmvar)) # create necessary interaction terms with exposure
   newform <- terms(f, data = data)
   class(newform) <- "formula"
   addedterms <- setdiff(attr(newform, "term.labels"), attr(originalform, "term.labels"))

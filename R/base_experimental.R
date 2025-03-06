@@ -1,4 +1,6 @@
+#' @export
 predict.qgcompemmfit <- function(object, expnms=NULL, newdata=NULL, type="response", ...){
+  message("Experimental feature, not validated")
   if(is.null(newdata)){
     pred <- predict(object$fit, type=type, ...)
   }
@@ -18,8 +20,9 @@ predict.qgcompemmfit <- function(object, expnms=NULL, newdata=NULL, type="respon
 predictmsm <- function (object, ...)
   UseMethod("predictmsm")
 
-
+#' @export
 predictmsm.qgcompemmfit <- function(object, expnms=NULL, newdata=NULL, type="response", ...){
+  message("Experimental feature, not validated")
   if(is.null(newdata)){
     pred <- predict(object$msmfit, type=type, ...)
   }
@@ -76,144 +79,91 @@ qgcomp.survcurve.boot <- function(x, ...){
   )
 }
 
-getjointeffects <- function(x, emmval=1.0, ...){
-  #' @title Calculate joint effect of mixture effect and modifier vs. common referent
-  #'
-  #' @description A standard qgcomp fit with effect measure modification
-  #' only estimates effects at the referent (0) level of the modifier (psi1).
-  #' This function can be used to estimate a "common referent" parameter that
-  #' estimates the effect of being in a non-referent category of the modifier and
-  #' increasing exposure by one quantile, relative to no change in exposure in the
-  #' referent category of the modifier. This is generally useful for binary exposures
-  #' (for a mixture with a set of binary exposures,
-  #' this would be the "effect" of being exposed and at the index level of the mediator,
-  #' relative to being unexposed in the referent level of the mediator), but it may also
-  #' be of interest with more general exposures.
-  #'
-  #'
-  #' @param x "qgcompemmfit" object from qgcomp.emm.noboot
-  #' function
-  #' @param emmval numerical: value of effect measure modifier at which weights are generated
-  #' @param ... unused
-  #' @seealso \code{\link[qgcompint]{qgcomp.emm.noboot}} \code{\link[qgcompint]{getstrateffects}}
-  #' @concept variance mixtures
-  #' @return
-  #' An object of class "qgcompemmeffects", which inherits from "qgcompemmfit" and "list"
-  #'
-  #' This class contains the `emmval`-stratum specific effect estimates of the mixture. By default, this prints a coefficient table, similar to objects of type "qgcompemmfit" which displays the stratum specific joint effects from a "qgcompemmfit" model.
-  #'
-  #' @export
-  #' @examples
-  #' library(qgcompint)
-  #' n = 500
-  #' dat <- data.frame(y=rbinom(n,1,0.5), cd=runif(n), pb=runif(n),
-  #'                   raceth=factor(sample(c("WNH", "BNH", "AMIND"), n, replace=TRUE),
-  #'                           levels = c("BNH", "WNH", "AMIND")))
-  #' (qfit <- qgcomp.emm.noboot(f=y ~cd + pb, emmvar="raceth",
-  #'                            expnms = c('cd', 'pb'), data=dat, q=4,
-  #'                            family=binomial()))
-  #'
-  #'
-  #' # first level of the stratifying variable should be the referent category,
-  #' #  which you can set with the "levels" argument to "factor" when
-  #' #  cleaning/generating data
-  #' levels(dat$raceth)
-  #'
-  #' # stratum specific mixture log-odds ratios
-  #' # this one comes straight from the model (psi 1)
-  #' getjointeffects(qfit, emmval = "BNH")
-  #' # this will coincide with joint effects, since it is in the referent category
-  #' getstrateffects(qfit, emmval = "BNH")
-  #'
-  #' # the stratum specific effect for a non-referent category of the EMM
-  #' #  will not coincide with the joint effect
-  #' getjointeffects(qfit, emmval = "AMIND")
-  #' getstrateffects(qfit, emmval = "AMIND")
-  #'
-
-  #expnms = x$expnms
-  #addedintsord =  x$intterms  zvar = x$fit$data[,x$call$emmvar]
-  #if(x$bootstrap) stop("This method does not work for bootstrapped fits. If using a linear parameterization, then stratified effects can be estimated using non-bootstrapped methods.")
-  if(x$degree>1) stop("not implemented for non-linear fits")
-  zvar = x$fit$data[,x$call$emmvar]
-  res = .calcjointffects(x,emmval=emmval, zvar=zvar)
-  class(res) <- "qgcompemmeffects"
-  res
-}
-
-
-
-.calcjointffects <- function(x, emmval=1.0, zvar){
-  #x$call$emmvar
-  whichintterms = x$intterms
-  if(is.factor(zvar)){
-    whichlevels = zproc(zvar[which(zvar==emmval)][1], znm = x$call$emmvar)
-    whichvar = names(whichlevels)[which(whichlevels==1)]
-    whichmainterms = whichvar
-    whichintterms = NULL
-    if(length(whichvar)>0) whichintterms = grep(whichvar, x$intterms, value = TRUE)
+#' @exportS3Method stats::anova
+anova.eeqgcompfit = function (object, ..., dispersion = NULL, test = NULL)
+{
+  stop("Not yet implemented")
+  dotargs <- list(...)
+  named <- if (is.null(names(dotargs)))
+    rep(FALSE, length(dotargs))
+  else (names(dotargs) != "")
+  if (any(named))
+    warning("The following arguments to anova.glm(..) are invalid and dropped: ",
+            paste(deparse(dotargs[named]), collapse = ", "))
+  dotargs <- dotargs[!named]
+  is.eefit <- unlist(lapply(dotargs, function(x) inherits(x,
+                                                        "eeqgcompfit")))
+  dotargs <- dotargs[is.eefit]
+  if (length(dotargs) > 0)
+    return(anova.eeqgcompfit(c(list(object), dotargs), dispersion = dispersion,
+                            test = test))
+  #varlist <- attr(object$terms, "variables")
+  varlist = names(coef(object))
+  x <- if (n <- match("x", names(object), 0)) {
+    object[[n]]
+  }else {
+    #model.matrix(object)
+    object$msmfit$X
   }
-
-  #lnx = length(x$expnms)
-  #lnxz = length(whichintterms)
-  mod = summary(x$fit)
-  if( x$fit$family$family=="cox" ){
-    covmat = as.matrix(x$fit$var)
-    colnames(covmat) <- rownames(covmat) <- names(x$fit$coefficients)
-  } else{
-    covmat = as.matrix(mod$cov.scaled)
-  }
-  #stopifnot(lnx == lnxz)
-  if(is.factor(zvar)){
-    indeffects =
-      x$fit$coefficients[x$expnms]
-    if(!is.null(whichintterms)){
-      indeffects =
-        indeffects +
-        x$fit$coefficients[whichintterms]
+  varseq <- attr(x, "assign")
+  nvars <- max(0, varseq)
+  betaList <- vbetaList <- NULL
+  if (nvars > 1) {
+    method <- object$method
+    if (!is.function(method))
+      method <- get(method, mode = "function", envir = parent.frame())
+    for (i in 1:(nvars - 1)) {
+      eprint("calling fit....")
+      fit <- method(x = x[, varseq <= i, drop = FALSE],
+                    y = object$y, weights = object$prior.weights,
+                    corstr = object$corstr, start = object$start,
+                    offset = object$offset, id = object$id, family = object$family,
+                    control = object$control)
+      betaList <- c(betaList, list(fit$beta))
+      vbetaList <- c(vbetaList, list(fit$vbeta))
     }
-  } else{
-    indeffects =
-      x$fit$coefficients[x$expnms] +
-      x$fit$coefficients[x$intterms]*emmval
   }
-  if(length(whichmainterms)>1)
-    stop("getjointeffects: length(whichmainterms)>1, which generally means something is wrong in code")
-  maineffects = 0
-  if(length(whichmainterms)==1)
-    maineffects = x$fit$coefficients[whichmainterms] # this
-  effectatZ <- sum(indeffects)  + maineffects
-  expidx <- which(colnames(covmat) %in% x$expnms)
-  mainidx <- which(colnames(covmat) %in% whichmainterms)
-  intidx <- which(colnames(covmat) %in% whichintterms)
-  effgrad = 0*x$fit$coefficients
-  effgrad[expidx] <- 1
-  effgrad[mainidx] <- 1
-  if(is.factor(zvar)){
-    effgrad[intidx] <- 1.0
-  } else effgrad[intidx] <- emmval
-  seatZ <-  se_comb2(c(x$expnms, whichmainterms, x$intterms),
-                     covmat = covmat,
-                     grad = effgrad
-  )
-  ciatZ <- cbind(
-    effectatZ + seatZ * qnorm(x$alpha / 2),
-    effectatZ + seatZ * qnorm(1 - x$alpha / 2)
-  )
-  res <- list(
-    effectmat = rbind(
-      terms.emm = x$fit$coefficients[whichmainterms],
-      terms.main = x$fit$coefficients[c(x$expnms)],
-      terms.prod = x$fit$coefficients[x$intterms],
-      indeffects = indeffects
-    )
-    , # main effect + product term
-    eff = effectatZ,
-    se = seatZ,
-    ci = ciatZ,
-    emmvar = x$call$emmvar,
-    emmlev = x$emmlev,
-    emmval = emmval
-  )
-  res
+  betaList <- c(betaList, list(object$geese$beta))
+  vbetaList <- c(vbetaList, list(object$geese$vbeta))
+  hasIntercept <- (length(grep("(Intercept)", names(betaList[[1]]))) !=
+                     0)
+  dimVec <- unlist(lapply(betaList, length))
+  if (hasIntercept) {
+    dfVec <- dimVec[1] - 1
+  }
+  else {
+    dfVec <- dimVec[1]
+  }
+  if (length(dimVec) > 1) {
+    for (i in 2:length(dimVec)) dfVec <- c(dfVec, dimVec[i] -
+                                             dimVec[i - 1])
+  }
+  X2Vec <- NULL
+  for (i in 1:length(dfVec)) {
+    beta <- betaList[[i]]
+    vbeta <- vbetaList[[i]]
+    beta0 <- rep(1, length(beta))
+    beta0[1:dfVec[i]] <- 0
+    beta0 <- rev(beta0)
+    zeroidx <- beta0 == 0
+    X2 <- t(beta[zeroidx]) %*% solve(vbeta[zeroidx, zeroidx,
+                                           drop = FALSE]) %*% beta[zeroidx]
+    X2Vec <- c(X2Vec, X2)
+  }
+  resdf <- dfVec
+  resdev <- X2Vec
+  tab <- data.frame(resdf, resdev, 1 - pchisq(resdev, resdf))
+  colnames(tab) <- c("Df", "X2", "P(>|Chi|)")
+  tl <- attr(object$terms, "term.labels")
+  if (length(tl) == 0)
+    tab <- tab[1, , drop = FALSE]
+  if (length(tl))
+    rownames(tab) <- c(tl)
+  title <- paste("Analysis of 'Wald statistic' Table", "\nModel: ",
+                 object$family$family, ", link: ", object$family$link,
+                 "\nResponse: ", as.character(varlist[-1])[1], "\nTerms added sequentially (first to last)\n",
+                 sep = "")
+  structure(tab, heading = title, class = c("anova", "data.frame"))
 }
+
+

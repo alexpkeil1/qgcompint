@@ -6,11 +6,11 @@ getstrateffects <- function(x, emmval=1.0, ...){
 #' This function can be used to estimate effects at arbitrary levels of the modifier
 #'
 #'
-#' @param x "qgcompemmfit" object from qgcomp.emm.noboot
+#' @param x "qgcompemmfit" object from qgcomp.emm.glm.noboot
 #' function
 #' @param emmval numerical: value of effect measure modifier at which weights are generated
 #' @param ... unused
-#' @seealso \code{\link[qgcompint]{qgcomp.emm.noboot}} \code{\link[qgcompint]{getstratweights}}
+#' @seealso \code{\link[qgcompint]{qgcomp.emm.glm.noboot}} \code{\link[qgcompint]{getstratweights}}
 #' @concept variance mixtures
 #' @return
 #' An object of class "qgcompemmeffects", which inherits from "qgcompemmfit" and "list"
@@ -21,7 +21,7 @@ getstrateffects <- function(x, emmval=1.0, ...){
 #' @examples
 #' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
 #'   z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
-#' (qfit <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",
+#' (qfit <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2, emmvar="z",
 #'   expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
 #' getstrateffects(qfit, emmval = 0)
 #' strateffects = getstrateffects(qfit, emmval = 1)
@@ -54,7 +54,10 @@ getstrateffects <- function(x, emmval=1.0, ...){
   if( x$fit$family$family=="cox" ){
     covmat = as.matrix(x$fit$var)
     colnames(covmat) <- rownames(covmat) <- names(x$fit$coefficients)
-  } else{
+  } else if(any(class(x$fit)=="eefit")){
+    covmat = fit$vcov
+  }
+  else{
     covmat = as.matrix(mod$cov.scaled)
   }
   #stopifnot(lnx == lnxz)
@@ -68,18 +71,18 @@ getstrateffects <- function(x, emmval=1.0, ...){
     }
   } else{
     indeffects =
-      x$fit$coefficients[x$expnms] +
-      x$fit$coefficients[x$intterms]*emmval
+      coef(x$fit)[x$expnms] +
+      coef(x$fit)[x$intterms]*emmval
   }
   effectatZ <- sum(indeffects)
   expidx <- which(colnames(covmat) %in% x$expnms)
   intidx <- which(colnames(covmat) %in% whichintterms)
-  effgrad = 0*x$fit$coefficients
+  effgrad = 0*coef(x$fit)
   effgrad[expidx] <- 1
   if(is.factor(zvar)){
     effgrad[intidx] <- 1.0
   } else effgrad[intidx] <- emmval
-  seatZ <-  se_comb2(c(x$expnms,x$intterms),
+  seatZ <- se_comb2(c(x$expnms,x$intterms),
                     covmat = covmat,
                     grad = effgrad
                     )
@@ -89,8 +92,8 @@ getstrateffects <- function(x, emmval=1.0, ...){
     )
   res <- list(
     effectmat = rbind(
-      terms.main = x$fit$coefficients[x$expnms],
-      terms.prod = x$fit$coefficients[x$intterms],
+      terms.main = coef(x$fit)[x$expnms],
+      terms.prod = coef(x$fit)[x$intterms],
       indeffects = indeffects
     )
   , # main effect + product term
@@ -115,11 +118,11 @@ getstratweights <- function(x, emmval=1.0, ...){
   #' This function can be used to estimate weights at arbitrary levels of the modifier
   #'
   #'
-  #' @param x "qgcompemmfit" object from qgcomp.emm.noboot
+  #' @param x "qgcompemmfit" object from qgcomp.emm.glm.noboot
   #' function
   #' @param emmval numerical: value of effect measure modifier at which weights are generated
   #' @param ... unused
-  #' @seealso \code{\link[qgcompint]{qgcomp.emm.noboot}}
+  #' @seealso \code{\link[qgcompint]{qgcomp.emm.glm.noboot}}
   #' @return
   #' An object of class "qgcompemmweights", which is just a special R list
   #'
@@ -132,7 +135,7 @@ getstratweights <- function(x, emmval=1.0, ...){
   #' set.seed(1231)
   #' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
   #'   z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
-  #' (qfit <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",
+  #' (qfit <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2, emmvar="z",
   #'   expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
   #' getstratweights(qfit, emmval = 0)
   #' weights1 = getstratweights(qfit, emmval = 1)

@@ -8,11 +8,11 @@ dat <- data.frame(y=runif(50),
                   z=rbinom(50,1,0.5),
                   r=rbinom(50,1,0.5))
 (qfit <- qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
-(qfitemm <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
+(qfitemm <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
 (qfitemmboot <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
-(qfitemmb <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, bayes=TRUE, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
+(qfitemmb <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2, bayes=TRUE, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
 (qfitemmboot <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=NULL, family=gaussian()))
-(qfitemmb <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, bayes=TRUE, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=NULL, family=gaussian()))
+(qfitemmb <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2, bayes=TRUE, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=NULL, family=gaussian()))
 # check
 getstratweights(qfitemm, emmval=0.0)
 getstrateffects(qfitemm, emmval=0.0)
@@ -22,7 +22,7 @@ getstratweights(qfitemmb, emmval=1.0)
 getstrateffects(qfitemmb, emmval=1.0)
 
 dat$z=as.factor(dat$z)
-(qfitemmf <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
+(qfitemmf <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
 
 checkres <- function(qfitemm){
   q0 <- q1 <- qfitemm$fit$data
@@ -47,9 +47,9 @@ dat <- data.frame(y=runif(n),
                   z=as.factor(sample(c("a","b","m"), n,replace=TRUE)),
                   r=rbinom(n,1,0.5))
 (qfit <- qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
-(qfitemm <- qgcomp.emm.noboot(f=y ~ x1 + x2, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian()))
+(qfitemm <- qgcomp.emm.glm.noboot(f=y ~ x1 + x2, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian()))
 (qfitemmboot <- qgcomp.emm.boot(f=y ~ x1 + x2, degree=1, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian()))
-(qfitemmb <- qgcomp.emm.noboot(f=y ~ x1 + x2, bayes=TRUE, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
+(qfitemmb <- qgcomp.emm.glm.noboot(f=y ~ x1 + x2, bayes=TRUE, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
 # check
 getstratweights(qfitemm, emmval=0.0)
 getstrateffects(qfitemm, emmval=0.0)
@@ -70,7 +70,7 @@ dat <- data.frame(y=runif(n),
                   z=rnorm(n,1,0.5),
                   r=rbinom(n,1,0.5))
 (qfit <- qgcomp.noboot(f=y ~ ., expnms = paste0("x",1:5), data=dat, q=4, family=gaussian()))
-(qfitemm <- qgcomp.emm.noboot(f=y ~x1+x2+x3+x4+x5, emmvar="z", expnms = paste0("x",1:5), data=dat, q=2, family=gaussian()))
+(qfitemm <- qgcomp.emm.glm.noboot(f=y ~x1+x2+x3+x4+x5, emmvar="z", expnms = paste0("x",1:5), data=dat, q=2, family=gaussian()))
 
 
 qfitemm$fit
@@ -95,7 +95,7 @@ rft <- function(i,n=50){
                     z=rbinom(n,1,0.5),
                     r=rbinom(n,1,0.5))
   (qfit <- qgcomp.noboot(f=y ~ x1 + x2 + r, expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
-  (qfitemm <- qgcomp.emm.noboot(f=y ~ z + x1 + x2 + r, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
+  (qfitemm <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2 + r, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
   c(qfit$pval[2], qfitemm$pval[c(2,4)], qfit$psi,qfitemm$psi,qfitemm$psiint, qfit$covmat.psi, qfitemm$covmat.psi, qfitemm$covmat.psiint)
 }
 
@@ -119,7 +119,7 @@ rftb <- function(i,n=50){
                     z=rbinom(n,1,0.5),
                     r=rbinom(n,1,0.5))
   (qfit <- qgcomp.noboot(f=y ~ x1 + x2 + r, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial()))
-  (qfitemm <- qgcomp.emm.noboot(f=y ~ z + x1 + x2 + r, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=2, family=binomial()))
+  (qfitemm <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2 + r, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=2, family=binomial()))
   c(qfit$pval[2], qfitemm$pval[c(2,4)], qfit$psi,qfitemm$psi,qfitemm$psiint, qfit$covmat.psi, qfitemm$covmat.psi, qfitemm$covmat.psiint)
 }
 
@@ -143,7 +143,7 @@ rft2 <- function(i,n=50){
                     z=rnorm(n,1,0.5),
                     r=rbinom(n,1,0.5))
   (qfit <- qgcomp.noboot(f=y ~ x1 + x2 + r, expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
-  suppressMessages(qfitemm <- qgcomp.emm.noboot(f=y ~ z + x1 + x2 + r, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
+  suppressMessages(qfitemm <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2 + r, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
   c(qfit$pval[2], qfitemm$pval[c(2,4)], qfit$psi,qfitemm$psi,qfitemm$psiint, qfit$covmat.psi, qfitemm$covmat.psi, qfitemm$covmat.psiint)
 }
 
@@ -172,7 +172,7 @@ rft3 <- function(i, n=100){
     corr=0.75
   )
   (qfit <- qgcomp.noboot(f=y ~ x1 + x2 + x3 + x4, expnms = paste0("x",1:4), data=dat, q=NULL, family=gaussian()))
-  suppressMessages(qfitemm <- qgcomp.emm.noboot(f=y ~ z + x1 + x2 + x3 + x4, emmvar="z", expnms = paste0("x",1:4), data=dat, q=NULL, family=gaussian()))
+  suppressMessages(qfitemm <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2 + x3 + x4, emmvar="z", expnms = paste0("x",1:4), data=dat, q=NULL, family=gaussian()))
   truth = attr(dat, "truecoef")
   c(pmarg = qfit$pval[2],
     pz = qfitemm$pval[c(2,4)],
@@ -219,7 +219,7 @@ rft4 <- function(i, n=100){
     corr=0.75
   )
   (qfit <- qgcomp.noboot(f=y ~ x1 + x2 + x3 + x4, expnms = paste0("x",1:4), data=dat, q=NULL, family=gaussian()))
-  suppressMessages(qfitemm <- qgcomp.emm.noboot(f=y ~ z + x1 + x2 + x3 + x4, emmvar="z", expnms = paste0("x",1:4), data=dat, q=NULL, family=gaussian()))
+  suppressMessages(qfitemm <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2 + x3 + x4, emmvar="z", expnms = paste0("x",1:4), data=dat, q=NULL, family=gaussian()))
   truth = attr(dat, "truecoef")
   c(pmarg = qfit$pval[2],
     pz = qfitemm$pval[c(2,4)],
@@ -268,7 +268,7 @@ rft5 <- function(i, n=100){
     corr=0.75
   )
   (qfit <- qgcomp.noboot(f=y ~ x1 + x2 + x3 + x4, expnms = paste0("x",1:4), data=dat, q=NULL, family=binomial()))
-  suppressMessages(qfitemm <- qgcomp.emm.noboot(f=y ~ z + x1 + x2 + x3 + x4, emmvar="z", expnms = paste0("x",1:4), data=dat, q=NULL, family=binomial()))
+  suppressMessages(qfitemm <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2 + x3 + x4, emmvar="z", expnms = paste0("x",1:4), data=dat, q=NULL, family=binomial()))
   truth = attr(dat, "truecoef")
   c(pmarg = qfit$pval[2],
     pz = qfitemm$pval[c(2,4)],
@@ -319,7 +319,7 @@ rft6 <- function(i, n=100){
     corr=0.75
   )
   (qfit <- qgcomp.noboot(f=y ~ x1 + x2 + x3 + x4, expnms = paste0("x",1:4), data=dat, q=NULL, family=binomial()))
-  suppressMessages(qfitemm <- qgcomp.emm.noboot(f=y ~ z + x1 + x2 + x3 + x4, emmvar="z", expnms = paste0("x",1:4), data=dat, q=NULL, family=binomial()))
+  suppressMessages(qfitemm <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2 + x3 + x4, emmvar="z", expnms = paste0("x",1:4), data=dat, q=NULL, family=binomial()))
   truth = attr(dat, "truecoef")
   c(pmarg = qfit$pval[2],
     pz = qfitemm$pval[c(2,4)],
@@ -427,7 +427,7 @@ rft8 <- function(i, n=100){
   )
   dat$z = as.factor(dat$z)
   (qfit <- qgcomp.noboot(f=y ~ x1 + x2 + x3 + x4, expnms = paste0("x",1:4), data=dat, q=NULL, family=gaussian()))
-  suppressMessages(qfitemm <- qgcomp.emm.noboot(f=y ~ z + x1 + x2 + x3 + x4, emmvar="z", expnms = paste0("x",1:4), data=dat, q=NULL, family=gaussian()))
+  suppressMessages(qfitemm <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2 + x3 + x4, emmvar="z", expnms = paste0("x",1:4), data=dat, q=NULL, family=gaussian()))
   truth = attr(dat, "truecoef")
   c(pmarg = qfit$pval[2],
     pz = qfitemm$pval[c(2,4)],

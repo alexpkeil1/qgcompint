@@ -89,12 +89,12 @@ cor(dat1[,paste0("x",1:7)])
 ```
 ### fitting a model with a modifier
 
-Here we see that qgcomp (via the function `qgcomp.emm.noboot`) estimates a $\psi_1$ fairly close to 0.8 (estimate = 0.7) (again, as we increase sample size, the estimated value will be expected to become increasingly close to the true value). The product term 'M:mixture' is the $\psi_3$ parameter noted above, which is also fairly close to the true value of 1.6 (estimate = 1.7).
+Here we see that qgcomp (via the function `qgcomp.emm.glm.noboot`) estimates a $\psi_1$ fairly close to 0.8 (estimate = 0.7) (again, as we increase sample size, the estimated value will be expected to become increasingly close to the true value). The product term 'M:mixture' is the $\psi_3$ parameter noted above, which is also fairly close to the true value of 1.6 (estimate = 1.7).
 
-For binary modifiers, `qgcomp.emm.noboot` will also estimate the joint effect of the mixture in strata of the modifier. Here, the effect of the mixture at $M=0$ is given by $\psi_1$, whereas the effect of the mixture at $M=1$ is estimated below the coefficient table (and is here given by $\psi_1+\psi_3$ = 2.4).
+For binary modifiers, `qgcomp.emm.glm.noboot` will also estimate the joint effect of the mixture in strata of the modifier. Here, the effect of the mixture at $M=0$ is given by $\psi_1$, whereas the effect of the mixture at $M=1$ is estimated below the coefficient table (and is here given by $\psi_1+\psi_3$ = 2.4).
 
 ```{r first_step_fit, include=TRUE}
-qfit1 <- qgcomp.emm.noboot(y~x1+x2+x3+x4+x5+x6+x7,
+qfit1 <- qgcomp.emm.glm.noboot(y~x1+x2+x3+x4+x5+x6+x7,
   data = dat1,
   expnms = paste0("x",1:7),
   emmvar = "M",
@@ -112,7 +112,7 @@ pointwisebound(qfit1, emmval=1)
 
 # plotting weights (weights are at referent level of modifier)
 
-For `qgcomp.emm.noboot` fits, a set of "weights" will be given that are interpreted as the proportion of a "partial" effect for each variable. That is, $\psi_1$ will represent the joint effect of multiple exposures, some of which will have independent effects that are positive, and some will have negative independent effects. For example, the "negative partial effect" is simply the sum of all of the negative independent effects (this is only given for a model in which all exposures are included via linear terms and no interactions among exposures occur). These weights are conditional on the fitted model, and so are not "estimates" per se and will not have associated confidence intervals. Nonetheless, the weights are useful for interpretation of the joint effect.
+For `qgcomp.emm.glm.noboot` fits, a set of "weights" will be given that are interpreted as the proportion of a "partial" effect for each variable. That is, $\psi_1$ will represent the joint effect of multiple exposures, some of which will have independent effects that are positive, and some will have negative independent effects. For example, the "negative partial effect" is simply the sum of all of the negative independent effects (this is only given for a model in which all exposures are included via linear terms and no interactions among exposures occur). These weights are conditional on the fitted model, and so are not "estimates" per se and will not have associated confidence intervals. Nonetheless, the weights are useful for interpretation of the joint effect.
 
 Notably, with product terms in the model for the joint effect, a different set of weights will be generated at every value of the modifier. Here, we can plot the weights at M=0 and M=1.
 ```{r first_step_plot, include=TRUE, fig.width=5,fig.height=4, fig.cap=paste("Weights for M =", 0:1)}
@@ -186,9 +186,9 @@ cor(dat2[,paste0("x",1:7)])
 ```
 
 ### wrong way to fit
-Below is one way to fit `qgcomp.emm.noboot` with a categorical modifier that exactly follows the previous code. This approach to categorical modifiers is incorrect, in this case, due to the format of these data. Note if you fit the model like this, where your categorical modifier is not the proper data type, `qgcomp.emm.noboot` will assume you have a continuous modifier.
+Below is one way to fit `qgcomp.emm.glm.noboot` with a categorical modifier that exactly follows the previous code. This approach to categorical modifiers is incorrect, in this case, due to the format of these data. Note if you fit the model like this, where your categorical modifier is not the proper data type, `qgcomp.emm.glm.noboot` will assume you have a continuous modifier.
 ```{r cat_mod_fit_wrong, include=TRUE}
-qfit.wrong <- qgcomp.emm.noboot(y~x1+x2+x3+x4+x5+x6+x7,
+qfit.wrong <- qgcomp.emm.glm.noboot(y~x1+x2+x3+x4+x5+x6+x7,
   data = dat2,
   expnms = paste0("x",1:7),
   emmvar = "z",
@@ -201,7 +201,7 @@ Instead, you should convert each categorical modifier to a "factor" prior to fit
 ```{r cat_mod_fit, include=TRUE}
 dat2$zfactor = as.factor(dat2$z)
 # using asymptotic-based confidence intervals
-qfit2 <- qgcomp.emm.noboot(y~x1+x2+x3+x4+x5+x6+x7,
+qfit2 <- qgcomp.emm.glm.noboot(y~x1+x2+x3+x4+x5+x6+x7,
   data = dat2,
   expnms = paste0("x",1:7),
   emmvar = "zfactor",
@@ -280,7 +280,7 @@ cor(dat3[,paste0("x",1:7)])
 ```
 
 ```{r cont_mod_fit, include=TRUE}
-qfit3 <- qgcomp.emm.noboot(y~x1+x2+x3+x4+x5+x6+x7,
+qfit3 <- qgcomp.emm.glm.noboot(y~x1+x2+x3+x4+x5+x6+x7,
   data = dat3,
   expnms = paste0("x",1:7),
   emmvar = "CoM",

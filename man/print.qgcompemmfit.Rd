@@ -7,7 +7,7 @@
 \method{print}{qgcompemmfit}(x, showweights = TRUE, ...)
 }
 \arguments{
-\item{x}{"qgcompemmfit" object from \code{qgcomp.emm.noboot}
+\item{x}{"qgcompemmfit" object from \code{qgcomp.emm.glm.noboot}
 function}
 
 \item{showweights}{logical: should weights be printed, if estimated?}
@@ -18,11 +18,11 @@ function}
 Invisibly returns x. Called primarily for side effects.
 }
 \description{
-Prints output depending for \code{qgcomp.emm.noboot} will output final estimate of joint exposure
+Prints output depending for \code{qgcomp.emm.glm.noboot} will output final estimate of joint exposure
 effect (similar to the 'index' effect in weighted quantile sums), as well
 as estimates of the 'weights' (standardized coefficients).
 }
 \seealso{
-\code{\link[qgcompint]{qgcomp.emm.noboot}}, \code{\link[qgcompint]{getstratweights}}
+\code{\link[qgcompint]{qgcomp.emm.glm.noboot}}, \code{\link[qgcompint]{getstratweights}}
 }
 \concept{variance mixtures}

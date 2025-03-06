@@ -19,7 +19,7 @@
 	 # no output given here          
 	 
 	 # with effect measure modification by Z
-	 (qfitemm <- qgcomp.emm.noboot(f=y ~ z + x1 + x2,
+	 (qfitemm <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2,
 	           emmvar="z", 
 	           expnms = c('x1', 'x2'), 
 	           data=dat, q=2, 

@@ -40,7 +40,7 @@
 #' )
 #' cor(qdat)
 #' table(qdat$x1)
-#' qgcomp.emm.noboot(y~x1+x2+x3+x4,expnms = c("x1", "x2", "x3", "x4"), emmvar = "z", data=qdat)
+#' qgcomp.emm.glm.noboot(y~x1+x2+x3+x4,expnms = c("x1", "x2", "x3", "x4"), emmvar = "z", data=qdat)
 simdata_quantized_emm <- function(
   outcometype=c("continuous", "logistic", "survival"),
   n = 100,

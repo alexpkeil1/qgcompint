@@ -1,9 +1,20 @@
 
 # qgcompint: quantile g-computation with statistical interaction
 
+# v0.8.0
+## Major changes
+- Added estimating functions approach `qgcomp.emm.glm.ee` which allows a variety of new approaches (see ?qgcomp::qgcomp.glm.ee for more info)
+
+## Minor changes
+- n/a
+
+## Bug fixes
+- `qgcomp.emm.glm.boot` had a rare, fatal bug when setting q=NULL
+
+
 # v0.7.0
 ## Minor changes
-- Added "getjointeffects" function to get mixture effects at values of an interacting variable versus a common referent level of exposure and the interacting variable
+- Added `getjointeffects` function to get mixture effects at values of an interacting variable versus a common referent level of exposure and the interacting variable
 
 ## Bug fixes
 - n/a

@@ -86,7 +86,7 @@ msm.emm.fit <- function(f,
                  ifelse(hasintercept, "1 +", "-1 +"),
                  paste0(c(newexpnms, emmvars), collapse = "+"))
   # TODO: categorical Z
-  msmform <- .intmaker(as.formula(msmf), expnms = newexpnms, emmvars = emmvars)
+  msmform <- .intmaker(as.formula(msmf), expnms = newexpnms, emmvars = emmvars, emmvar)
   class(msmform) <- "formula"
   newterms <- terms(msmform)
   nterms = length(attr(newterms, "term.labels"))
@@ -132,7 +132,7 @@ msm.emm.fit <- function(f,
 
 
 
-qgcomp.emm.boot <- function(
+qgcomp.emm.glm.boot <- function(
   f,
   data,
   expnms=NULL,
@@ -176,8 +176,8 @@ qgcomp.emm.boot <- function(
   #' to define cutpoints.
   #' @param id (optional) NULL, or variable name indexing individual units of
   #' observation (only needed if analyzing data with multiple observations per
-  #' id/cluster). Note that qgcomp.emm.noboot will not produce cluster-appropriate
-  #' standard errors (this parameter is essentially ignored in qgcomp.emm.noboot).
+  #' id/cluster). Note that qgcomp.emm.glm.noboot will not produce cluster-appropriate
+  #' standard errors (this parameter is essentially ignored in qgcomp.emm.glm.noboot).
   #' Qgcomp.emm.boot can be used for this, which will use bootstrap
   #' sampling of clusters/individuals to estimate cluster-appropriate standard
   #' errors via bootstrapping.
@@ -224,7 +224,7 @@ qgcomp.emm.boot <- function(
   #' # linear model, binary modifier
   #' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
   #'   z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
-  #' (qfit <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",
+  #' (qfit <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2, emmvar="z",
   #'   expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian()))
   #' # set B larger for real examples
   #' (qfit2 <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
@@ -234,7 +234,7 @@ qgcomp.emm.boot <- function(
   #' dat2 <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
   #'   z=sample(0:2, 50,replace=TRUE), r=rbinom(50,1,0.5))
   #' dat2$z = as.factor(dat2$z)
-  #' (qfit3 <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",
+  #' (qfit3 <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2, emmvar="z",
   #'   expnms = c('x1', 'x2'), data=dat2, q=4, family=gaussian()))
   #' # set B larger for real examples
   #' (qfit4 <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
@@ -267,7 +267,7 @@ qgcomp.emm.boot <- function(
   hasintercept = as.logical(attr(originalform, "intercept"))
 
   #f = .intmaker(f,expnms,emmvar) # create necessary interaction terms with exposure
-  (f <- .intmaker(f,expnms,emmvars)) # create necessary interaction terms with exposure
+  (f <- .intmaker(f,expnms,emmvars, emmvar)) # create necessary interaction terms with exposure
   newform <- terms(f, data = data)
   addedterms <- setdiff(attr(newform, "term.labels"), attr(originalform, "term.labels"))
   addedmain <- setdiff(addedterms, grep(":",addedterms, value = TRUE))
@@ -466,3 +466,9 @@ qgcomp.emm.boot <- function(
   }
   res
 }
+
+#' @rdname qgcomp.emm.glm.boot
+#' @export
+qgcomp.emm.boot <- qgcomp.emm.glm.boot
+
+

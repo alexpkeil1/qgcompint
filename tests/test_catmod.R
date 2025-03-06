@@ -25,7 +25,7 @@ head(dat2)
 table(dat2$z)
 table(dat2$y)
 dat2$z = as.factor(dat2$z)
-qfit2 <- qgcomp.emm.noboot(y~x1,
+qfit2 <- qgcomp.emm.glm.noboot(y~x1,
                            data = dat2,
                            expnms = paste0("x",1:1),
                            emmvar = "z",

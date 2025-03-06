@@ -248,7 +248,7 @@
 #' # linear model, binary modifier
 #' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
 #' z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
-#' (qfit <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",
+#' (qfit <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2, emmvar="z",
 #' expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
 #' plot(qfit, emmval = 1)
 #' #

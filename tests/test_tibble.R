@@ -27,13 +27,13 @@ dat$zspace <- ifelse(dat$z==1, "cat1", dat$zspace)
 
 dat$zspace2 = as.factor(dat$zspace)
 # testing with character
-qfit1 <- qgcomp.emm.noboot(y~x1+x2,
+qfit1 <- qgcomp.emm.glm.noboot(y~x1+x2,
                            data = dat,
                            expnms = paste0("x",1:2),
                            emmvar = "zspace",
                            q = 4)
 # testing with factor
-qfit2 <- qgcomp.emm.noboot(y~x1+x2,
+qfit2 <- qgcomp.emm.glm.noboot(y~x1+x2,
                            data = dat,
                            expnms = paste0("x",1:2),
                            emmvar = "zspace2",
@@ -46,7 +46,7 @@ qfit2
 
 #dat2 = as_tibble(dat)
 
-#qgcomp.emm.noboot(y~x1+x2,
+#qgcomp.emm.glm.noboot(y~x1+x2,
 #                  data = dat2,
 #                  expnms = paste0("x",1:2),
 #                  emmvar = "zspace",

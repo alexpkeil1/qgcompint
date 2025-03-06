@@ -56,30 +56,31 @@ print.getstrateffects <- function(x, ..., digits=2){
 print.qgcompemmfit <- function(x, showweights=TRUE, ...){
   #' @title Default printing method for a qgcompemmfit object
   #'
-  #' @description Prints output depending for `qgcomp.emm.noboot` will output final estimate of joint exposure
+  #' @description Prints output depending for `qgcomp.emm.glm.noboot` will output final estimate of joint exposure
   #' effect (similar to the 'index' effect in weighted quantile sums), as well
   #' as estimates of the 'weights' (standardized coefficients).
   #'
-  #' @param x "qgcompemmfit" object from `qgcomp.emm.noboot`
+  #' @param x "qgcompemmfit" object from `qgcomp.emm.glm.noboot`
   #' function
   #' @param showweights logical: should weights be printed, if estimated?
   #' @param ... unused
   #' @return Invisibly returns x. Called primarily for side effects.
-  #' @seealso \code{\link[qgcompint]{qgcomp.emm.noboot}}, \code{\link[qgcompint]{getstratweights}}
+  #' @seealso \code{\link[qgcompint]{qgcomp.emm.glm.noboot}}, \code{\link[qgcompint]{getstratweights}}
   #' @concept variance mixtures
   #' @export
   emmvar <- x$call$emmvar
   isboot <- x$bootstrap
+  isemm <- any(class(x$fit) == "eefit")
   isbinemm <- x$emmlev == 2
   #rnm = c("(Intercept)", 'psi1', emmvar, paste0(emmvar,":mixture"))
   rnm = names(x$coef)
   fam <- x$fit$family$family
-  if(showweights & !isboot) {
+  if(showweights & !isboot & !isemm) {
     ww = getstratweights(x, emmval=0.0)
     print(ww)
     cat("\n")
   }
-  if(!is.null(x$pos.size1) & showweights & isbinemm & !isboot) {
+  if(!is.null(x$pos.size1) & showweights & isbinemm & !isboot & !isemm) {
     ww = getstratweights(x, emmval=1.0)
     print(ww)
     cat("\n")

@@ -56,7 +56,7 @@ Proceedings of the Winter Simulation Conference, 2005.. IEEE, 2005.
 set.seed(50)
 dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
                   z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
-(qfit <- qgcomp.emm.noboot(f=y ~ z + x1 + x2, emmvar="z",
+(qfit <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2, emmvar="z",
                            expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian()))
 (qfit2 <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
                           degree = 1,
