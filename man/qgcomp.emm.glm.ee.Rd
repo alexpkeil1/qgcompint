@@ -112,7 +112,7 @@ dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
   z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
 (qfit <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2, emmvar="z",
   expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
-(qfitee <- qgcompint:::qgcomp.emm.glm.ee(f=y ~ z + x1 + x2, emmvar="z",
+(qfitee <- qgcomp.emm.glm.ee(f=y ~ z + x1 + x2, emmvar="z",
   expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
 # logistic model, continuous modifier
 dat2 <- data.frame(y=rbinom(50, 1,0.5), x1=runif(50), x2=runif(50),

@@ -149,3 +149,23 @@ formula.qgcompemmfit <- function(x, ...){
   #' @export
   x$call$f
 }
+
+
+
+model.matrix.qgcompemmfit <- function(object, ...){
+  #' @exportS3Method stats::model.matrix
+  object$fit$X
+}
+
+
+# temp: should be in qgcomp package
+model.matrix.eeqgcompfit <- function(object, ...){
+  #' @exportS3Method stats::model.matrix
+  object$fit$X
+}
+
+# temp: should be in qgcomp package
+formula.eeqgcompfit <- function(x, ...){
+  #' @exportS3Method stats::formula
+  x$call$f
+}

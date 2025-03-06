@@ -87,7 +87,8 @@
 #'  measure of interest (psi) and associated variance (var.psi), as well
 #'  as information on the conditional/underlying model fit (fit) and the marginal structural model fit (msmfit).
 #' @concept variance mixtures
-#' @import stats arm
+#' @importFrom rootSolve multiroot
+#' @importFrom numDeriv jacobian
 #' @export
 #' @examples
 #' set.seed(50)
@@ -96,7 +97,7 @@
 #'   z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
 #' (qfit <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2, emmvar="z",
 #'   expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
-#' (qfitee <- qgcompint:::qgcomp.emm.glm.ee(f=y ~ z + x1 + x2, emmvar="z",
+#' (qfitee <- qgcomp.emm.glm.ee(f=y ~ z + x1 + x2, emmvar="z",
 #'   expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
 #' # logistic model, continuous modifier
 #' dat2 <- data.frame(y=rbinom(50, 1,0.5), x1=runif(50), x2=runif(50),
@@ -143,7 +144,7 @@ qgcomp.emm.glm.ee <- function(
   allemmvals<- unique(data[,emmvar,drop=TRUE])
   emmlev <- length(allemmvals)
   ## process to expand factors if needed
-  zdata = qgcompint:::zproc(data[,emmvar,drop=TRUE], znm = emmvar)
+  zdata = zproc(data[,emmvar,drop=TRUE], znm = emmvar)
   emmvars = names(zdata)
   data = cbind(data, zdata)
 
@@ -158,8 +159,8 @@ qgcomp.emm.glm.ee <- function(
 
   hasintercept = as.logical(attr(originalform, "intercept"))
   #f = .intmaker(f,expnms,emmvar) # create necessary interaction terms with exposure
-  (f <- qgcompint:::.intmaker(updatedf,expnms,emmvars, emmvar)) # create necessary interaction terms with exposure
-  #(f <- qgcompint:::.intmaker(f,expnms,emmvars, emmvar)) # create necessary interaction terms with exposure
+  (f <- .intmaker(updatedf,expnms,emmvars, emmvar)) # create necessary interaction terms with exposure
+  #(f <- .intmaker(f,expnms,emmvars, emmvar)) # create necessary interaction terms with exposure
   newform <- terms(f, data = data)
   addedterms <- setdiff(attr(newform, "term.labels"), attr(originalform, "term.labels"))
   addedmain <- setdiff(addedterms, grep(":",addedterms, value = TRUE))
@@ -218,7 +219,7 @@ qgcomp.emm.glm.ee <- function(
       message("Including all model terms as exposures of interest\n")
     }
   }
-  lin = qgcompint:::.intchecknames(expnms)
+  lin = .intchecknames(expnms)
   if(!lin) stop("Model appears to be non-linear and I'm having trouble parsing it:
                   please use `expnms` parameter to define the variables making up the exposure")
   if (!is.null(q) & !is.null(breaks)){
@@ -296,7 +297,7 @@ qgcomp.emm.glm.ee <- function(
 
 
 
-  (msmf <- qgcompint:::.intmaker(msmf,"mixture",emmvars,emmvar)) # create necessary interaction terms with exposure
+  (msmf <- .intmaker(msmf,"mixture",emmvars,emmvar)) # create necessary interaction terms with exposure
   newmsmform <- terms(msmf, data = msmdf)
   hasintercept = as.logical(attr(newmsmform, "intercept"))
   class(newmsmform) <- "formula"

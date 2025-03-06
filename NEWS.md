@@ -1,6 +1,18 @@
 
 # qgcompint: quantile g-computation with statistical interaction
 
+# v0.9.0
+## Major changes
+- added new dependencies: numDeriv and rootSolve
+
+
+## Minor changes
+- added a number of generic functions, including `anova` to help make global chi-squared tests of interaction
+
+## Bug fixes
+- n/a
+
+
 # v0.8.0
 ## Major changes
 - Added estimating functions approach `qgcomp.emm.glm.ee` which allows a variety of new approaches (see ?qgcomp::qgcomp.glm.ee for more info)
