@@ -7,7 +7,7 @@
 pointwisebound(x, alpha = 0.05, pointwiseref = 1, emmval = 0, ...)
 }
 \arguments{
-\item{x}{qgcompemmfit object from qgcomp.emm.glm.noboot}
+\item{x}{"qgcompemmfit" object from \code{qgcomp.emm.glm.boot} or \code{qgcomp.emm.glm.ee}}
 
 \item{alpha}{alpha level for confidence intervals}
 

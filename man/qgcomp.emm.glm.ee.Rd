@@ -137,14 +137,26 @@ dat$zfact = as.factor(dat$z)
 (qfitee <- qgcomp.emm.glm.ee(f=y ~ zfact + x1 + x2, emmvar="zfact",
   expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
 library(qgcomp)
-(qfitee_noemm <- qgcomp.glm.ee(f=y ~ zfact + x1 + x2, emmvar="zfact",
+# standard qgcomp model without interaction
+(qfitee_noemm <- qgcomp.glm.ee(f=y ~ zfact + x1 + x2,
   expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
+  qfitee_noemm$fit # underlying fit
 # global test for interaction
 anova(qfitee, qfitee_noemm)
 # get stratified effect estimates:
 getstrateffects(qfitee, emmval=1)
 getstrateffects(qfitee, emmval=2)
 getstrateffects(qfitee, emmval=3)
+dat$rfact = as.factor(dat$r)
+(qfiteer <- qgcomp.emm.glm.ee(f=y ~ zfact + x1 + x2 + r, emmvar="zfact",
+  expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
+ # factor as a confounder, also works if the modifier is not in the model
+(qfiteerr2 <- qgcomp.emm.glm.ee(f=y ~  x1 + x2 + rfact, emmvar="zfact",
+  expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
+getstrateffects(qfiteerr2, emmval=2)
+getjointeffects(qfiteerr2, emmval=2)
+modelbound(qfiteerr2, emmval=2)
+pointwisebound(qfiteerr2, emmval=2)
 }
 \seealso{
 \code{\link[qgcomp]{qgcomp.noboot}}

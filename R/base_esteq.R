@@ -129,14 +129,27 @@
 #' (qfitee <- qgcomp.emm.glm.ee(f=y ~ zfact + x1 + x2, emmvar="zfact",
 #'   expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
 #' library(qgcomp)
-#' (qfitee_noemm <- qgcomp.glm.ee(f=y ~ zfact + x1 + x2, emmvar="zfact",
+#' # standard qgcomp model without interaction
+#' (qfitee_noemm <- qgcomp.glm.ee(f=y ~ zfact + x1 + x2,
 #'   expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
+#'   qfitee_noemm$fit # underlying fit
 #' # global test for interaction
 #' anova(qfitee, qfitee_noemm)
 #' # get stratified effect estimates:
 #' getstrateffects(qfitee, emmval=1)
 #' getstrateffects(qfitee, emmval=2)
 #' getstrateffects(qfitee, emmval=3)
+#' dat$rfact = as.factor(dat$r)
+#' (qfiteer <- qgcomp.emm.glm.ee(f=y ~ zfact + x1 + x2 + r, emmvar="zfact",
+#'   expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
+#'  # factor as a confounder, also works if the modifier is not in the model
+#' (qfiteerr2 <- qgcomp.emm.glm.ee(f=y ~  x1 + x2 + rfact, emmvar="zfact",
+#'   expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
+#' getstrateffects(qfiteerr2, emmval=2)
+#' getjointeffects(qfiteerr2, emmval=2)
+#' modelbound(qfiteerr2, emmval=2)
+#' pointwisebound(qfiteerr2, emmval=2)
+
 qgcomp.emm.glm.ee <- function(
     f,
     data,
@@ -303,11 +316,13 @@ qgcomp.emm.glm.ee <- function(
   }
 
 
-
   # simultaneous estimation of conditional and
-  basevars = get_all_vars(newform, data=qdata) # variables before being processed by model.frame
+  #basevars = get_all_vars(newform, data=qdata) # variables before being processed by model.frame
+  # need to bring in modifier if it is not in the model and also expand all other factors
+  bvdata = cbind(zdata, qdata[,as.character(newform[[2]]), drop=FALSE], data.frame(model.matrix(originalform, qdata)))
+  basevars = get_all_vars(newform, data=bvdata) # variables before being processed by model.frame
   #modframe = model.frame(newform, data=basevars)
-  modframe = model.frame(newform, data=qdata)
+  modframe = model.frame(newform, data=basevars)
   X = model.matrix(newform, modframe)
   Y = model.response(modframe)
   # nesting model.frame within the model.matrix function seems to be necessary to get interaction terms to propogate after setting exposures

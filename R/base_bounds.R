@@ -105,8 +105,7 @@
 #' \eqn{f(\beta) = \sum_i^p \beta_i, and \partial y/ \partial x} denotes the partial derivative/gradient. The vector G takes on values that equal the difference in quantiles of S for each pointwise comparison (e.g. for a comparison of the 3rd vs the 5th category, G is a vector of 2s)
 #' This variance is used to create pointwise confidence intervals via a normal approximation: (e.g. upper 95% CI = psi + variance*1.96)
 #'
-#' @param x qgcompemmfit object from qgcomp.emm.glm.noboot
-#'
+#' @param x "qgcompemmfit" object from `qgcomp.emm.glm.boot` or `qgcomp.emm.glm.ee`
 #' @param alpha alpha level for confidence intervals
 #' @param pointwiseref referent quantile (e.g. 1 uses the lowest joint-exposure category as the referent category for calculating all mean differences/standard deviations)
 #' @param emmval fixed value for effect measure modifier at which pointwise comparisons are calculated
@@ -281,7 +280,7 @@ pointwisebound.qgcompemmfit <- function (x, alpha = 0.05, pointwiseref = 1, emmv
 #' @description Calculates: expected outcome (on the link scale), and upper and lower
 #'  confidence intervals (both pointwise and simultaneous)
 #'
-#' @details This method leverages the bootstrap distribution of qgcomp model coefficients
+#' @details This method leverages the distribution of qgcomp model coefficients
 #' to estimate pointwise regression line confidence bounds. These are defined as the bounds
 #' that, for each value of the independent variable X (here, X is the joint exposure quantiles)
 #' the 95% bounds (for example) for the model estimate of the regression line E(Y|X) are expected to include the
@@ -289,10 +288,16 @@ pointwisebound.qgcompemmfit <- function (x, alpha = 0.05, pointwiseref = 1, emmv
 #' simultaneous bounds contain the true value of E(Y|X) for all values of X in 95% of studies. The
 #' latter are more conservative and account for the multiple testing implied by the former. Pointwise
 #' bounds are calculated via the standard error for the estimates of E(Y|X), while the simultaneous
-#' bounds are estimated using the bootstrap method of Cheng (reference below). All bounds are large
+#' bounds are estimated using the method of Cheng (reference below). All bounds are large
 #' sample bounds that assume normality and thus will be underconservative in small samples. These
-#' bounds may also inclue illogical values (e.g. values less than 0 for a dichotomous outcome) and
+#' bounds may also include illogical values (e.g. values less than 0 for a dichotomous outcome) and
 #' should be interpreted cautiously in small samples.
+#'
+#' Following Cheng, this approach is possible on bootstrap fitted models (aside from Cox models).
+#' For estimating equation approaches, a normality assumption is used to draw values from the sampling
+#' distribution of the model parameters based on the covariance matrix of the parameters of the
+#' marginal structural model. Because those parameters are not separately estimated for the `noboot`
+#' approaches, this method is not available for `noboot` methods.
 #'
 #'
 #' Reference:
@@ -300,7 +305,7 @@ pointwisebound.qgcompemmfit <- function (x, alpha = 0.05, pointwiseref = 1, emmv
 #' Cheng, Russell CH. "Bootstrapping simultaneous confidence bands."
 #' Proceedings of the Winter Simulation Conference, 2005.. IEEE, 2005.
 #'
-#' @param x "qgcompemmfit" object from `qgcomp.emm.boot`,
+#' @param x "qgcompemmfit" object from `qgcomp.emm.glm.boot` or `qgcomp.emm.glm.ee`,
 #' @param emmval fixed value for effect measure modifier at which pointwise comparisons are calculated
 #' @param alpha alpha level for confidence intervals
 #' @param pwonly logical: return only pointwise estimates (suppress simultaneous estimates)
@@ -359,7 +364,7 @@ modelbound <- function(x, emmval=0.0, alpha=0.05, pwonly=FALSE, ...){
 
 #' @export
 modelbound.qgcompemmfit <- function(x, emmval=0.0, alpha=0.05, pwonly=FALSE, ...){
-  if(!x$bootstrap || inherits(x, "survqgcompfit")){
+  if(!x$bootstrap & !inherits(x, "eeqgcompfit") || inherits(x, "survqgcompfit")){
     stop("This function does not work with this type of qgcomp fit")
   }
   #if(x$degree>1) stop("not implemented for non-linear fits")
@@ -367,19 +372,31 @@ modelbound.qgcompemmfit <- function(x, emmval=0.0, alpha=0.05, pwonly=FALSE, ...
   link = x$msmfit$family$link
     qvals = c(1:x$q)-1
     designmat = .makenewdesign(x, qvals, emmval=emmval)
-    coef.boot = x$bootsamps
     #as.matrix(designmat) %*% coef(x$msmfit) # expected given new design matrix
+    if(x$bootstrap){
+      coef.boot = x$bootsamps
+    }
+    else if(!x$bootstrap){
+      coef.fixed = coef(x)
+      coef.vcov = vcov(x)
+      # samples from the sampling distribution, rather than the bootstrap distribution
+      coef.boot = t(qgcomp:::.rmvnorm(5000, coef.fixed, coef.vcov))
+      #t(designmat %*% coef.boot)
+    }
+
+
+
     ypred <- t(designmat %*% coef.boot) # linearpredictor at each bootstrap rep, given new design matrix
     #
     #py = tapply(x$y.expectedmsm, x$index, mean)
-    py <- as.numeric(designmat %*% coef(x$msmfit))
+    py <- as.numeric(designmat %*% coef(x))
     ycovmat = cov(ypred) # covariance at specific value of emmval
     #  ycovmat = x$cov.yhat # bootstrap covariance matrix of E(y|x) from MSM
     pw.vars = diag(ycovmat)
 
   if(!pwonly){
-    boot.err = t(coef.boot - x$coef)
-    iV = solve(qr(x$covmat.coef, tol=1e-20))
+    boot.err = t(coef.boot - coef(x))
+    iV = solve(qr(vcov(x), tol=1e-20))
     chi.boots = vapply(seq_len(nrow(boot.err)), function(i) boot.err[i,] %*% iV %*% boot.err[i,], 0.0)
     chicrit = qchisq(1-alpha, length(x$coef))
     C.set = t(coef.boot[,which(chi.boots<chicrit)])

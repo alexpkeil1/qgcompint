@@ -255,40 +255,42 @@ getjointeffects <- function(x, emmval=1.0, ...){
     whichintterms = NULL
     if(length(whichvar)>0) whichintterms = grep(whichvar, x$intterms, value = TRUE)
   }
-
   #lnx = length(x$expnms)
   #lnxz = length(whichintterms)
   mod = summary(x$fit)
   if( x$fit$family$family=="cox" ){
     covmat = as.matrix(x$fit$var)
-    colnames(covmat) <- rownames(covmat) <- names(x$fit$coefficients)
-  } else{
+    colnames(covmat) <- rownames(covmat) <- names(coef(x$fit))
+  } else if(any(class(x$fit)=="eefit")){
+    covmat = vcov(x$fit)
+  }
+  else{
     covmat = as.matrix(mod$cov.scaled)
   }
   #stopifnot(lnx == lnxz)
   if(is.factor(zvar)){
     indeffects =
-      x$fit$coefficients[x$expnms]
+      coef(x$fit)[x$expnms]
     if(!is.null(whichintterms)){
       indeffects =
         indeffects +
-        x$fit$coefficients[whichintterms]
+        coef(x$fit)[whichintterms]
     }
   } else{
     indeffects =
-      x$fit$coefficients[x$expnms] +
-      x$fit$coefficients[x$intterms]*emmval
+      coef(x$fit)[x$expnms] +
+      coef(x$fit)[x$intterms]*emmval
   }
   if(length(whichmainterms)>1)
     stop("getjointeffects: length(whichmainterms)>1, which generally means something is wrong in code")
   maineffects = 0
   if(length(whichmainterms)==1)
-    maineffects = x$fit$coefficients[whichmainterms] # this
+    maineffects = coef(x$fit)[whichmainterms] # this
   effectatZ <- sum(indeffects)  + maineffects
   expidx <- which(colnames(covmat) %in% x$expnms)
   mainidx <- which(colnames(covmat) %in% whichmainterms)
   intidx <- which(colnames(covmat) %in% whichintterms)
-  effgrad = 0*x$fit$coefficients
+  effgrad = 0*coef(x$fit)
   effgrad[expidx] <- 1
   effgrad[mainidx] <- 1
   if(is.factor(zvar)){
@@ -304,9 +306,9 @@ getjointeffects <- function(x, emmval=1.0, ...){
   )
   res <- list(
     effectmat = rbind(
-      terms.emm = x$fit$coefficients[whichmainterms],
-      terms.main = x$fit$coefficients[c(x$expnms)],
-      terms.prod = x$fit$coefficients[x$intterms],
+      terms.emm = coef(x$fit)[whichmainterms],
+      terms.main = coef(x$fit)[c(x$expnms)],
+      terms.prod = coef(x$fit)[x$intterms],
       indeffects = indeffects
     )
     , # main effect + product term
@@ -376,9 +378,9 @@ getstrateffects <- function(x, emmval=1.0, ...){
   mod = summary(x$fit)
   if( x$fit$family$family=="cox" ){
     covmat = as.matrix(x$fit$var)
-    colnames(covmat) <- rownames(covmat) <- names(x$fit$coefficients)
+    colnames(covmat) <- rownames(covmat) <- names(coef(x$fit))
   } else if(any(class(x$fit)=="eefit")){
-    covmat = x$fit$vcov
+    covmat = vcov(x$fit)
   }
   else{
     covmat = as.matrix(mod$cov.scaled)

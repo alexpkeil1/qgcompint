@@ -7,7 +7,7 @@
 modelbound(x, emmval = 0, alpha = 0.05, pwonly = FALSE, ...)
 }
 \arguments{
-\item{x}{"qgcompemmfit" object from \code{qgcomp.emm.boot},}
+\item{x}{"qgcompemmfit" object from \code{qgcomp.emm.glm.boot} or \code{qgcomp.emm.glm.ee},}
 
 \item{emmval}{fixed value for effect measure modifier at which pointwise comparisons are calculated}
 
@@ -33,7 +33,7 @@ Calculates: expected outcome (on the link scale), and upper and lower
 confidence intervals (both pointwise and simultaneous)
 }
 \details{
-This method leverages the bootstrap distribution of qgcomp model coefficients
+This method leverages the distribution of qgcomp model coefficients
 to estimate pointwise regression line confidence bounds. These are defined as the bounds
 that, for each value of the independent variable X (here, X is the joint exposure quantiles)
 the 95\% bounds (for example) for the model estimate of the regression line E(Y|X) are expected to include the
@@ -41,10 +41,16 @@ true value of E(Y|X) in 95\% of studies. The "simultaneous" bounds are also calc
 simultaneous bounds contain the true value of E(Y|X) for all values of X in 95\% of studies. The
 latter are more conservative and account for the multiple testing implied by the former. Pointwise
 bounds are calculated via the standard error for the estimates of E(Y|X), while the simultaneous
-bounds are estimated using the bootstrap method of Cheng (reference below). All bounds are large
+bounds are estimated using the method of Cheng (reference below). All bounds are large
 sample bounds that assume normality and thus will be underconservative in small samples. These
-bounds may also inclue illogical values (e.g. values less than 0 for a dichotomous outcome) and
+bounds may also include illogical values (e.g. values less than 0 for a dichotomous outcome) and
 should be interpreted cautiously in small samples.
+
+Following Cheng, this approach is possible on bootstrap fitted models (aside from Cox models).
+For estimating equation approaches, a normality assumption is used to draw values from the sampling
+distribution of the model parameters based on the covariance matrix of the parameters of the
+marginal structural model. Because those parameters are not separately estimated for the \code{noboot}
+approaches, this method is not available for \code{noboot} methods.
 
 Reference:
 
