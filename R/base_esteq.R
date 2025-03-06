@@ -28,7 +28,7 @@
   binlink = ifelse(rr, "logitlog", "logit")
   FUN <- switch(fam,
                 gaussian = qgcomp:::.esteq_qgclin,
-                tobit = qgcomp:::.esteq_qgctobit,
+                #tobit = qgcomp:::.esteq_qgctobit,
                 poisson = qgcomp:::.esteq_qgcpoisson,
                 #binomial = .esteq_qgclogit(theta, Y, X, Xint, Xmsm, weights),
                 binomial = switch(binlink,
@@ -73,6 +73,7 @@
 #' sampling of clusters/individuals to estimate cluster-appropriate standard
 #' errors via bootstrapping.
 #' @param weights "case weights" - passed to the "weight" argument of
+#' @param offset Model offset term on individual basis: not yet implemented
 #' \code{\link[stats]{glm}} or \code{\link[arm]{bayesglm}}
 #' @param alpha alpha level for confidence limit calculation
 #' @param rr (logical, default=TRUE) estimate a risk ratio from the MSM when using an underlying logistic model
@@ -186,7 +187,8 @@ qgcomp.emm.glm.ee <- function(
     family = testfit$family
   }
   if(!is.null(cc$family) && cc$family == "tobit"){
-    family  = tobit()
+    #family  = tobit()
+    stop("Tobit not implemented")
   }
   if(is.null(cc$family)){
     family=gaussian()
@@ -319,7 +321,7 @@ qgcomp.emm.glm.ee <- function(
     res = switch(fam,
                  binomial = c(log(mean(Y))-(mean(offset)), rep(0, np-1), log(mean(Y))-(mean(offset)), rep(0, npmsm-1)),
                  poisson = c(log(mean(Y))-(mean(offset)), rep(0, np-1), log(mean(Y))-(mean(offset)), rep(0, npmsm-1)),
-                 tobit = c(rep(0, np+npmsm),1),
+                 #tobit = c(rep(0, np+npmsm),1),
                  rep(0, np+npmsm)
     )
     res
