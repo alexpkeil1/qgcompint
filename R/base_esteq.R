@@ -374,11 +374,11 @@ qgcomp.emm.glm.ee <- function(
 
   # modifier main term, product term
   condcovmat = fullcovmat[condidx,condidx]
-  estb.prod <- do.call(c, lapply(1:length(emmvars), function(x) c(
-    coef(fit)[emmvars[x]],
-    #sum(mod$coefficients[addedintsl[[x]],1, drop=TRUE])
-    sum(coef(fit)[addedintsl[[x]]])
-  )))
+  #estb.prod <- do.call(c, lapply(1:length(emmvars), function(x) c(
+  #  coef(fit)[emmvars[x]],
+  #  #sum(mod$coefficients[addedintsl[[x]],1, drop=TRUE])
+  #  sum(coef(fit)[addedintsl[[x]]])
+  #)))
   #names(estb.prod) <- do.call(c, lapply(1:length(emmvars), function(x) c(emmvars[x], paste0(emmvars[x], ":mixture"))))
   #seb.prod <- do.call(c, lapply(1:length(emmvars), function(x) c(
   #  sqrt(condcovmat[emmvars[x],emmvars[x]]),

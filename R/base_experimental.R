@@ -82,6 +82,7 @@ qgcomp.survcurve.boot <- function(x, ...){
 #' @exportS3Method stats::anova
 anova.eeqgcompfit = function (object, ..., dispersion = NULL, test = NULL)
 {
+  # based on geepack::anova.geeglm
   stop("Not yet implemented")
   dotargs <- list(...)
   named <- if (is.null(names(dotargs)))
@@ -114,6 +115,7 @@ anova.eeqgcompfit = function (object, ..., dispersion = NULL, test = NULL)
       method <- get(method, mode = "function", envir = parent.frame())
     for (i in 1:(nvars - 1)) {
       eprint("calling fit....")
+      # TODO: START HERE: fit model with decreasing number of variables (should just be underlying fit)
       fit <- method(x = x[, varseq <= i, drop = FALSE],
                     y = object$y, weights = object$prior.weights,
                     corstr = object$corstr, start = object$start,
