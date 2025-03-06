@@ -70,7 +70,9 @@ Qgcomp.boot can be used for this, which will use bootstrap
 sampling of clusters/individuals to estimate cluster-appropriate standard
 errors via bootstrapping.}
 
-\item{weights}{"case weights" - passed to the "weight" argument of
+\item{weights}{"case weights" - passed to the "weight" argument of}
+
+\item{offset}{Model offset term on individual basis: not yet implemented
 \code{\link[stats]{glm}} or \code{\link[arm]{bayesglm}}}
 
 \item{alpha}{alpha level for confidence limit calculation}

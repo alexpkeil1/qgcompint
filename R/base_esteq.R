@@ -1,4 +1,11 @@
-.esteq_qgc <- qgcomp:::.esteq_qgc
+#.esteq_qgc <- qgcomp:::.esteq_qgc
+
+.esteq_qgc <- utils::getFromNamespace(".esteq_qgc", "qgcomp")
+.esteq_error <- utils::getFromNamespace(".esteq_error", "qgcomp")
+.esteq_qgclin <- utils::getFromNamespace(".esteq_qgclin", "qgcomp")
+.esteq_qgclogit <- utils::getFromNamespace(".esteq_qgclogit", "qgcomp")
+.esteq_qgclogitlog <- utils::getFromNamespace(".esteq_qgclogitlog", "qgcomp")
+.esteq_qgcpoisson <- utils::getFromNamespace(".esteq_qgcpoisson", "qgcomp")
 
 .esteq_qgcemmdf <- function(f, data, theta, family, intvals, expnms, emmvar, emmvars, hasintercept, weights, degree=1,rr=FALSE,offset=0, delta=-Inf, ...){
   # family specific estimating equation based on input dataframes
