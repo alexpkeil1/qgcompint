@@ -79,10 +79,10 @@ qgcomp.survcurve.boot <- function(x, ...){
   )
 }
 
-#' @exportS3Method stats::anova
 anova.eeqgcompfit = function (object, ..., dispersion = NULL, test = NULL)
+  #' @exportS3Method stats::anova
 {
-  # based on geepack::anova.geeglm
+  # based on geepack:::anova.geeglm
   stop("Not yet implemented")
   dotargs <- list(...)
   named <- if (is.null(names(dotargs)))
@@ -92,80 +92,37 @@ anova.eeqgcompfit = function (object, ..., dispersion = NULL, test = NULL)
     warning("The following arguments to anova.glm(..) are invalid and dropped: ",
             paste(deparse(dotargs[named]), collapse = ", "))
   dotargs <- dotargs[!named]
-  is.eefit <- unlist(lapply(dotargs, function(x) inherits(x,
-                                                        "eeqgcompfit")))
+  is.eefit <- unlist(lapply(dotargs, function(x) inherits(x, "eeqgcompfit")))
   dotargs <- dotargs[is.eefit]
   if (length(dotargs) > 0)
-    return(anova.eeqgcompfit(c(list(object), dotargs), dispersion = dispersion,
+    return(anova.eeqgcompfitlist(c(list(object), dotargs), dispersion = dispersion,
                             test = test))
-  #varlist <- attr(object$terms, "variables")
-  varlist = names(coef(object))
-  x <- if (n <- match("x", names(object), 0)) {
-    object[[n]]
-  }else {
-    #model.matrix(object)
-    object$msmfit$X
+  else{
+    stop("Two model fits are needed")
   }
-  varseq <- attr(x, "assign")
-  nvars <- max(0, varseq)
-  betaList <- vbetaList <- NULL
-  if (nvars > 1) {
-    method <- object$method
-    if (!is.function(method))
-      method <- get(method, mode = "function", envir = parent.frame())
-    for (i in 1:(nvars - 1)) {
-      eprint("calling fit....")
-      # TODO: START HERE: fit model with decreasing number of variables (should just be underlying fit)
-      fit <- method(x = x[, varseq <= i, drop = FALSE],
-                    y = object$y, weights = object$prior.weights,
-                    corstr = object$corstr, start = object$start,
-                    offset = object$offset, id = object$id, family = object$family,
-                    control = object$control)
-      betaList <- c(betaList, list(fit$beta))
-      vbetaList <- c(vbetaList, list(fit$vbeta))
-    }
-  }
-  betaList <- c(betaList, list(object$geese$beta))
-  vbetaList <- c(vbetaList, list(object$geese$vbeta))
-  hasIntercept <- (length(grep("(Intercept)", names(betaList[[1]]))) !=
-                     0)
-  dimVec <- unlist(lapply(betaList, length))
-  if (hasIntercept) {
-    dfVec <- dimVec[1] - 1
-  }
-  else {
-    dfVec <- dimVec[1]
-  }
-  if (length(dimVec) > 1) {
-    for (i in 2:length(dimVec)) dfVec <- c(dfVec, dimVec[i] -
-                                             dimVec[i - 1])
-  }
-  X2Vec <- NULL
-  for (i in 1:length(dfVec)) {
-    beta <- betaList[[i]]
-    vbeta <- vbetaList[[i]]
-    beta0 <- rep(1, length(beta))
-    beta0[1:dfVec[i]] <- 0
-    beta0 <- rev(beta0)
-    zeroidx <- beta0 == 0
-    X2 <- t(beta[zeroidx]) %*% solve(vbeta[zeroidx, zeroidx,
-                                           drop = FALSE]) %*% beta[zeroidx]
-    X2Vec <- c(X2Vec, X2)
-  }
-  resdf <- dfVec
-  resdev <- X2Vec
-  tab <- data.frame(resdf, resdev, 1 - pchisq(resdev, resdf))
-  colnames(tab) <- c("Df", "X2", "P(>|Chi|)")
-  tl <- attr(object$terms, "term.labels")
-  if (length(tl) == 0)
-    tab <- tab[1, , drop = FALSE]
-  if (length(tl))
-    rownames(tab) <- c(tl)
-  title <- paste("Analysis of 'Wald statistic' Table", "\nModel: ",
-                 object$family$family, ", link: ", object$family$link,
-                 "\nResponse: ", as.character(varlist[-1])[1], "\nTerms added sequentially (first to last)\n",
-                 sep = "")
-  structure(tab, heading = title, class = c("anova", "data.frame"))
 }
 
 
+anova.eeqgcompfitlist <- function (object, ..., dispersion = NULL, test = NULL)
+  #' @exportS3Method stats::anova
+{
+  responses <- as.character(lapply(object, function(x) {
+    deparse(formula(x)[[2]])
+  }))
+  sameresp <- responses == responses[1]
+  if (!all(sameresp)) {
+    object <- object[sameresp]
+    warning("Models with response ", deparse(responses[!sameresp]),
+            " removed because response differs from ", "model 1")
+  }
+  ns <- sapply(object, function(x) length(x$residuals))
+  if (any(ns != ns[1]))
+    stop("models were not all fitted to the same size of dataset")
+  objects <- list(object, ...)
+  m1 <- objects[[1]][[1]]
+  if (length(objects[[1]]) > 1)
+    m2 <- objects[[1]][[2]]
+  else m2 <- NULL
+  value <- anovageePrim2(m1, m2)
+  return(value)
+}

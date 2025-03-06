@@ -309,43 +309,49 @@ qgcomp.emm.glm.ee <- function(
 
 
   # point estimates
-  np = ncol(X)
-  npmsm = ncol(Xmsm)
-
-  startvals <- function(family,Y,X,np,npmsm,offset=0){
-    fam = family$family
-    res = switch(fam,
-                 binomial = c(log(mean(Y))-(mean(offset)), rep(0, np-1), log(mean(Y))-(mean(offset)), rep(0, npmsm-1)),
-                 poisson = c(log(mean(Y))-(mean(offset)), rep(0, np-1), log(mean(Y))-(mean(offset)), rep(0, npmsm-1)),
-                 tobit = c(rep(0, np+npmsm),1),
-                 rep(0, np+npmsm)
-    )
-    res
-  }
-  parminits = startvals(family,Y,X,np,npmsm)
   #.esteq_qgc(parminits, family=family, Y=Y, X=X, Xint=Xint, Xmsm=Xmsm, weights=qdata$weights, rr=FALSE)
-  eqfit <- rootSolve::multiroot(.esteq_qgc, start=parminits, family=family, Y=Y, X=X, Xint=Xint, Xmsm=Xmsm, weights=qdata$weights, rr=rr, offset=qdata$offset__, delta=delta)
-  # "bread" of the sandwich covariance
-  A = numDeriv::jacobian(func=.esteq_qgc, x=eqfit$root, family=family, Y=Y, X=X, Xint=Xint, Xmsm=Xmsm, weights=qdata$weights,method="Richardson", rr=rr,offset=qdata$offset__, delta=delta)
-  #
+    np = ncol(X)
+    npmsm = ncol(Xmsm)
+    totn = sum(c(np, npmsm))
 
-  # "meat" of the sandwich covariance
-  uid =   unique(qdata[,id,drop=TRUE])
-  psii = lapply(uid, function(x){
-    selidx = which(qdata[,id,drop=TRUE] == x)
-    .esteq_qgcemmdf(newform, data=modframe[selidx,,drop=FALSE], theta=eqfit$root, family, intvals, expnms, emmvar, emmvars, hasintercept, weights=qdata$weights[selidx], degree=degree, rr=rr,offset=qdata$offset__[selidx], delta=delta)
-  } )
-  Bi = lapply(psii, function(x) x%*%t(x))
-  n = length(Y)
-  B = Bi[[1]]
-  for(i in 2:length(Bi)){
-    B = B + Bi[[i]]
-  }
+    startvals <- function(family,Y,X,np,npmsm,offset=0){
+      if(!is.null(npmsm)){
+        msmstart = c(log(mean(Y))-(mean(offset)), rep(0, npmsm-1))
+      } else msmstart = NULL
 
-  # sandwich covariance
-  ibread = solve(A)
-  (fullcovmat = ibread %*% B %*% t(ibread))
+      fam = family$family
+      res = switch(fam,
+                   binomial = c(log(mean(Y))-(mean(offset)), rep(0, np-1), msmstart),
+                   poisson = c(log(mean(Y))-(mean(offset)), rep(0, np-1), msmstart),
+                   tobit = c(rep(0, totn),1),
+                   rep(0, totn)
+      )
+      res
+    }
+    parminits = startvals(family,Y,X,np,npmsm)
+    eqfit <- rootSolve::multiroot(.esteq_qgc, start=parminits, family=family, Y=Y, X=X, Xint=Xint, Xmsm=Xmsm, weights=qdata$weights, rr=rr, offset=qdata$offset__, delta=delta)
+    # "bread" of the sandwich covariance
+    A = numDeriv::jacobian(func=.esteq_qgc, x=eqfit$root, family=family, Y=Y, X=X, Xint=Xint, Xmsm=Xmsm, weights=qdata$weights,method="Richardson", rr=rr,offset=qdata$offset__, delta=delta)
+    #
 
+    # "meat" of the sandwich covariance
+    uid =   unique(id)
+    psii = lapply(uid, function(x){
+      selidx = which(qdata[,id,drop=TRUE] == x)
+      .esteq_qgcemmdf(newform, data=modframe[selidx,,drop=FALSE], theta=eqfit$root, family, intvals, expnms, emmvar, emmvars, hasintercept, weights=qdata$weights[selidx], degree=degree, rr=rr,offset=qdata$offset__[selidx], delta=delta)
+    } )
+    Bi = lapply(psii, function(x) x%*%t(x))
+    n = length(Y)
+    B = Bi[[1]]
+    for(i in 2:length(Bi)){
+      B = B + Bi[[i]]
+    }
+
+    # sandwich covariance
+    ibread = solve(A)
+    (fullcovmat = ibread %*% B %*% t(ibread))
+
+  qgcomp.glm.ee.fit(Y=Y,X=X,Xint=Xint,Xmsm=Xmsm, family=family, id=qdata[,id,drop=TRUE], weights=qdata$weights, rr=TRUE, offset=qdata$offset__, delta = delta)
   condidx = 1:np
   msmidx = (np+1):(np+npmsm)
   estb <- as.numeric(eqfit$root[msmidx])

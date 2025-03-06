@@ -142,3 +142,10 @@ coef.qgcompemmfit <- function(object, ...){
   #' @export
   object$coef
 }
+
+
+formula.qgcompemmfit <- function(x, ...){
+  #' @importFrom stats formula
+  #' @export
+  x$call$f
+}
