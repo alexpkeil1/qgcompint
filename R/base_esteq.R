@@ -1,5 +1,6 @@
-#.esteq_qgc <- qgcomp:::.esteq_qgc
+#.esteq_qgc <- .esteq_qgc
 
+# bring in hidden functions from qgcomp that relate to estimating equations methodology
 .esteq_qgc <- utils::getFromNamespace(".esteq_qgc", "qgcomp")
 .esteq_error <- utils::getFromNamespace(".esteq_error", "qgcomp")
 .esteq_qgclin <- utils::getFromNamespace(".esteq_qgclin", "qgcomp")
@@ -34,15 +35,15 @@
 
   binlink = ifelse(rr, "logitlog", "logit")
   FUN <- switch(fam,
-                gaussian = qgcomp:::.esteq_qgclin,
-                #tobit = qgcomp:::.esteq_qgctobit,
-                poisson = qgcomp:::.esteq_qgcpoisson,
+                gaussian = .esteq_qgclin,
+                #tobit = .esteq_qgctobit,
+                poisson = .esteq_qgcpoisson,
                 #binomial = .esteq_qgclogit(theta, Y, X, Xint, Xmsm, weights),
                 binomial = switch(binlink,
-                                  logit = qgcomp:::.esteq_qgclogit,
-                                  logitlog = qgcomp:::.esteq_qgclogitlog
+                                  logit = .esteq_qgclogit,
+                                  logitlog = .esteq_qgclogitlog
                 ),
-                qgcomp:::.esteq_error
+                .esteq_error
   )
   FUN(theta=theta, Y=Y, X=X, Xint=Xint, Xmsm=Xmsm, weights=weights, offset=offset, delta=-Inf, ...)
 }
