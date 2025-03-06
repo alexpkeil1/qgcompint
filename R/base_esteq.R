@@ -347,7 +347,6 @@ qgcomp.emm.glm.ee <- function(
   ibread = solve(A)
   (fullcovmat = ibread %*% B %*% t(ibread))
 
-  qgcomp.glm.ee.fit(Y=Y,X=X,Xint=Xint,Xmsm=Xmsm, family=family, id=qdata[,id,drop=TRUE], weights=qdata$weights, rr=TRUE, offset=qdata$offset__, delta = delta)
   condidx = 1:np
   msmidx = (np+1):(np+npmsm)
   estb <- as.numeric(eqfit$root[msmidx])
