@@ -79,6 +79,7 @@ qgcomp.survcurve.boot <- function(x, ...){
   )
 }
 
+# TODO: move to qgcomp
 anova.eeqgcompfit = function (object, ..., dispersion = NULL, test = NULL)
   #' @exportS3Method stats::anova
 {
@@ -101,7 +102,7 @@ anova.eeqgcompfit = function (object, ..., dispersion = NULL, test = NULL)
   }
 }
 
-
+# TODO: move to qgcomp
 anova.eeqgcompfitlist <- function (object, ..., dispersion = NULL, test = NULL)
   #' @exportS3Method stats::anova
 {
@@ -126,7 +127,7 @@ anova.eeqgcompfitlist <- function (object, ..., dispersion = NULL, test = NULL)
   return(value)
 }
 
-
+# TODO: move to qgcomp
 anovaqgcompgee <- function (m1, m2, ...)
 {
   mm1 <- model.matrix(m1)
@@ -190,5 +191,18 @@ anovaqgcompgee <- function (m1, m2, ...)
                      class = c("anova", "data.frame"))
     return(val)
   }
+}
+
+
+# TODO: move to qgcomp
+model.matrix.eeqgcompfit <- function(object, ...){
+  #' @exportS3Method stats::model.matrix
+  object$fit$X
+}
+
+# TODO: move to qgcomp
+formula.eeqgcompfit <- function(x, ...){
+  #' @exportS3Method stats::formula
+  x$call$f
 }
 

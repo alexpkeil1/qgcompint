@@ -319,3 +319,116 @@ getjointeffects <- function(x, emmval=1.0, ...){
   )
   res
 }
+
+
+getstrateffects <- function(x, emmval=1.0, ...){
+  #' @title Calculate mixture effect at a set value of effect measure modifier
+  #'
+  #' @description A standard qgcomp fit with effect measure modification
+  #' only estimates effects at the referent (0) level of the modifier (psi1).
+  #' This function can be used to estimate effects at arbitrary levels of the modifier
+  #'
+  #'
+  #' @param x "qgcompemmfit" object from qgcomp.emm.glm.noboot
+  #' function
+  #' @param emmval numerical: value of effect measure modifier at which weights are generated
+  #' @param ... unused
+  #' @seealso \code{\link[qgcompint]{qgcomp.emm.glm.noboot}} \code{\link[qgcompint]{getstratweights}}
+  #' @concept variance mixtures
+  #' @return
+  #' An object of class "qgcompemmeffects", which inherits from "qgcompemmfit" and "list"
+  #'
+  #' This class contains the `emmval`-stratum specific effect estimates of the mixture. By default, this prints a coefficient table, similar to objects of type "qgcompemmfit" which displays the stratum specific joint effects from a "qgcompemmfit" model.
+  #'
+  #' @export
+  #' @examples
+  #' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
+  #'   z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
+  #' (qfit <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2, emmvar="z",
+  #'   expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
+  #' getstrateffects(qfit, emmval = 0)
+  #' strateffects = getstrateffects(qfit, emmval = 1)
+  #'
+
+  #expnms = x$expnms
+  #addedintsord =  x$intterms  zvar = x$fit$data[,x$call$emmvar]
+  #if(x$bootstrap) stop("This method does not work for bootstrapped fits. If using a linear parameterization, then stratified effects can be estimated using non-bootstrapped methods.")
+  if(x$degree>1) stop("not implemented for non-linear fits")
+  zvar = x$fit$data[,x$call$emmvar]
+  res = .calcstrateffects(x,emmval=emmval, zvar=zvar)
+  class(res) <- "qgcompemmeffects"
+  res
+}
+
+
+.calcstrateffects <- function(x, emmval=1.0, zvar){
+  #x$call$emmvar
+  whichintterms = x$intterms
+  if(is.factor(zvar)){
+    whichlevels = zproc(zvar[which(zvar==emmval)][1], znm = x$call$emmvar)
+    whichvar = names(whichlevels)[which(whichlevels==1)]
+    whichintterms = NULL
+    if(length(whichvar)>0) whichintterms = grep(whichvar, x$intterms, value = TRUE)
+  }
+
+  #lnx = length(x$expnms)
+  #lnxz = length(whichintterms)
+  mod = summary(x$fit)
+  if( x$fit$family$family=="cox" ){
+    covmat = as.matrix(x$fit$var)
+    colnames(covmat) <- rownames(covmat) <- names(x$fit$coefficients)
+  } else if(any(class(x$fit)=="eefit")){
+    covmat = x$fit$vcov
+  }
+  else{
+    covmat = as.matrix(mod$cov.scaled)
+  }
+  #stopifnot(lnx == lnxz)
+  if(is.factor(zvar)){
+    indeffects =
+      x$fit$coefficients[x$expnms]
+    if(!is.null(whichintterms)){
+      indeffects =
+        indeffects +
+        x$fit$coefficients[whichintterms]
+    }
+  } else{
+    indeffects =
+      coef(x$fit)[x$expnms] +
+      coef(x$fit)[x$intterms]*emmval
+  }
+  effectatZ <- sum(indeffects)
+  expidx <- which(colnames(covmat) %in% x$expnms)
+  intidx <- which(colnames(covmat) %in% whichintterms)
+  effgrad = 0*coef(x$fit)
+  effgrad[expidx] <- 1
+  if(is.factor(zvar)){
+    effgrad[intidx] <- 1.0
+  } else effgrad[intidx] <- emmval
+  seatZ <- se_comb2(c(x$expnms,x$intterms),
+                    covmat = covmat,
+                    grad = effgrad
+  )
+  ciatZ <- cbind(
+    effectatZ + seatZ * qnorm(x$alpha / 2),
+    effectatZ + seatZ * qnorm(1 - x$alpha / 2)
+  )
+  res <- list(
+    effectmat = rbind(
+      terms.main = coef(x$fit)[x$expnms],
+      terms.prod = coef(x$fit)[x$intterms],
+      indeffects = indeffects
+    )
+    , # main effect + product term
+    eff = effectatZ,
+    se = seatZ,
+    ci = ciatZ,
+    emmvar = x$call$emmvar,
+    emmlev = x$emmlev,
+    emmval = emmval
+  )
+  res
+}
+
+#.calcstrateffects(lst)
+
