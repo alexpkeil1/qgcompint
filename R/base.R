@@ -289,7 +289,8 @@ qgcomp.emm.glm.noboot <- function(
     cov.yhat=NULL,
     alpha=alpha,
     call=origcall,
-    emmlev = emmlev
+    emmlev = emmlev,
+    hasintercept = hasintercept
   )
   # include some extra things by default for binary modifier (convenience only)
   if(emmlev==2){

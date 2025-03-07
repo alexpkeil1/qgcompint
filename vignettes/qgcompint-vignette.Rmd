@@ -7,7 +7,7 @@ output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{The qgcompint package: g-computation with statistical interaction}
   %\VignetteEngine{knitr::knitr}
-  \usepackage[utf8]{inputenc}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include=FALSE}
@@ -143,6 +143,32 @@ Visually, it's easier to compare two plots with the same y-axis. Here we can see
 ```{r first_step_boot_plot_scale, include=TRUE, fig.width=6,fig.height=4, fig.cap=paste("Pointwise comparisons (same scale) for M =", 0:1)}
 p1 <- plot(qfit1b, emmval=0, suppressprint = TRUE)
 p2 <- plot(qfit1b, emmval=1, suppressprint = TRUE)
+p1 + ggplot2::coord_cartesian(ylim=c(0,10))
+p2 + ggplot2::coord_cartesian(ylim=c(0,10))
+```
+
+# Estimating equations
+Another approach to non-linear qgcomp fits, or to get marginal estimates of the exposure-response curve (i.e. conditional only on the modifier), we can use the `qgcomp.emm.glm.ee` function. Here we just repeat the analysis with the bootstrapped fit, which yields similar evidence that there is substantial statistical interaction on the additive scale, so that we would expect the joint exposure effect estimate to be greater for M=1 than for M=0, which corroborates the fit above (the point estimates are identical, as expected in this case due to no non-modifier covariates, so this is not a surprise).
+```{r first_step_ee, include=TRUE}
+qfit1ee <- qgcomp.emm.glm.ee(y~x1+x2+x3+x4+x5+x6+x7,
+  data=dat1,
+  expnms = paste0("x",1:7),
+  emmvar = "M",
+  q = 4)
+qfit1b
+```
+
+#### plotting
+```{r first_step_ee_plot, include=TRUE, fig.width=6,fig.height=4, fig.cap=paste("Pointwise comparisons for M =", 0:1)}
+plot(qfit1ee, emmval=0)
+plot(qfit1ee, emmval=1)
+```
+
+#### plotting with same y axis
+Visually, it's easier to compare two plots with the same y-axis. Here we can see that the joint regression curve is steeper at M=1 than it is at M=0
+```{r first_step_ee_plot_scale, include=TRUE, fig.width=6,fig.height=4, fig.cap=paste("Pointwise comparisons (same scale) for M =", 0:1)}
+p1 <- plot(qfit1ee, emmval=0, suppressprint = TRUE)
+p2 <- plot(qfit1ee, emmval=1, suppressprint = TRUE)
 p1 + ggplot2::coord_cartesian(ylim=c(0,10))
 p2 + ggplot2::coord_cartesian(ylim=c(0,10))
 ```
@@ -346,15 +372,23 @@ print(pointwisebound(qfit3b, emmval=quantile(dat3$CoM, .8)))
 ```
 
 # Non-linear fits
-Non-linear joint effects of a mixture will tend to occur when independent effects of individual exposures are non-linear or when there is interaction on the model scale between exposures. Here is a toy example of allowing a quadratic overall joint effect with an underlying set of interaction terms between x1 and all other exposures. q is set to 8 for this example for reasons described in the `qgcomp` package vignette. This approach adds an interaction term for both the "main effect" of the mixture and the squared term of the mixture. The coefficients can be intererpreted as any other quadratic/interaction terms (which is to say, with some difficulty). Informally, the CoM:mixture^2 term can be interpreted as the magnitude of the change in the non-linearity of the slope due to a one unit increase in the continuous modifier. 
+Non-linear joint effects of a mixture will tend to occur when independent effects of individual exposures are non-linear or when there is interaction on the model scale between exposures. Here is a toy example of allowing a quadratic overall joint effect with an underlying set of interaction terms between x1 and all other exposures. q is set to 8 for this example for reasons described in the `qgcomp` package vignette. This approach adds an interaction term for both the "main effect" of the mixture and the squared term of the mixture. The coefficients can be intererpreted as any other quadratic/interaction terms (which is to say, with some difficulty). Informally, the CoM:mixture^2 term can be interpreted as the magnitude of the change in the non-linearity of the slope due to a one unit increase in the continuous modifier. Both the bootstrapped and estimating equations formulations can be used to fit non-linear models, with the estimating equations approaches being preferred for computational efficiency.
 
 ```{r cont_mod_nlfit, include=TRUE}
-qfit3bnl <- qgcomp.emm.boot(y~x1+x2+x3+x4+x5+x6+x7 + x1*(x2 + x3 + x4 + x5 + x6 +x7),
+qfit3bnl <- qgcomp.emm.glm.boot(y~x1+x2+x3+x4+x5+x6+x7 + x1*(x2 + x3 + x4 + x5 + x6 +x7),
   data = dat3,
   expnms = paste0("x",1:7),
   emmvar = "CoM",
   q = 8, degree= 2)
+
+qfit3bnlee <- qgcomp.emm.glm.ee(y~x1+x2+x3+x4+x5+x6+x7 + x1*(x2 + x3 + x4 + x5 + x6 +x7),
+  data = dat3,
+  expnms = paste0("x",1:7),
+  emmvar = "CoM",
+  q = 8, degree= 2)
+
 qfit3bnl
+qfit3bnlee
 ```
 
 

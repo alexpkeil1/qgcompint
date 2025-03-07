@@ -56,9 +56,9 @@ print.getstrateffects <- function(x, ..., digits=2){
 print.qgcompemmfit <- function(x, showweights=TRUE, ...){
   #' @title Default printing method for a qgcompemmfit object
   #'
-  #' @description Prints output depending for `qgcomp.emm.glm.noboot` will output final estimate of joint exposure
-  #' effect (similar to the 'index' effect in weighted quantile sums), as well
-  #' as estimates of the 'weights' (standardized coefficients).
+  #' @description Prints output depending the model used. `qgcomp.emm.glm.noboot` and `qgcomp.emm.cox.noboot` will output final estimate of joint exposure
+  #' effect, as well
+  #' as estimates of the 'weights' (scaled coefficients). `qgcomp.emm.glm.boot` and `qgcomp.emm.glm.ee` methods will only output final effect estimates.
   #'
   #' @param x "qgcompemmfit" object from `qgcomp.emm.glm.noboot`
   #' function
@@ -70,17 +70,20 @@ print.qgcompemmfit <- function(x, showweights=TRUE, ...){
   #' @export
   emmvar <- x$call$emmvar
   isboot <- x$bootstrap
-  isemm <- any(class(x$fit) == "eefit")
+  isee <- inherits(x, "eeqgcompfit")
   isbinemm <- x$emmlev == 2
   #rnm = c("(Intercept)", 'psi1', emmvar, paste0(emmvar,":mixture"))
+
+  cilabel = ifelse(isboot, " (bootstrap CI)", ifelse(isee, " (Cluster robust CI)", " (Delta method CI)"))
+
   rnm = names(x$coef)
   fam <- x$fit$family$family
-  if(showweights & !isboot & !isemm) {
+  if(showweights & !isboot & !isee) {
     ww = getstratweights(x, emmval=0.0)
     print(ww)
     cat("\n")
   }
-  if(!is.null(x$pos.size1) & showweights & isbinemm & !isboot & !isemm) {
+  if(!is.null(x$pos.size1) & showweights & isbinemm & !isboot & !isee) {
     ww = getstratweights(x, emmval=1.0)
     print(ww)
     cat("\n")
@@ -88,21 +91,21 @@ print.qgcompemmfit <- function(x, showweights=TRUE, ...){
   if (fam == "binomial"){
     estimand <- 'OR'
     if(x$bootstrap && x$msmfit$family$link=='log') estimand = 'RR'
-    cat(paste0("## Mixture log(",estimand,")", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
+    cat(paste0("## Mixture log(",estimand,")", cilabel, ":\n\n"))
     testtype = "Z"
   }
   if (fam == "poisson"){
     estimand <- 'RR'
-    cat(paste0("## Mixture log(",estimand,")", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
+    cat(paste0("## Mixture log(",estimand,")", cilabel, ":\n\n"))
     testtype = "Z"
   }
   if (fam == "gaussian"){
-    cat(paste0("## Mixture slope parameters", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
+    cat(paste0("## Mixture slope parameters", cilabel, ":\n\n"))
     testtype = "t"
     x$zstat = x$tstat
   }
   if (fam == "cox"){
-    cat(paste0("Mixture log(hazard ratio)", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
+    cat(paste0("Mixture log(hazard ratio)", cilabel, ":\n\n"))
     testtype = "Z"
     rnm = rnm#[-1]
   }

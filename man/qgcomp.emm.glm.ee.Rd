@@ -157,6 +157,10 @@ getstrateffects(qfiteerr2, emmval=2)
 getjointeffects(qfiteerr2, emmval=2)
 modelbound(qfiteerr2, emmval=2)
 pointwisebound(qfiteerr2, emmval=2)
+(qfitee <- qgcomp.glm.ee(f=y ~ zfact + x1 + x2, emmvar="zfact",
+  expnms = c('x1', 'x2'), data=dat, q=10, degree=2, family=gaussian()))
+(qfitee <- qgcomp.emm.glm.ee(f=y ~ zfact + x1 + x2, emmvar="zfact",
+  expnms = c('x1', 'x2'), data=dat, q=10, degree=2, family=gaussian()))
 }
 \seealso{
 \code{\link[qgcomp]{qgcomp.noboot}}

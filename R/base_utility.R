@@ -6,8 +6,10 @@
     emmvars,
     emmvar
 ){
+  # original code
   rightside = as.character(f)[3]
-  trms = strsplit(gsub(" ", "", rightside), "+",fixed=TRUE)[[1]]
+  #trms = strsplit(gsub(" ", "", rightside), "+",fixed=TRUE)[[1]]
+  trms = attr(terms(f), "term.labels")
   # drop emmvar so it isn't duplicated when it's a factor
   trms = setdiff(trms, emmvar)
   rightside = paste0(trms, collapse="+")
@@ -246,7 +248,11 @@ getjointeffects <- function(x, emmval=1.0, ...){
 
 
 .calcjointffects <- function(x, emmval=1.0, zvar){
-  #x$call$emmvar
+  #x$call$emmvar\
+  isboot <- x$bootstrap
+  isee <- inherits(x, "eeqgcompfit")
+  issurv <- inherits(x, "survqgcompfit")
+
   whichintterms = x$intterms
   if(is.factor(zvar)){
     whichlevels = zproc(zvar[which(zvar==emmval)][1], znm = x$call$emmvar)
@@ -257,11 +263,12 @@ getjointeffects <- function(x, emmval=1.0, ...){
   }
   #lnx = length(x$expnms)
   #lnxz = length(whichintterms)
+
   mod = summary(x$fit)
-  if( x$fit$family$family=="cox" ){
+  if( issurv ){
     covmat = as.matrix(x$fit$var)
     colnames(covmat) <- rownames(covmat) <- names(coef(x$fit))
-  } else if(any(class(x$fit)=="eefit")){
+  } else if(isee){
     covmat = vcov(x$fit)
   }
   else{
@@ -364,6 +371,8 @@ getstrateffects <- function(x, emmval=1.0, ...){
 
 
 .calcstrateffects <- function(x, emmval=1.0, zvar){
+  isee = inherits(x, "eeqgcompfit")
+  issurv <- inherits(x, "survqgcompfit")
   #x$call$emmvar
   whichintterms = x$intterms
   if(is.factor(zvar)){
@@ -376,10 +385,10 @@ getstrateffects <- function(x, emmval=1.0, ...){
   #lnx = length(x$expnms)
   #lnxz = length(whichintterms)
   mod = summary(x$fit)
-  if( x$fit$family$family=="cox" ){
+  if( issurv){
     covmat = as.matrix(x$fit$var)
     colnames(covmat) <- rownames(covmat) <- names(coef(x$fit))
-  } else if(any(class(x$fit)=="eefit")){
+  } else if(isee){
     covmat = vcov(x$fit)
   }
   else{

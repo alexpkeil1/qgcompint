@@ -85,7 +85,6 @@ msm.emm.fit <- function(f,
   msmf <- paste0("Ya ~ ",
                  ifelse(hasintercept, "1 +", "-1 +"),
                  paste0(c(newexpnms, emmvars), collapse = "+"))
-  # TODO: categorical Z
   msmform <- .intmaker(as.formula(msmf), expnms = newexpnms, emmvars = emmvars, emmvar)
   class(msmform) <- "formula"
   newterms <- terms(msmform)
@@ -152,7 +151,7 @@ qgcomp.emm.glm.boot <- function(
   parplan = FALSE,
   errcheck=FALSE,
   ...){
-  #' @title EMM for Quantile g-computation for continuous, binary, and count outcomes under linearity/additivity
+  #' @title EMM for Quantile g-computation for continuous, binary, and count outcomes under non-linearity/non-additivity or clustered data
   #'
   #' @description This function fits a quantile g-computation model, allowing
   #' effect measure modification by a binary or continuous covariate. This allows
@@ -178,7 +177,7 @@ qgcomp.emm.glm.boot <- function(
   #' observation (only needed if analyzing data with multiple observations per
   #' id/cluster). Note that qgcomp.emm.glm.noboot will not produce cluster-appropriate
   #' standard errors (this parameter is essentially ignored in qgcomp.emm.glm.noboot).
-  #' Qgcomp.emm.boot can be used for this, which will use bootstrap
+  #' qgcomp.emm.glm.boot can be used for this, which will use bootstrap
   #' sampling of clusters/individuals to estimate cluster-appropriate standard
   #' errors via bootstrapping.
   #' @param weights "case weights" - passed to the "weight" argument of
@@ -227,7 +226,7 @@ qgcomp.emm.glm.boot <- function(
   #' (qfit <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2, emmvar="z",
   #'   expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian()))
   #' # set B larger for real examples
-  #' (qfit2 <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
+  #' (qfit2 <- qgcomp.emm.glm.boot(f=y ~ z + x1 + x2, emmvar="z",
   #'   degree = 1,
   #'   expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian(), B=10))
   #' # categorical modifier
@@ -237,7 +236,7 @@ qgcomp.emm.glm.boot <- function(
   #' (qfit3 <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2, emmvar="z",
   #'   expnms = c('x1', 'x2'), data=dat2, q=4, family=gaussian()))
   #' # set B larger for real examples
-  #' (qfit4 <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
+  #' (qfit4 <- qgcomp.emm.glm.boot(f=y ~ z + x1 + x2, emmvar="z",
   #'   degree = 1,
   #'   expnms = c('x1', 'x2'), data=dat2, q=4, family=gaussian(), B=10))
   oldq = NULL
@@ -265,10 +264,15 @@ qgcomp.emm.glm.boot <- function(
   # keep track of added terms by remembering old model
   originalform <- terms(f, data = data)
   hasintercept = as.logical(attr(originalform, "intercept"))
-
-  #f = .intmaker(f,expnms,emmvar) # create necessary interaction terms with exposure
+  # NOTE: overwriting f object here
   (f <- .intmaker(f,expnms,emmvars, emmvar)) # create necessary interaction terms with exposure
+
+
+
+
+
   newform <- terms(f, data = data)
+  terms(originalform, data = data)
   addedterms <- setdiff(attr(newform, "term.labels"), attr(originalform, "term.labels"))
   addedmain <- setdiff(addedterms, grep(":",addedterms, value = TRUE))
   addedints <- setdiff(addedterms, addedmain)
@@ -346,6 +350,12 @@ qgcomp.emm.glm.boot <- function(
     id <- "id__"
     qdata$id__ <- seq_len(dim(qdata)[1])
   }
+  ###
+  # formula call above to add in interaction term
+
+
+
+
   ###
   msmfit <- msm.emm.fit(newform, qdata, intvals, emmvar=emmvar, emmvars=emmvars, expnms=expnms, rr, main=TRUE,degree=degree, id=id,
                     weights,

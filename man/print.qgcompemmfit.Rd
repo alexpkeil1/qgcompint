@@ -18,9 +18,9 @@ function}
 Invisibly returns x. Called primarily for side effects.
 }
 \description{
-Prints output depending for \code{qgcomp.emm.glm.noboot} will output final estimate of joint exposure
-effect (similar to the 'index' effect in weighted quantile sums), as well
-as estimates of the 'weights' (standardized coefficients).
+Prints output depending the model used. \code{qgcomp.emm.glm.noboot} and \code{qgcomp.emm.cox.noboot} will output final estimate of joint exposure
+effect, as well
+as estimates of the 'weights' (scaled coefficients). \code{qgcomp.emm.glm.boot} and \code{qgcomp.emm.glm.ee} methods will only output final effect estimates.
 }
 \seealso{
 \code{\link[qgcompint]{qgcomp.emm.glm.noboot}}, \code{\link[qgcompint]{getstratweights}}

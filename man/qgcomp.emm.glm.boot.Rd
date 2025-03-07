@@ -3,7 +3,7 @@
 \name{qgcomp.emm.glm.boot}
 \alias{qgcomp.emm.glm.boot}
 \alias{qgcomp.emm.boot}
-\title{EMM for Quantile g-computation for continuous, binary, and count outcomes under linearity/additivity}
+\title{EMM for Quantile g-computation for continuous, binary, and count outcomes under non-linearity/non-additivity or clustered data}
 \usage{
 qgcomp.emm.glm.boot(
   f,
@@ -72,7 +72,7 @@ to define cutpoints.}
 observation (only needed if analyzing data with multiple observations per
 id/cluster). Note that qgcomp.emm.glm.noboot will not produce cluster-appropriate
 standard errors (this parameter is essentially ignored in qgcomp.emm.glm.noboot).
-Qgcomp.emm.boot can be used for this, which will use bootstrap
+qgcomp.emm.glm.boot can be used for this, which will use bootstrap
 sampling of clusters/individuals to estimate cluster-appropriate standard
 errors via bootstrapping.}
 
@@ -138,7 +138,7 @@ dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
 (qfit <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2, emmvar="z",
   expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian()))
 # set B larger for real examples
-(qfit2 <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
+(qfit2 <- qgcomp.emm.glm.boot(f=y ~ z + x1 + x2, emmvar="z",
   degree = 1,
   expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian(), B=10))
 # categorical modifier
@@ -148,7 +148,7 @@ dat2$z = as.factor(dat2$z)
 (qfit3 <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2, emmvar="z",
   expnms = c('x1', 'x2'), data=dat2, q=4, family=gaussian()))
 # set B larger for real examples
-(qfit4 <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
+(qfit4 <- qgcomp.emm.glm.boot(f=y ~ z + x1 + x2, emmvar="z",
   degree = 1,
   expnms = c('x1', 'x2'), data=dat2, q=4, family=gaussian(), B=10))
 }

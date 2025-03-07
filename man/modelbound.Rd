@@ -4,7 +4,7 @@
 \alias{modelbound}
 \title{Estimating qgcomp regression line confidence bounds}
 \usage{
-modelbound(x, emmval = 0, alpha = 0.05, pwonly = FALSE, ...)
+modelbound(x, emmval = NULL, alpha = 0.05, pwonly = FALSE, ...)
 }
 \arguments{
 \item{x}{"qgcompemmfit" object from \code{qgcomp.emm.glm.boot} or \code{qgcomp.emm.glm.ee},}
@@ -64,7 +64,7 @@ dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
                   z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
 (qfit <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2, emmvar="z",
                            expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian()))
-(qfit2 <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
+(qfit2 <- qgcomp.emm.glm.boot(f=y ~ z + x1 + x2, emmvar="z",
                           degree = 1,
                           expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian()))
 # modelbound(qfit) # this will error (only works with bootstrapped objects)
@@ -73,12 +73,12 @@ dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
 set.seed(200)
 dat2 <- data.frame(y=rbinom(200, 1, 0.3), x1=runif(200), x2=runif(200),
                   z=rbinom(200,1,0.5))
-(qfit3 <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
+(qfit3 <- qgcomp.emm.glm.boot(f=y ~ z + x1 + x2, emmvar="z",
                           degree = 1,
                           expnms = c('x1', 'x2'), data=dat2, q=4, rr = FALSE, family=binomial()))
 modelbound(qfit3)
 # risk ratios instead (check for upper bound > 1.0, indicating implausible risk)
-(qfit3b <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
+(qfit3b <- qgcomp.emm.glm.boot(f=y ~ z + x1 + x2, emmvar="z",
                           degree = 1,
                           expnms = c('x1', 'x2'), data=dat2, q=4, rr = TRUE, family=binomial()))
 modelbound(qfit3b)
@@ -87,12 +87,12 @@ set.seed(50)
 dat3 <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
    z=sample(0:2, 50,replace=TRUE), r=rbinom(50,1,0.5))
 dat3$z = as.factor(dat3$z)
-(qfit4 <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
+(qfit4 <- qgcomp.emm.glm.boot(f=y ~ z + x1 + x2, emmvar="z",
                           degree = 1,
                           expnms = c('x1', 'x2'), data=dat3, q=4, family=gaussian()))
 modelbound(qfit4, emmval=2)
 }
 }
 \seealso{
-\code{\link[qgcompint]{qgcomp.emm.boot}}
+\code{\link[qgcompint]{qgcomp.emm.glm.boot}}
 }

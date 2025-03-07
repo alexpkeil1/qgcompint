@@ -1,6 +1,19 @@
 
 # qgcompint: quantile g-computation with statistical interaction
 
+# v0.10.2
+## Major changes
+- added non-linearity for estimating equation methods
+- added plotting and bounds for estimating equation methods
+- new dependency: MASS
+
+## Minor changes
+- n/a
+
+## Bug fixes
+- major, rare: fixed an issue with formula interpretation for complex formulas with nested interaction terms
+
+
 # v0.9.0
 ## Major changes
 - added new dependencies: numDeriv and rootSolve

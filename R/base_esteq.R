@@ -1,5 +1,3 @@
-#.esteq_qgc <- .esteq_qgc
-
 # bring in hidden functions from qgcomp that relate to estimating equations methodology
 .esteq_qgc <- utils::getFromNamespace(".esteq_qgc", "qgcomp")
 .esteq_error <- utils::getFromNamespace(".esteq_error", "qgcomp")
@@ -7,31 +5,21 @@
 .esteq_qgclogit <- utils::getFromNamespace(".esteq_qgclogit", "qgcomp")
 .esteq_qgclogitlog <- utils::getFromNamespace(".esteq_qgclogitlog", "qgcomp")
 .esteq_qgcpoisson <- utils::getFromNamespace(".esteq_qgcpoisson", "qgcomp")
+.esteq_qgcpoisson <- utils::getFromNamespace(".esteq_qgcpoisson", "qgcomp")
+.rmvnorm <- utils::getFromNamespace(".rmvnorm", "qgcomp")
 
+# family specific estimating equation based on input dataframes
+# used for "B" part of sandwich variance: V = solve(A) %*% B %&% t(solve(A)) because it facilitates
+# individual level calculations.
 .esteq_qgcemmdf <- function(f, data, theta, family, intvals, expnms, emmvar, emmvars, hasintercept, weights, degree=1,rr=FALSE,offset=0, delta=-Inf, ...){
-  # family specific estimating equation based on input dataframes
-  # used for "B" part of sandwich variance: V = solve(A) %*% B %&% t(solve(A)) because it facilitates
-  # individual level calculations.
   fam = family$family
   lnk = family$link
   X = model.matrix(f, data) # model.frame
   #modframe = model.frame(f, data=data)
   Y = model.response(data)
   Xint = as.matrix(do.call(rbind,lapply(intvals, function(x) {data[,expnms] = x; model.matrix(f,data)})))
-  Xmsm = poly(Xint[, expnms[1]], degree=degree, raw=TRUE) # intercept and constant exposure
-  if(hasintercept){
-    Xmsm = cbind(Xint[,colnames(Xint)[1]], Xmsm)
-  }
-  Zmsm = do.call(rbind, lapply(intvals, function(x) X[,emmvars,drop=FALSE]))
-  msmdf = cbind(data.frame(Xmsm), Zmsm, data.frame(fakey=1))
-  msmf = fakey~X1
-  (msmf <- .intmaker(msmf,"X1",emmvars, emmvar)) # create necessary interaction terms with exposure
-  newmsmform <- terms(msmf, data = msmdf)
-  hasintercept = as.logical(attr(newmsmform, "intercept"))
-  class(newmsmform) <- "formula"
-  msmvars = get_all_vars(newmsmform, data=msmdf) # variables before being processed by model.frame
-  msmmodframe = model.frame(msmvars, data=msmdf)
-  Xmsm = model.matrix(newmsmform, msmmodframe)
+
+  Xmsm = .msmdesign(Xint, expnms, degree, X, emmvar, emmvars, intvals, hasintercept)
 
   binlink = ifelse(rr, "logitlog", "logit")
   FUN <- switch(fam,
@@ -47,6 +35,35 @@
   )
   FUN(theta=theta, Y=Y, X=X, Xint=Xint, Xmsm=Xmsm, weights=weights, offset=offset, delta=-Inf, ...)
 }
+
+.msmdesign <- function(Xint, expnms, degree, modframe, emmvar, emmvars, intvals, hasintercept){
+  Xmsm = poly(Xint[, expnms[1]], degree=1, raw=TRUE) # intercept and constant exposure, degree not needed here
+  msmexpnms = c("mixture")
+  msmfs = "fakey~mixture"
+  for(deg in seq_len(degree)){
+    if(deg > 1) {
+      msmexpnms = c(msmexpnms, paste0("I(mixture^", deg, ")"))
+      msmfs = paste0(msmfs, "+I(mixture^", deg, ")")
+    }
+  }
+  colnames(Xmsm) = msmexpnms[seq_len(ncol(Xmsm))]
+  if(hasintercept){
+    Xmsm = cbind(Xint[,colnames(Xint)[1]], Xmsm)
+    colnames(Xmsm)[1] = "(Intercept)"
+  }
+  Zmsm = do.call(rbind, lapply(intvals, function(x) modframe[,emmvars,drop=FALSE]))
+  msmdf = cbind(data.frame(Xmsm), Zmsm, data.frame(fakey=1))
+  names(msmdf)[seq_len(ncol(Xmsm))] = colnames(Xmsm)
+
+  msmf <- .intmaker(as.formula(msmfs),msmexpnms,emmvars,emmvar)
+
+  newmsmform <- terms(msmf, data = msmdf)
+  #hasintercept = as.logical(attr(newmsmform, "intercept"))
+  class(newmsmform) <- "formula"
+  msmvars = get_all_vars(newmsmform, data=msmdf) # variables before being processed by model.frame
+  Xmsm = model.matrix(newmsmform, msmvars)
+}
+
 
 #' @title EMM for Quantile g-computation for continuous, binary, and count outcomes under linearity/additivity
 #'
@@ -149,6 +166,10 @@
 #' getjointeffects(qfiteerr2, emmval=2)
 #' modelbound(qfiteerr2, emmval=2)
 #' pointwisebound(qfiteerr2, emmval=2)
+#' (qfitee <- qgcomp.glm.ee(f=y ~ zfact + x1 + x2, emmvar="zfact",
+#'   expnms = c('x1', 'x2'), data=dat, q=10, degree=2, family=gaussian()))
+#' (qfitee <- qgcomp.emm.glm.ee(f=y ~ zfact + x1 + x2, emmvar="zfact",
+#'   expnms = c('x1', 'x2'), data=dat, q=10, degree=2, family=gaussian()))
 
 qgcomp.emm.glm.ee <- function(
     f,
@@ -169,8 +190,10 @@ qgcomp.emm.glm.ee <- function(
     ...
 ){
   if(degree>1){
-    message("Degree > 1 not supported yet in this function, setting to 1")
-    degree = 1
+    TRUE
+    #message("Degree > 1 is experimental")
+    #message("Degree > 1 not supported yet in this function, setting to 1")
+    #degree = 1
   }
   if(errcheck){
     # basic argument checks
@@ -187,24 +210,21 @@ qgcomp.emm.glm.ee <- function(
   # housekeeping
   allemmvals<- unique(data[,emmvar,drop=TRUE])
   emmlev <- length(allemmvals)
-  ## process to expand factors if needed
+  ## process to expand factors; manually created design matrix needed for fit
   zdata = zproc(data[,emmvar,drop=TRUE], znm = emmvar)
   emmvars = names(zdata)
   data = cbind(data, zdata)
 
   # keep track of added terms by remembering old model
   originalform <- terms.formula(f, data = data)
-  # need to explicitly expand factors because there is no automatic processing by lm or glm
- mm = model.matrix(f, data=data[1,,drop=FALSE])
- expandedterms = setdiff(colnames(mm), "(Intercept)")
- expandedfright = paste0(expandedterms, collapse="+")
- updatedf = as.formula(paste0(originalform[[2]], "~", expandedfright))
- #originalform = terms.formula(updatedf, data = data)
+  mm = model.matrix(f, data=data[1,,drop=FALSE])
+  expandedterms = setdiff(colnames(mm), "(Intercept)")
+  expandedfright = paste0(expandedterms, collapse="+")
+  updatedf = as.formula(paste0(originalform[[2]], "~", expandedfright))
 
   hasintercept = as.logical(attr(originalform, "intercept"))
-  #f = .intmaker(f,expnms,emmvar) # create necessary interaction terms with exposure
+  # NOTE: overwriting f object here
   (f <- .intmaker(updatedf,expnms,emmvars, emmvar)) # create necessary interaction terms with exposure
-  #(f <- .intmaker(f,expnms,emmvars, emmvar)) # create necessary interaction terms with exposure
   newform <- terms(f, data = data)
   addedterms <- setdiff(attr(newform, "term.labels"), attr(originalform, "term.labels"))
   addedmain <- setdiff(addedterms, grep(":",addedterms, value = TRUE))
@@ -236,12 +256,6 @@ qgcomp.emm.glm.ee <- function(
   if(is.null(cc$family)){
     family=gaussian()
   }
-  #family = testfit$family
-
-  #  famlist = c("binomial", "gaussian", "poisson")
-  #  if(!(family$family %in% famlist))
-  #    stop(paste0("Distribution (family) `", family$family, "` not (yet?) supported."))
-
 
   nobs = nrow(data)
   origcall <- thecall <- match.call(expand.dots = FALSE)
@@ -253,7 +267,7 @@ qgcomp.emm.glm.ee <- function(
 
   thecall[[1L]] <- quote(stats::model.frame)
   thecalle <- eval(thecall, parent.frame())
-  if(hasweights){
+  if(hasweights && !is.null(thecall$weights)){
     data$weights <- as.vector(model.weights(thecalle))
   } else data$weights = rep(1, nobs)
 
@@ -331,30 +345,7 @@ qgcomp.emm.glm.ee <- function(
   #Xint = as.matrix(do.call(rbind,lapply(intvals, function(x) {mf2 = modframe; mf2[,expnms] = x; model.matrix(newform,model.frame(newform, data=mf2))}))) # works in non-linear setting
   Xint = as.matrix(model.matrix(newform, do.call(rbind,lapply(intvals, function(x) {mf2 = basevars; mf2[,expnms] = x; model.frame(newform, data=mf2)})))) # works in non-linear setting
 
-  # TODO: make this work for an interaction term
-
-  Xmsm = poly(Xint[, expnms[1]], degree=degree, raw=TRUE) # intercept and constant exposure
-  colnames(Xmsm) = paste0("mixture")
-  if(hasintercept){
-    Xmsm = cbind(Xint[,colnames(Xint)[1]], Xmsm)
-  }
-  Zmsm = do.call(rbind, lapply(intvals, function(x) modframe[,emmvars,drop=FALSE]))
-  msmdf = cbind(data.frame(Xmsm), Zmsm, data.frame(fakey=1))
-  msmf = fakey~mixture
-
-
-
-  (msmf <- .intmaker(msmf,"mixture",emmvars,emmvar)) # create necessary interaction terms with exposure
-  newmsmform <- terms(msmf, data = msmdf)
-  hasintercept = as.logical(attr(newmsmform, "intercept"))
-  class(newmsmform) <- "formula"
-
-
-  msmvars = get_all_vars(newmsmform, data=msmdf) # variables before being processed by model.frame
-  msmmodframe = model.frame(msmvars, data=msmdf)
-  Xmsm = model.matrix(newmsmform, msmmodframe)
-  #Y = model.response(modframe)
-
+  Xmsm = .msmdesign(Xint, expnms, degree, modframe, emmvar, emmvars, intvals, hasintercept)
 
   # point estimates
   #.esteq_qgc(parminits, family=family, Y=Y, X=X, Xint=Xint, Xmsm=Xmsm, weights=qdata$weights, rr=FALSE)
@@ -379,6 +370,8 @@ qgcomp.emm.glm.ee <- function(
   #
 
   # "meat" of the sandwich covariance
+  #Xdf = data.frame(X)
+  #Xdf = cbind(modframe[,as.character(f[[2]]),drop=FALSE], data.frame(X))
   uid =   unique(qdata[,id,drop=TRUE])
   psii = lapply(uid, function(x){
     selidx = which(qdata[,id,drop=TRUE] == x)
@@ -465,8 +458,13 @@ qgcomp.emm.glm.ee <- function(
   qx <- qdata[, expnms]
   names(qx) <- paste0(names(qx), "_q")
   res <- .qgcompemm_object(
-    qx = qx, fit=fit, msmfit = msmfit,
-    psi = estb[psiidx], var.psi = seb[psiidx] ^ 2,
+    qx = qx,
+    fit=fit,
+    msmfit = msmfit,
+    psi = estb[psiidx],
+    var.psi = seb[psiidx] ^ 2,
+    #psiint = estb.prod[2*(1:length(emmvars))],
+    #var.psiint = seb.prod[2*(1:length(emmvars))] ^ 2,
     covmat.psi=covmat[psiidx,psiidx, drop=FALSE],
     ci = ci[psiidx,],
     coef = estb,
@@ -479,16 +477,20 @@ qgcomp.emm.glm.ee <- function(
     breaks=br,
     degree=degree,
     bootstrap=FALSE,
-    y.expected = fit$family$linkinv(Xint %*% coef(fit)), index=Xint[,expnms[1]], # predictions from conditional fit at intervention data
+    y.expected = fit$family$linkinv(Xint %*% coef(fit)),
+    index=Xint[,expnms[1]],
     y.expectedmsm=predict(msmfit),
-    bread = A, meat = B,
+    bread = A,
+    meat = B,
     covmat.all_robust = fullcovmat,
     alpha=alpha,
     call=origcall,
     emmlev = emmlev,
+    emmvar.msm = as.data.frame(msmfit$X)[,emmvars],
     hasintercept=hasintercept
   )
   # include some extra things by default for binary modifier (convenience only)
+  attr(res, "class") <- c("eeqgcompfit", attr(res, "class"))
 
   if(emmlev==2){
     #ww = getstratweights(res, emmval = 1)
@@ -512,8 +514,6 @@ qgcomp.emm.glm.ee <- function(
     res$zstat <- c(tstat)
     res$pval <- c(pvalz)
   }
-  res
-  attr(res, "class") <- c("eeqgcompfit", attr(res, "class"))
   res
 }
 

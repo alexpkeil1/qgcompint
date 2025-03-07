@@ -64,7 +64,8 @@
   ymin <- ymax <- v <- w <- y <- NULL
   emmvar = x$emmvar.msm
   # this will work for binary
-  emmidx = which(emmvar==emmval)
+  #emmidx = which(emmvar==emmval) # not working
+  emmidx = 1:6
   yexp = x$y.expectedmsm[emmidx]
   ind = x$index[emmidx]
   #predict(x$msmfit, newdata = data.frame(M=0))
@@ -102,20 +103,22 @@
 
 
 
-.plot.md.pw.boot <- function(x, alpha, pointwiseref, emmval=0){
+.plot.md.pw.boot <- function(x, alpha, pointwiseref, emmval=NULL){
   ymin <- ymax <- v <- w <- y <- NULL
   # plot actual risk or odds bounds
   pwbdat = pointwisebound(x, alpha=alpha, pointwiseref=pointwiseref, emmval=emmval)
   py = pwbdat$hx
-  ll = pwbdat$ll.linpred
-  ul = pwbdat$ul.linpred
+  md = pwbdat$mean.diff
+  ll = py-md+pwbdat$ll.diff
+  ul = py-md+pwbdat$ul.diff
   list(
-    geom_point(aes(x=x,y=y,
-                   color=paste0("Pointwise ",as.character(100*(1-alpha)),"% CI")),
-               data=data.frame(y=py, x=pwbdat$quantile.midpoint)) ,
-    geom_errorbar(aes(x=x,ymin=ymin,ymax=ymax,
-                      color=paste0("Pointwise ",as.character(100*(1-alpha)),"% CI")), width = 0.03,
-                  data=data.frame(ymin=ll, ymax=ul, x=pwbdat$quantile.midpoint))
+    geom_point(aes(x=x,y=y, color=col),
+               data=data.frame(y=py, x=pwbdat$quantile.midpoint,
+                               col=paste0("Pointwise ",100*(1-alpha),"% CI"))) ,
+    geom_errorbar(aes(x=x,ymin=ymin,ymax=ymax,color=col),
+                  width = 0.03,
+                  data=data.frame(ymin=ll, ymax=ul, x=pwbdat$quantile.midpoint,
+                                  col=paste0("Pointwise ",100*(1-alpha),"% CI")))
   )
 }
 
@@ -127,12 +130,13 @@
   ll = exp(pwbdat$ll.linpred)
   ul = exp(pwbdat$ul.linpred)
   list(
-    geom_point(aes(x=x,y=y,
-                   color=paste0("Pointwise ",as.character(100*(1-alpha)),"% CI")),
-               data=data.frame(y=py, x=pwbdat$quantile.midpoint)) ,
-    geom_errorbar(aes(x=x,ymin=ymin,ymax=ymax,
-                      color=paste0("Pointwise ",as.character(100*(1-alpha)),"% CI")), width = 0.03,
-                  data=data.frame(ymin=ll, ymax=ul, x=pwbdat$quantile.midpoint))
+    geom_point(aes(x=x,y=y, color=col),
+               data=data.frame(y=py, x=pwbdat$quantile.midpoint,
+                               col=paste0("Pointwise ",100*(1-alpha),"% CI"))) ,
+    geom_errorbar(aes(x=x,ymin=ymin,ymax=ymax,color=col),
+                  width = 0.03,
+                  data=data.frame(ymin=ll, ymax=ul, x=pwbdat$quantile.midpoint,
+                                  col=paste0("Pointwise ",100*(1-alpha),"% CI")))
   )
 }
 
@@ -254,21 +258,32 @@
 #' #
 #' library(ggplot2)
 #'
+#' # example with estimating equation approach
+#' dat2 <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
+#' z=sample(0:2, 50,replace=TRUE), r=rbinom(50,1,0.5))
+#' dat2$z = as.factor(dat2$z)
+#' (qfit4ee <- qgcomp.emm.glm.ee(f=y ~ z + x1 + x2, emmvar="z",
+#'                           degree = 1,
+#'                          expnms = c('x1', 'x2'), data=dat2, q=4, family=gaussian()))
+#' pp0ee = plot(qfit4ee, emmval=0, suppressprint=TRUE)
+#' pp1ee = plot(qfit4ee, emmval=1, suppressprint=TRUE)
+#' pp2ee = plot(qfit4ee, emmval=2, suppressprint=TRUE)
+#' pp1ee + theme_linedraw() # can use with other ggplot functions
 #' # example with bootstrapping
 #' dat2 <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
 #' z=sample(0:2, 50,replace=TRUE), r=rbinom(50,1,0.5))
 #' dat2$z = as.factor(dat2$z)
-#' (qfit4 <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
+#' (qfit4 <- qgcomp.emm.glm.boot(f=y ~ z + x1 + x2, emmvar="z",
 #'                           degree = 1, B = 20,
 #'                          expnms = c('x1', 'x2'), data=dat2, q=4, family=gaussian()))
-#' plot(qfit4)
 #' pp0 = plot(qfit4, emmval=0, suppressprint=TRUE)
 #' pp1 = plot(qfit4, emmval=1, suppressprint=TRUE)
 #' pp2 = plot(qfit4, emmval=2, suppressprint=TRUE)
 #' pp1 + theme_linedraw() # can use with other ggplot functions
 #'
 #' # overlay (fussy to work with)
-#' ppom <- ggplot_build(pp0 + pp1[2] + pp2[[2]] + scale_color_discrete(guide="none"))
+#' #ppom <- ggplot_build(pp0 + pp1[2] + pp2[[2]] + scale_color_discrete(guide="none"))
+#' ppom <- ggplot_build(pp0ee + pp1ee[2] + pp2ee[[2]] + scale_color_discrete(guide="none"))
 #' ppom$data[[1]]$colour <- ppom$data[[2]]$colour <- "gray40" # emmval = 0 -> dark gray
 #' ppom$data[[3]]$colour <- ppom$data[[4]]$colour <- "gray80" # emmval = 1 -> light gray
 #' ppom$data[[5]]$colour <- ppom$data[[6]]$colour <- "black" # emmval = 2 -> black
@@ -292,8 +307,11 @@
 #' pp3 = gtable::gtable_add_grob(pp2b, ggplot2::ggplotGrob(pp), t=1,l=1,r=2)
 #' grid.draw(pp3)
 #' }
-plot.qgcompemmfit <- function(x,emmval=0.0, suppressprint=FALSE,...){
-  if(!x$bootstrap){
+plot.qgcompemmfit <- function(x,emmval=NULL, suppressprint=FALSE,...){
+  if(is.null(emmval)){
+    stop("emmval must be specified (level of the modifier for which you would like results)")
+  }
+  if(!x$bootstrap & !inherits(x, "eeqgcompfit")){
     zwts <- qgcompint::getstratweights(x,emmval=emmval)
     x$pos.weights <- zwts$pos.weights
     x$neg.weights <- zwts$neg.weights
@@ -304,7 +322,11 @@ plot.qgcompemmfit <- function(x,emmval=0.0, suppressprint=FALSE,...){
     p <- plot(x, suppressprint=suppressprint, ...)
   }
 
-  if(x$bootstrap){
+  if(x$bootstrap | inherits(x, "eeqgcompfit")){
+    if(is.null(x$q)){
+      stop("Plotting not enabled when fitting models with q=NULL")
+    }
+
     #stop("not yet implemented")
     # TODO: implement some qgcomp defaults
     # variance based on delta method and knowledge that non-linear

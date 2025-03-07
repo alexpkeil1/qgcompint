@@ -4,7 +4,7 @@
 \alias{pointwisebound}
 \title{Estimating pointwise comparisons for qgcompint fits}
 \usage{
-pointwisebound(x, alpha = 0.05, pointwiseref = 1, emmval = 0, ...)
+pointwisebound(x, alpha = 0.05, pointwiseref = 1, emmval = NULL, ...)
 }
 \arguments{
 \item{x}{"qgcompemmfit" object from \code{qgcomp.emm.glm.boot} or \code{qgcomp.emm.glm.ee}}
@@ -58,15 +58,21 @@ pointwisebound(qfit3, pointwiseref = 2, emmval = 1)
 pointwisebound(qfit3, pointwiseref = 2, emmval = 2)
 # linear model, categorical modifier, bootstrapped
 # set B larger for real examples
-(qfit3b <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
+(qfit3b <- qgcomp.emm.glm.boot(f=y ~ z + x1 + x2, emmvar="z",
 expnms = c('x1', 'x2'), data=dat3, q=5, family=gaussian(), B=10))
 pointwisebound(qfit3b, pointwiseref = 2, emmval = 0)
 pointwisebound(qfit3b, pointwiseref = 2, emmval = 1)
 pointwisebound(qfit3b, pointwiseref = 2, emmval = 2)
+# linear model, categorical modifier, estimating equation
+(qfit3c <- qgcomp.emm.glm.ee(f=y ~ z + x1 + x2, emmvar="z",
+expnms = c('x1', 'x2'), data=dat3, q=5, family=gaussian()))
+pointwisebound(qfit3c, pointwiseref = 2, emmval = 0)
+pointwisebound(qfit3c, pointwiseref = 2, emmval = 1)
+pointwisebound(qfit3c, pointwiseref = 2, emmval = 2)
 # logistic model, binary modifier
 dat4 <- data.frame(y=rbinom(50, 1, 0.3), x1=runif(50), x2=runif(50),
   z=as.factor(sample(0:1, 50,replace=TRUE)), r=rbinom(50,1,0.5))
-(qfit4 <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
+(qfit4 <- qgcomp.emm.glm.boot(f=y ~ z + x1 + x2, emmvar="z",
 expnms = c('x1', 'x2'), data=dat4, q=5, family=binomial(), B=10))
 pointwisebound(qfit4, pointwiseref = 2, emmval = 0) # reverts to odds ratio
 

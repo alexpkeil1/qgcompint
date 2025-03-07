@@ -4,7 +4,7 @@
 \alias{plot.qgcompemmfit}
 \title{Default plotting method for a qgcompfit object}
 \usage{
-\method{plot}{qgcompemmfit}(x, emmval = 0, suppressprint = FALSE, ...)
+\method{plot}{qgcompemmfit}(x, emmval = NULL, suppressprint = FALSE, ...)
 }
 \arguments{
 \item{x}{"qgcompfit" object from \code{qgcomp.noboot},  \code{qgcomp.boot},
@@ -45,21 +45,32 @@ plot(qfit, emmval = 1)
 #
 library(ggplot2)
 
+# example with estimating equation approach
+dat2 <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
+z=sample(0:2, 50,replace=TRUE), r=rbinom(50,1,0.5))
+dat2$z = as.factor(dat2$z)
+(qfit4ee <- qgcomp.emm.glm.ee(f=y ~ z + x1 + x2, emmvar="z",
+                          degree = 1,
+                         expnms = c('x1', 'x2'), data=dat2, q=4, family=gaussian()))
+pp0ee = plot(qfit4ee, emmval=0, suppressprint=TRUE)
+pp1ee = plot(qfit4ee, emmval=1, suppressprint=TRUE)
+pp2ee = plot(qfit4ee, emmval=2, suppressprint=TRUE)
+pp1ee + theme_linedraw() # can use with other ggplot functions
 # example with bootstrapping
 dat2 <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
 z=sample(0:2, 50,replace=TRUE), r=rbinom(50,1,0.5))
 dat2$z = as.factor(dat2$z)
-(qfit4 <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
+(qfit4 <- qgcomp.emm.glm.boot(f=y ~ z + x1 + x2, emmvar="z",
                           degree = 1, B = 20,
                          expnms = c('x1', 'x2'), data=dat2, q=4, family=gaussian()))
-plot(qfit4)
 pp0 = plot(qfit4, emmval=0, suppressprint=TRUE)
 pp1 = plot(qfit4, emmval=1, suppressprint=TRUE)
 pp2 = plot(qfit4, emmval=2, suppressprint=TRUE)
 pp1 + theme_linedraw() # can use with other ggplot functions
 
 # overlay (fussy to work with)
-ppom <- ggplot_build(pp0 + pp1[2] + pp2[[2]] + scale_color_discrete(guide="none"))
+#ppom <- ggplot_build(pp0 + pp1[2] + pp2[[2]] + scale_color_discrete(guide="none"))
+ppom <- ggplot_build(pp0ee + pp1ee[2] + pp2ee[[2]] + scale_color_discrete(guide="none"))
 ppom$data[[1]]$colour <- ppom$data[[2]]$colour <- "gray40" # emmval = 0 -> dark gray
 ppom$data[[3]]$colour <- ppom$data[[4]]$colour <- "gray80" # emmval = 1 -> light gray
 ppom$data[[5]]$colour <- ppom$data[[6]]$colour <- "black" # emmval = 2 -> black

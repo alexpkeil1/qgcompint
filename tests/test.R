@@ -9,9 +9,9 @@ dat <- data.frame(y=runif(50),
                   r=rbinom(50,1,0.5))
 (qfit <- qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
 (qfitemm <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
-(qfitemmboot <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
+(qfitemmboot <- qgcomp.emm.glm.boot(f=y ~ z + x1 + x2, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
 (qfitemmb <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2, bayes=TRUE, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
-(qfitemmboot <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=NULL, family=gaussian()))
+(qfitemmboot <- qgcomp.emm.glm.boot(f=y ~ z + x1 + x2, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=NULL, family=gaussian()))
 (qfitemmb <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2, bayes=TRUE, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=NULL, family=gaussian()))
 # check
 getstratweights(qfitemm, emmval=0.0)
@@ -48,7 +48,7 @@ dat <- data.frame(y=runif(n),
                   r=rbinom(n,1,0.5))
 (qfit <- qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
 (qfitemm <- qgcomp.emm.glm.noboot(f=y ~ x1 + x2, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian()))
-(qfitemmboot <- qgcomp.emm.boot(f=y ~ x1 + x2, degree=1, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian()))
+(qfitemmboot <- qgcomp.emm.glm.boot(f=y ~ x1 + x2, degree=1, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian()))
 (qfitemmb <- qgcomp.emm.glm.noboot(f=y ~ x1 + x2, bayes=TRUE, emmvar="z", expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
 # check
 getstratweights(qfitemm, emmval=0.0)

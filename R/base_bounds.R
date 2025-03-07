@@ -3,6 +3,7 @@
 # Pointwise bounds/ confidence intervals for pointwise comparisons
 #
 ###############################################################################
+.rmvnorm <- utils::getFromNamespace(".rmvnorm", "qgcomp")
 
 .pointwise.ident <- function(q, py, se.diff, alpha, pwr){
   # mean, mean differences
@@ -139,26 +140,35 @@
 #' pointwisebound(qfit3, pointwiseref = 2, emmval = 2)
 #' # linear model, categorical modifier, bootstrapped
 #' # set B larger for real examples
-#' (qfit3b <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
+#' (qfit3b <- qgcomp.emm.glm.boot(f=y ~ z + x1 + x2, emmvar="z",
 #' expnms = c('x1', 'x2'), data=dat3, q=5, family=gaussian(), B=10))
 #' pointwisebound(qfit3b, pointwiseref = 2, emmval = 0)
 #' pointwisebound(qfit3b, pointwiseref = 2, emmval = 1)
 #' pointwisebound(qfit3b, pointwiseref = 2, emmval = 2)
+#' # linear model, categorical modifier, estimating equation
+#' (qfit3c <- qgcomp.emm.glm.ee(f=y ~ z + x1 + x2, emmvar="z",
+#' expnms = c('x1', 'x2'), data=dat3, q=5, family=gaussian()))
+#' pointwisebound(qfit3c, pointwiseref = 2, emmval = 0)
+#' pointwisebound(qfit3c, pointwiseref = 2, emmval = 1)
+#' pointwisebound(qfit3c, pointwiseref = 2, emmval = 2)
 #' # logistic model, binary modifier
 #' dat4 <- data.frame(y=rbinom(50, 1, 0.3), x1=runif(50), x2=runif(50),
 #'   z=as.factor(sample(0:1, 50,replace=TRUE)), r=rbinom(50,1,0.5))
-#' (qfit4 <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
+#' (qfit4 <- qgcomp.emm.glm.boot(f=y ~ z + x1 + x2, emmvar="z",
 #' expnms = c('x1', 'x2'), data=dat4, q=5, family=binomial(), B=10))
 #' pointwisebound(qfit4, pointwiseref = 2, emmval = 0) # reverts to odds ratio
 #'
-pointwisebound <- function(x, alpha = 0.05, pointwiseref = 1, emmval=0.0, ...){
+pointwisebound <- function(x, alpha = 0.05, pointwiseref = 1, emmval=NULL, ...){
+  if(is.null(emmval)){
+    stop("emmval must be specified (level of the modifier for which you would like results)")
+  }
   UseMethod("pointwisebound")
 }
 
 
 
 #' @export
-pointwisebound.qgcompemmfit <- function (x, alpha = 0.05, pointwiseref = 1, emmval=0.0, ...)
+pointwisebound.qgcompemmfit <- function (x, alpha = 0.05, pointwiseref = 1, emmval=NULL, ...)
 {
   #if (x$bootstrap || inherits(x, "ziqgcompfit") || inherits(x,"survqgcompfit")) {
     #stop("This function is only for qgcomp.emm.glm.noboot objects")
@@ -202,14 +212,17 @@ pointwisebound.qgcompemmfit <- function (x, alpha = 0.05, pointwiseref = 1, emmv
 
   #x$fit$data
   #####
+  isboot <- x$bootstrap
+  isee <- inherits(x, "eeqgcompfit")
+
   py = as.matrix(designdf) %*% coef(x) # actual predicted outcome (from msm in case of bootstrapped version)
-  if(!x$bootstrap){
+  if(!isboot & !isee){
     res = switch(link,
                  identity = .pointwise.ident(x$q, py, se.diff,alpha, pointwiseref),
                  log = .pointwise.log(x$q, py, se.diff,alpha, pointwiseref),
                  logit = .pointwise.logit(x$q, py, se.diff, alpha, pointwiseref))
   }
-  if(x$bootstrap){
+  if(isboot | isee){
     #if(x$degree>1) stop("not implemented for non-linear fits")
     link = x$msmfit$family$link
     res = switch(link,
@@ -319,7 +332,7 @@ pointwisebound.qgcompemmfit <- function (x, alpha = 0.05, pointwiseref = 1, emmv
 #' }
 #' The confidence bounds are either  "pointwise" (pw) and "simultaneous" (simul) confidence
 #' intervals at each each quantized value of all exposures.
-#' @seealso \code{\link[qgcompint]{qgcomp.emm.boot}}
+#' @seealso \code{\link[qgcompint]{qgcomp.emm.glm.boot}}
 #' @export
 #' @examples
 #' \dontrun{
@@ -329,7 +342,7 @@ pointwisebound.qgcompemmfit <- function (x, alpha = 0.05, pointwiseref = 1, emmv
 #'                   z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
 #' (qfit <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2, emmvar="z",
 #'                            expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian()))
-#' (qfit2 <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
+#' (qfit2 <- qgcomp.emm.glm.boot(f=y ~ z + x1 + x2, emmvar="z",
 #'                           degree = 1,
 #'                           expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian()))
 #' # modelbound(qfit) # this will error (only works with bootstrapped objects)
@@ -338,12 +351,12 @@ pointwisebound.qgcompemmfit <- function (x, alpha = 0.05, pointwiseref = 1, emmv
 #' set.seed(200)
 #' dat2 <- data.frame(y=rbinom(200, 1, 0.3), x1=runif(200), x2=runif(200),
 #'                   z=rbinom(200,1,0.5))
-#' (qfit3 <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
+#' (qfit3 <- qgcomp.emm.glm.boot(f=y ~ z + x1 + x2, emmvar="z",
 #'                           degree = 1,
 #'                           expnms = c('x1', 'x2'), data=dat2, q=4, rr = FALSE, family=binomial()))
 #' modelbound(qfit3)
 #' # risk ratios instead (check for upper bound > 1.0, indicating implausible risk)
-#' (qfit3b <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
+#' (qfit3b <- qgcomp.emm.glm.boot(f=y ~ z + x1 + x2, emmvar="z",
 #'                           degree = 1,
 #'                           expnms = c('x1', 'x2'), data=dat2, q=4, rr = TRUE, family=binomial()))
 #' modelbound(qfit3b)
@@ -352,19 +365,26 @@ pointwisebound.qgcompemmfit <- function (x, alpha = 0.05, pointwiseref = 1, emmv
 #' dat3 <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
 #'    z=sample(0:2, 50,replace=TRUE), r=rbinom(50,1,0.5))
 #' dat3$z = as.factor(dat3$z)
-#' (qfit4 <- qgcomp.emm.boot(f=y ~ z + x1 + x2, emmvar="z",
+#' (qfit4 <- qgcomp.emm.glm.boot(f=y ~ z + x1 + x2, emmvar="z",
 #'                           degree = 1,
 #'                           expnms = c('x1', 'x2'), data=dat3, q=4, family=gaussian()))
 #' modelbound(qfit4, emmval=2)
 #' }
-modelbound <- function(x, emmval=0.0, alpha=0.05, pwonly=FALSE, ...){
+modelbound <- function(x, emmval=NULL, alpha=0.05, pwonly=FALSE, ...){
+  if(is.null(emmval)){
+    stop("emmval must be specified (level of the modifier for which you would like results)")
+  }
   UseMethod("modelbound")
 }
 
 
 #' @export
-modelbound.qgcompemmfit <- function(x, emmval=0.0, alpha=0.05, pwonly=FALSE, ...){
-  if(!x$bootstrap & !inherits(x, "eeqgcompfit") || inherits(x, "survqgcompfit")){
+modelbound.qgcompemmfit <- function(x, emmval=NULL, alpha=0.05, pwonly=FALSE, ...){
+  isboot <- x$bootstrap
+  isee <- inherits(x, "eeqgcompfit")
+  issurv <- inherits(x, "survqgcompfit")
+
+  if(!isboot & !isee || issurv){
     stop("This function does not work with this type of qgcomp fit")
   }
   #if(x$degree>1) stop("not implemented for non-linear fits")
@@ -380,12 +400,9 @@ modelbound.qgcompemmfit <- function(x, emmval=0.0, alpha=0.05, pwonly=FALSE, ...
       coef.fixed = coef(x)
       coef.vcov = vcov(x)
       # samples from the sampling distribution, rather than the bootstrap distribution
-      coef.boot = t(qgcomp:::.rmvnorm(5000, coef.fixed, coef.vcov))
+      coef.boot = t(.rmvnorm(5000, coef.fixed, coef.vcov))
       #t(designmat %*% coef.boot)
     }
-
-
-
     ypred <- t(designmat %*% coef.boot) # linearpredictor at each bootstrap rep, given new design matrix
     #
     #py = tapply(x$y.expectedmsm, x$index, mean)
