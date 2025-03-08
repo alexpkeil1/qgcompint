@@ -1,13 +1,13 @@
-### qgcompint: quantile g-computation with effect measure modification 
+## qgcompint: quantile g-computation with effect measure modification 
 
 ## installation
-# official release
+#### official release
 install.packages("qgcomp")
-# developmental release (not always guaranteed to be stable)
+#### developmental release (not always guaranteed to be stable)
 devtools::install_github("alexpkeil1/qgcompint", build_vignettes=TRUE)
 
 
-## for help
+#### for help
 vignette("qgcompint-vignette", package="qgcompint")
 
 ### Quick start
