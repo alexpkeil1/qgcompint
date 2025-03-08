@@ -8,7 +8,7 @@
 - new dependency: MASS
 
 ## Minor changes
-- n/a
+- Documentation improvements
 
 ## Bug fixes
 - major, rare: fixed an issue with formula interpretation for complex formulas with nested interaction terms

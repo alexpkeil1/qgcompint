@@ -7,8 +7,8 @@
 \method{plot}{qgcompemmfit}(x, emmval = NULL, suppressprint = FALSE, ...)
 }
 \arguments{
-\item{x}{"qgcompfit" object from \code{qgcomp.noboot},  \code{qgcomp.boot},
-\code{qgcomp.cox.noboot},  \code{qgcomp.cox.boot}, \code{qgcomp.zi.noboot} or \code{qgcomp.zi.boot} functions}
+\item{x}{"qgcompfit" object from \code{qgcomp.noboot}, \code{qgcomp.boot},
+\code{qgcomp.cox.noboot}, \code{qgcomp.cox.boot}, \code{qgcomp.zi.noboot} or \code{qgcomp.zi.boot} functions}
 
 \item{emmval}{fixed value for effect measure modifier at which pointwise comparisons are calculated}
 
@@ -38,7 +38,7 @@ every exposure')
 set.seed(50)
 # linear model, binary modifier
 dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
-z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
+z=rbinom(50, 1, 0.5), r=rbinom(50, 1, 0.5))
 (qfit <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2, emmvar="z",
 expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
 plot(qfit, emmval = 1)
@@ -47,7 +47,7 @@ library(ggplot2)
 
 # example with estimating equation approach
 dat2 <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
-z=sample(0:2, 50,replace=TRUE), r=rbinom(50,1,0.5))
+z=sample(0:2, 50, replace=TRUE), r=rbinom(50, 1, 0.5))
 dat2$z = as.factor(dat2$z)
 (qfit4ee <- qgcomp.emm.glm.ee(f=y ~ z + x1 + x2, emmvar="z",
                           degree = 1,
@@ -58,7 +58,7 @@ pp2ee = plot(qfit4ee, emmval=2, suppressprint=TRUE)
 pp1ee + theme_linedraw() # can use with other ggplot functions
 # example with bootstrapping
 dat2 <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
-z=sample(0:2, 50,replace=TRUE), r=rbinom(50,1,0.5))
+z=sample(0:2, 50, replace=TRUE), r=rbinom(50, 1, 0.5))
 dat2$z = as.factor(dat2$z)
 (qfit4 <- qgcomp.emm.glm.boot(f=y ~ z + x1 + x2, emmvar="z",
                           degree = 1, B = 20,
@@ -89,9 +89,9 @@ library(gtable) # may need to separately install gtable
 pp2 <- plot(qfit, emmval = 1, suppressprint=TRUE)
 grid.draw(pp2)
 # insert row on top that is 1/2 height of existing plot
-pp2b = gtable::gtable_add_rows(pp2, heights=unit(0.5, 'null') ,pos = 0)
+pp2b = gtable::gtable_add_rows(pp2, heights=unit(0.5, 'null') , pos = 0)
 # add plot to that row
-pp3 = gtable::gtable_add_grob(pp2b, ggplot2::ggplotGrob(pp), t=1,l=1,r=2)
+pp3 = gtable::gtable_add_grob(pp2b, ggplot2::ggplotGrob(pp), t=1, l=1, r=2)
 grid.draw(pp3)
 }
 }

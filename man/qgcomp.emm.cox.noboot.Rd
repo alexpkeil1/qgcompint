@@ -21,8 +21,8 @@ qgcomp.emm.cox.noboot(
 }
 \arguments{
 \item{f}{R style survival formula, which includes \code{\link[survival]{Surv}}
-in the outcome definition. E.g. \code{Surv(time,event) ~ exposure}. Offset
-terms can be included via \code{Surv(time,event) ~ exposure + offset(z)}}
+in the outcome definition. E.g. \code{Surv(time, event) ~ exposure}. Offset
+terms can be included via \code{Surv(time, event) ~ exposure + offset(z)}}
 
 \item{data}{data frame}
 
@@ -72,7 +72,7 @@ testing of statistical interaction as well as estimation of stratum specific eff
 \examples{
 set.seed(5)
 N=200
-dat <- data.frame(time=(tmg <- pmin(.1,rweibull(N, 10, 0.1))),
+dat <- data.frame(time=(tmg <- pmin(.1, rweibull(N, 10, 0.1))),
                 d=1.0*(tmg<0.1), x1=runif(N), x2=runif(N), z=runif(N))
 expnms=paste0("x", 1:2)
 f = survival::Surv(time, d)~x1 + x2+z
@@ -80,7 +80,7 @@ f = survival::Surv(time, d)~x1 + x2+z
 (obj <- qgcomp.emm.cox.noboot(f, expnms = expnms, emmvar="z", data = dat))
 
 #categorical emm
-dat <- data.frame(time=(tmg <- pmin(.1,rweibull(N, 10, 0.1))),
+dat <- data.frame(time=(tmg <- pmin(.1, rweibull(N, 10, 0.1))),
                 d=1.0*(tmg<0.1), x1=runif(N), x2=runif(N),
                 z=sample(0:2, N, replace=TRUE))
  dat$z = as.factor(dat$z)

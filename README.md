@@ -1,28 +1,37 @@
 ### qgcompint: quantile g-computation with effect measure modification 
 
+## installation
+# official release
+install.packages("qgcomp")
+# developmental release (not always guaranteed to be stable)
+devtools::install_github("alexpkeil1/qgcompint", build_vignettes=TRUE)
+
+
+## for help
+vignette("qgcompint-vignette", package="qgcompint")
+
 ### Quick start
-    devtools::install_github("alexpkeil1/qgcompint")
     library(qgcomp)
     library(qgcompint)
-	 set.seed(40)
-    dat <- data.frame(y=runif(50),
-	                  x1=runif(50),
-	                  x2=runif(50),
-	                  z=rbinom(50,1,0.5),
-	                  r=rbinom(50,1,0.5))
+	  set.seed(40)
+    dat <- data.frame(y=runif (50),
+	                  x1=runif (50),
+	                  x2=runif (50),
+	                  z=rbinom(50, 1, 0.5),
+	                  r=rbinom(50, 1, 0.5))
 	 
 	 # quantile g-computation without effect measure modification
-	 qfit <- qgcomp.noboot(f=y ~ z + x1 + x2, 
-	           expnms = c('x1', 'x2'), 
-	           data=dat, q=2, 
+	 qfit <- qgcomp.glm.noboot(f=y ~ z + x1 + x2,
+	           expnms = c('x1', 'x2'),
+	           data=dat, q=2,
 	           family=gaussian())
 	 # no output given here          
 	 
 	 # with effect measure modification by Z
 	 (qfitemm <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2,
-	           emmvar="z", 
-	           expnms = c('x1', 'x2'), 
-	           data=dat, q=2, 
+	           emmvar="z",
+	           expnms = c('x1', 'x2'),
+	           data=dat, q=2,
 	           family=gaussian()))
 
    
@@ -44,7 +53,7 @@
 	> x2 
 	>  1 
 
-	> Mixture slope parameters (Delta method CI):
+	> Mixture slope parameters (delta method CI):
 
 	> 			  Estimate Std. Error Lower CI Upper CI t value  Pr(>|t|)
 	> (Intercept)  0.58062    0.11142  0.36224  0.79900  5.2112 4.787e-06
@@ -57,18 +66,18 @@
 	
 ### Current package capabilities/limitations
 - Single modifiers only (e.g. interaction terms between a modifier and the mixture can only be estimated for a single modifier at a time). This also implies that no interaction terms between the modifier and other covariates can be considered.
-- linear only specifications (i.e. linear effects of a mixture, but not covariates) for Cox model
+- Cox model: linear only specifications (i.e. linear effects of a mixture, but not covariates) 
 
 ### Interpretation
 - coefficients
   - psi1 coefficient: effect of the mixture in the referent category of the effect measure modifier (`z` in this case)
   - z coefficient: main effect of the effect measure modifier (will change based on name of effect measure modifier)
   - z:mixture coefficient: interaction term between the effect measure modifier and the entire mixture
-- weights/partial effects (only given if effect measure modifier is binary)
+- weights/partial effects
   - first set of weights/sum of negative/positive coefficients: 
     	- weights: proportion of positive/negative partial effect in the reference stratum effect measure modifier (here, `z=0`)
   	  - partial effect: sum of main term coefficients for exposure in a given direction (these will sum to psi1, the effect estimate in the reference stratum effect measure modifier (here, `z=0`))
-  - second set:
+  - If the modifier is binary, a second set is printed:
   	  - weights: proportion of positive/negative partial effect in the index stratum effect measure modifier (here, `z=1`)
   	  - partial effect: sum of main term coefficients + interaction term coefficients for exposure in a given direction (these will sum to the mixture effect estimate in the index stratum effect measure modifier (here, `z=1`))
 - Additional estimates (only given if effect measure modifier is binary): The effect of the mixture in the index category of the effect measure modifier (here, `z=1`)

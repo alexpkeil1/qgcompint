@@ -1,4 +1,4 @@
-qgcomp.emm.cox.noboot <- function (
+qgcomp.emm.cox.noboot <- function(
   f,
   data,
   expnms = NULL,
@@ -20,8 +20,8 @@ qgcomp.emm.cox.noboot <- function (
   #' testing of statistical interaction as well as estimation of stratum specific effects.
   #'
   #' @param f R style survival formula, which includes \code{\link[survival]{Surv}}
-  #'   in the outcome definition. E.g. \code{Surv(time,event) ~ exposure}. Offset
-  #'   terms can be included via \code{Surv(time,event) ~ exposure + offset(z)}
+  #'   in the outcome definition. E.g. \code{Surv(time, event) ~ exposure}. Offset
+  #'   terms can be included via \code{Surv(time, event) ~ exposure + offset(z)}
   #' @param data data frame
   #' @param expnms character vector of exposures of interest
   #' @param emmvar (character) name of effect measure modifier in dataset (if categorical, must be coded as a factor variable)
@@ -56,7 +56,7 @@ qgcomp.emm.cox.noboot <- function (
   #' @examples
   #' set.seed(5)
   #' N=200
-  #' dat <- data.frame(time=(tmg <- pmin(.1,rweibull(N, 10, 0.1))),
+  #' dat <- data.frame(time=(tmg <- pmin(.1, rweibull(N, 10, 0.1))),
   #'                 d=1.0*(tmg<0.1), x1=runif(N), x2=runif(N), z=runif(N))
   #' expnms=paste0("x", 1:2)
   #' f = survival::Surv(time, d)~x1 + x2+z
@@ -64,7 +64,7 @@ qgcomp.emm.cox.noboot <- function (
   #' (obj <- qgcomp.emm.cox.noboot(f, expnms = expnms, emmvar="z", data = dat))
   #'
   #' #categorical emm
-  #' dat <- data.frame(time=(tmg <- pmin(.1,rweibull(N, 10, 0.1))),
+  #' dat <- data.frame(time=(tmg <- pmin(.1, rweibull(N, 10, 0.1))),
   #'                 d=1.0*(tmg<0.1), x1=runif(N), x2=runif(N),
   #'                 z=sample(0:2, N, replace=TRUE))
   #'  dat$z = as.factor(dat$z)
@@ -72,7 +72,7 @@ qgcomp.emm.cox.noboot <- function (
   #' f = survival::Surv(time, d)~x1 + x2+z
   #' (obj2 <- qgcomp.emm.cox.noboot(f, expnms = expnms, emmvar="z", data = dat))
   #'
-  if(errcheck){
+  if (errcheck) {
     # basic argument checks
     if (is.null(expnms)) {
       stop("'expnms' must be specified explicitly\n")
@@ -81,10 +81,13 @@ qgcomp.emm.cox.noboot <- function (
       stop("'emmvar' must be specified explicitly\n")
     }
   }
-  allemmvals<- unique(data[,emmvar,drop=TRUE])
+  allemmvals<- unique(data[, emmvar, drop=TRUE])
+  if (!(inherits(allemmvals, "numeric") || inherits(allemmvals, "factor") || inherits(allemmvals, "integer")))
+    stop("Modifier must be of types: numeric, integer or factor (convert to one of these types to proceed)")
   emmlev <- length(allemmvals)
   ## process to expand factors if needed
-  zdata = zproc(data[,emmvar], znm = emmvar)
+  zdata = zproc(data[, emmvar], znm = emmvar)
+
   emmvars = names(zdata)
   data = cbind(data, zdata)
   ### end new
@@ -92,26 +95,26 @@ qgcomp.emm.cox.noboot <- function (
   #of <- f
   # keep track of added terms by remembering old model
   originalform <- terms(f, data = data)
-  #f = .intmaker(f,expnms,emmvar) # create necessary interaction terms with exposure
-  (f <- .intmaker(f,expnms,emmvars, emmvar)) # create necessary interaction terms with exposure
+  #f = .intmaker(f, expnms, emmvar) # create necessary interaction terms with exposure
+  (f <- .intmaker(f, expnms, emmvars, emmvar)) # create necessary interaction terms with exposure
   newform <- terms(f, data = data)
   class(newform) <- "formula"
   addedterms <- setdiff(attr(newform, "term.labels"), attr(originalform, "term.labels"))
-  addedmain <- setdiff(addedterms, grep(":",addedterms, value = TRUE))
+  addedmain <- setdiff(addedterms, grep(":", addedterms, value = TRUE))
   addedints <- setdiff(addedterms, addedmain)
   addedintsl <- lapply(emmvars, function(x) grep(x, addedints, value = TRUE))
   if (length(addedmain)>0) {
-    message(paste0("Adding main term for ",emmvar," to the model\n"))
+    message(paste0("Adding main term for ", emmvar, " to the model\n"))
   }
   #oord <- order(expnms)
   # order interaction terms in same order as main terms
-  #s0 <- gsub(paste0("^", emmvar,":"), "",
-  #           gsub(paste0(":", emmvar,"$"), "", addedints))
+  #s0 <- gsub(paste0("^", emmvar, ":"), "",
+  #           gsub(paste0(":", emmvar, "$"), "", addedints))
   #intord = order(s0)
   #equalord = all.equal(oord, intord)
   addedintsord = addedints
-  #if( equalord ) addedintsord = addedints
-  #if( !equalord ){
+  #if ( equalord ) addedintsord = addedints
+  #if ( !equalord ) {
   #  neword = match(s0, expnms)
   #  addedintsord = addedints[neword]
   #}
@@ -126,7 +129,7 @@ qgcomp.emm.cox.noboot <- function (
   #
   thecall[[1L]] <- quote(stats::model.frame)
   thecalle <- eval(thecall, parent.frame())
-  if(hasweights){
+  if (hasweights) {
     data$weights <- as.vector(model.weights(thecalle))
   } else data$weights = rep(1, nobs)
   if (is.null(expnms)) {
@@ -134,8 +137,8 @@ qgcomp.emm.cox.noboot <- function (
     expnms <- attr(newform, "term.labels")
   }
   lin = .intchecknames(expnms)
-  if(!lin) stop("Model appears to be non-linear: this is not yet implemented")
-  if (!is.null(q) | !is.null(breaks)) {
+  if (!lin) stop("Model appears to be non-linear: this is not yet implemented")
+  if (!is.null(q) || !is.null(breaks)) {
     ql <- qgcomp::quantize(data, expnms, q, breaks)
     qdata <- ql$data
     br <- ql$breaks
@@ -148,7 +151,7 @@ qgcomp.emm.cox.noboot <- function (
   environment(newform) <- list2env(list(qdata=qdata))
   #newform = Surv(time, d) ~ x1 + x2 + x1 * z + x2 * z
   fit <- coxph(newform, data = qdata,
-               weights=weights, x=FALSE,y=FALSE,
+               weights=weights, x=FALSE, y=FALSE,
                #cluster=cluster,
                ...)
   fit$data = data.frame(qdata)
@@ -177,20 +180,20 @@ qgcomp.emm.cox.noboot <- function (
   # modifier main term, product term
   estb.prod <- do.call(c, lapply(1:length(emmvars), function(x) c(
     fit$coefficients[emmvars[x]],
-    sum(mod$coefficients[addedintsl[[x]],1, drop=TRUE])
+    sum(mod$coefficients[addedintsl[[x]], 1, drop=TRUE])
   )))
   names(estb.prod) <- do.call(c, lapply(1:length(emmvars), function(x) c(emmvars[x], paste0(emmvars[x], ":mixture"))))
   seb.prod <- do.call(c, lapply(1:length(emmvars), function(x) c(
-    sqrt(covMat[emmvars[x],emmvars[x]]),
+    sqrt(covMat[emmvars[x], emmvars[x]]),
     se_comb2(addedintsl[[x]], covmat = covMat)
   )))
   #estb.prod <- c(
   #  mod$coefficients[emmvar, 1],
-  #  sum(mod$coefficients[addedints,1, drop=TRUE])
+  #  sum(mod$coefficients[addedints, 1, drop=TRUE])
   #)
   #names(estb.prod) <- c(emmvar, paste0(emmvar, ":mixture"))
   #seb.prod <- c(
-  #  sqrt(covMat[emmvar,emmvar]),
+  #  sqrt(covMat[emmvar, emmvar]),
   #  se_comb2(addedints, covmat = covMat)
   #)
   tstat.prod <- estb.prod / seb.prod
@@ -214,7 +217,7 @@ qgcomp.emm.cox.noboot <- function (
   qx <- qdata[, expnms]
   names(qx) <- paste0(names(qx), "_q")
   covmat.coef = vc_multiscomb(inames = NULL, emmvars=emmvars,
-                              expnms=expnms,addedintsl=addedintsl, covmat=covMat, grad = NULL
+                              expnms=expnms, addedintsl=addedintsl, covmat=covMat, grad = NULL
   )
   colnames(covmat.coef) <- rownames(covmat.coef) <- names(c(estb, estb.prod))
 
@@ -228,7 +231,7 @@ qgcomp.emm.cox.noboot <- function (
     covmat.psi=covmat.coef["psi1", "psi1"],
     covmat.psiint=covmat.coef[grep("mixture", colnames(covmat.coef)), grep("mixture", colnames(covmat.coef))], # to fix
     ci = ci,
-    ciint = ci.prod[2*(1:length(emmvars)),],
+    ciint = ci.prod[2*(1:length(emmvars)), ],
     coef = c(estb, estb.prod),
     var.coef = c(seb ^ 2, seb.prod ^ 2),
     covmat.coef = covmat.coef,
@@ -245,15 +248,18 @@ qgcomp.emm.cox.noboot <- function (
     pos.size = sum(abs(wcoef[poscoef])),
     neg.size = sum(abs(wcoef[negcoef])),
     bootstrap = FALSE,
-    zstat = c(tstat,tstat.prod),
-    pval = c(pvalz,pvalz.prod),
+    zstat = c(tstat, tstat.prod),
+    pval = c(pvalz, pvalz.prod),
     alpha=alpha,
     call=origcall,
-    emmlev = emmlev
+    emmlev = emmlev,
+    emmvals = allemmvals,
+    hasintercept = FALSE
   )
-  if(emmlev==2){
-    ww = getstratweights(res, emmval = 1)
-    ff = getstrateffects(res, emmval = 1)
+  attr(res, "class") <- c( "survqgcompemmfit", "survqgcompfit", attr(res, "class"))
+  if (emmlev==2) {
+    ww = getstratweights(res, emmval = allemmvals[2])
+    ff = getstrateffects(res, emmval = allemmvals[2])
     cl = class(res)
     res = c(res,
             list(
@@ -272,7 +278,5 @@ qgcomp.emm.cox.noboot <- function (
     )
     class(res) = cl
   }
-  res$hasintercept = FALSE
-  attr(res, "class") <- c( "survqgcompemmfit", "survqgcompfit", attr(res, "class"))
   res
 }

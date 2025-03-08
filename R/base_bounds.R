@@ -5,91 +5,90 @@
 ###############################################################################
 .rmvnorm <- utils::getFromNamespace(".rmvnorm", "qgcomp")
 
-.pointwise.ident <- function(q, py, se.diff, alpha, pwr){
+.pointwise.ident <- function(q, py, se.diff, alpha, pwr) {
   # mean, mean differences
-  data.frame(quantile= (seq_len(q)) - 1,
-             quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
-             hx = py,
-             mean.diff = py - py[pwr],
-             se.diff = se.diff, # standard error on link scale
-             ll.diff =  py - py[pwr] + qnorm(alpha/2) * se.diff,
-             ul.diff =  py - py[pwr] + qnorm(1-alpha/2) * se.diff
+  data.frame(
+    quantile = (seq_len(q)) - 1,
+    quantile.midpoint=((seq_len(q)) - 1 + 0.5) / q,
+    hx = py,
+    mean.diff = py - py[pwr],
+    se.diff = se.diff, # standard error on link scale
+    ll.diff =  py - py[pwr] + qnorm(alpha / 2) * se.diff,
+    ul.diff =  py - py[pwr] + qnorm(1 - alpha / 2) * se.diff
   )
 }
 
 
 
-.pointwise.log <- function(q, py, se.diff, alpha, pwr){
+.pointwise.log <- function(q, py, se.diff, alpha, pwr) {
   # risk, risk ratios / prevalence ratios
-  data.frame(quantile= (seq_len(q)) - 1,
-             quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
-             hx = py,
-             rr = exp(py - py[pwr]),
-             se.lnrr = se.diff, # standard error on link scale
-             ll.rr = exp(py - py[pwr] + qnorm(alpha/2) * se.diff),
-             ul.rr = exp(py - py[pwr] + qnorm(1-alpha/2) * se.diff)
+  data.frame(
+    quantile = (seq_len(q)) - 1,
+    quantile.midpoint = ((seq_len(q)) - 1 + 0.5) / q,
+    hx = py,
+    rr = exp(py - py[pwr]),
+    se.lnrr = se.diff, # standard error on link scale
+    ll.rr = exp(py - py[pwr] + qnorm(alpha / 2) * se.diff),
+    ul.rr = exp(py - py[pwr] + qnorm(1 - alpha / 2) * se.diff)
   )
 }
 
 
 
-.pointwise.logit <- function(q, py, se.diff, alpha, pwr){
+.pointwise.logit <- function(q, py, se.diff, alpha, pwr) {
   # odds, odds ratios
-  data.frame(quantile= (seq_len(q)) - 1,
-             quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
-             hx = py, # log odds
-             or = exp(py - py[pwr]),
-             se.lnor = se.diff, # standard error on link scale
-             ll.or = exp(py - py[pwr] + qnorm(alpha/2) * se.diff),
-             ul.or = exp(py - py[pwr] + qnorm(1-alpha/2) * se.diff)
+  data.frame(
+    quantile= (seq_len(q)) - 1,
+    quantile.midpoint=((seq_len(q)) - 1 + 0.5) / q,
+    hx = py, # log odds
+    or = exp(py - py[pwr]),
+    se.lnor = se.diff, # standard error on link scale
+    ll.or = exp(py - py[pwr] + qnorm(alpha/2) * se.diff),
+    ul.or = exp(py - py[pwr] + qnorm(1-alpha/2) * se.diff)
   )
 }
 
 
-.pointwise.ident.boot <- function(q, py, se.diff, alpha, pwr){
+.pointwise.ident.boot <- function(q, py, se.diff, alpha, pwr) {
   pw = .pointwise.ident(q, py, se.diff, alpha, pwr)
   pw$ll.linpred = pw$hx - pw$mean.diff + pw$ll.diff
   pw$ul.linpred = pw$hx - pw$mean.diff + pw$ul.diff
   pw
 }
 
-.pointwise.log.boot <- function(q, py, se.diff, alpha, pwr){
+.pointwise.log.boot <- function(q, py, se.diff, alpha, pwr) {
   pw = .pointwise.log(q, py, se.diff, alpha, pwr)
   pw$ll.linpred = pw$hx - log(pw$rr) + log(pw$ll.rr)
   pw$ul.linpred = pw$hx - log(pw$rr) + log(pw$ul.rr)
   pw
 }
 
-.pointwise.logit.boot <- function(q, py, se.diff, alpha, pwr){
+.pointwise.logit.boot <- function(q, py, se.diff, alpha, pwr) {
   pw = .pointwise.logit(q, py, se.diff, alpha, pwr)
   pw$ll.linpred = pw$hx - log(pw$or) + log(pw$ll.or)
   pw$ul.linpred = pw$hx - log(pw$or) + log(pw$ul.or)
   pw
 }
 
-.makenewdesign <- function(x, qvals, emmval=0.0, degree=1,...){
-  coxmod = FALSE
-  if(class(x$fit)[1]=="coxph") coxmod = TRUE
-  #expnms = x$expnms
-  emmvar = x$call$emmvar
-  zvar = x$fit$data[,emmvar,drop=TRUE]
-  if(is.factor(zvar))
-    zdat = zproc(zvar[zvar==emmval], znm = emmvar)
-  if(!is.factor(zvar))
-    zdat = zproc(zvar*0 + emmval, znm = emmvar)
+.makenewdesign <- function(x, qvals, emmval=0.0, degree=1, ...) {
+  emmvar <- x$call$emmvar
+  zvar <- x$fit$data[, emmvar, drop = TRUE]
+  if (is.factor(zvar))
+    zdat <- zproc(zvar[zvar == emmval], znm = emmvar)
+  if (!is.factor(zvar))
+    zdat <- zproc(zvar*0 + emmval, znm = emmvar)
 
-  zinmodel = zdat[1,,drop=FALSE][rep(1,length(qvals)),, drop=FALSE]
-  coefnm = names(coef(x))
-  cfi = coefnm[which(tolower(coefnm) != "(intercept)")]
+  zinmodel <- zdat[1, , drop=FALSE][rep(1, length(qvals)), , drop=FALSE]
+  coefnm <- names(coef(x))
+  cfi <- coefnm[which(tolower(coefnm) != "(intercept)")]
   cfi <- gsub("psi([0-9])", "I(q^\\1)", cfi)
-  cfi <- gsub("mixture([\\^0-9]{0,2})", "I(q\\1)", cfi)
+  cfi <- gsub("mixture([\\^0-9]{0, 2})", "I(q\\1)", cfi)
   cfi <- gsub("mixture", "q", cfi)
   cfi <- gsub("I\\(q\\)|I\\(q\\^1\\)", "q", cfi)
   cfi <- c(ifelse(x$hasintercept, "~1", "~-1"), cfi)
   ff <- as.formula(paste(cfi, collapse="+"))
-  df <- model.frame(formula=ff,data = data.frame(q=qvals, zinmodel))
+  df <- model.frame(formula=ff, data = data.frame(q=qvals, zinmodel))
   res <- model.matrix.default(ff, data = df)
-  #if(coxmod) res = res[,,drop=FALSE]
   row.names(res) <- NULL
   res
 }
@@ -98,7 +97,7 @@
 #' Estimating pointwise comparisons for qgcompint fits
 #' @description
 #' Calculates: expected outcome (on the link scale), mean difference (link scale) and the standard error of the mean difference (link scale) for pointwise comparisons
-#' @details The comparison of interest following a qgcomp fit is often comparisons of model predictions at various values of the joint-exposures (e.g. expected outcome at all exposures at the 1st quartile vs. the 3rd quartile). The expected outcome at a given joint exposure and at a given level of non-exposure covariates (W) is given as E(Y|S,W=w), where S takes on integer values 0 to q-1. Thus, comparisons are of the type E(Y|S=s,W=w) - E(Y|S=s2,W=w) where s and s2 are two different values of the joint exposures (e.g. 0 and 2). This function yields E(Y|S,W=w) as well as E(Y|S=s,W=w) - E(Y|S=p,W=w) where s is any value of S and p is the value chosen via "pointwise ref" - e.g. for binomial variables this will equal the risk/ prevalence difference at all values of S, with the referent category S=p-1. For the non-boostrapped version of quantile g-computation (under a linear model)
+#' @details The comparison of interest following a qgcomp fit is often comparisons of model predictions at various values of the joint-exposures (e.g. expected outcome at all exposures at the 1st quartile vs. the 3rd quartile). The expected outcome at a given joint exposure and at a given level of non-exposure covariates (W) is given as E(Y|S, W=w), where S takes on integer values 0 to q-1. Thus, comparisons are of the type E(Y|S=s, W=w) - E(Y|S=s2, W=w) where s and s2 are two different values of the joint exposures (e.g. 0 and 2). This function yields E(Y|S, W=w) as well as E(Y|S=s, W=w) - E(Y|S=p, W=w) where s is any value of S and p is the value chosen via "pointwise ref" - e.g. for binomial variables this will equal the risk/ prevalence difference at all values of S, with the referent category S=p-1. For the non-boostrapped version of quantile g-computation (under a linear model)
 #' Note that function only works with standard "qgcompint" objects from qgcomp.emm.glm.noboot (so it doesn't work with zero inflated, hurdle, or Cox models)
 #' Variance for the overall effect estimate is given by: \eqn{transpose(G) Cov(\beta) G}
 #' Where the "gradient vector" G is given by
@@ -126,13 +125,13 @@
 #' set.seed(50)
 #' # linear model, binary modifier
 #' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
-#' z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
+#' z=rbinom(50, 1, 0.5), r=rbinom(50, 1, 0.5))
 #' (qfit <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2, emmvar="z",
 #'   expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian()))
 #' pointwisebound(qfit, pointwiseref = 2, emmval = 0.1)
 #' # linear model, categorical modifier
 #' dat3 <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
-#' z=as.factor(sample(0:2, 50,replace=TRUE)), r=rbinom(50,1,0.5))
+#' z=as.factor(sample(0:2, 50, replace=TRUE)), r=rbinom(50, 1, 0.5))
 #' (qfit3 <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2, emmvar="z",
 #' expnms = c('x1', 'x2'), data=dat3, q=5, family=gaussian()))
 #' pointwisebound(qfit3, pointwiseref = 2, emmval = 0)
@@ -153,13 +152,13 @@
 #' pointwisebound(qfit3c, pointwiseref = 2, emmval = 2)
 #' # logistic model, binary modifier
 #' dat4 <- data.frame(y=rbinom(50, 1, 0.3), x1=runif(50), x2=runif(50),
-#'   z=as.factor(sample(0:1, 50,replace=TRUE)), r=rbinom(50,1,0.5))
+#'   z=as.factor(sample(0:1, 50, replace=TRUE)), r=rbinom(50, 1, 0.5))
 #' (qfit4 <- qgcomp.emm.glm.boot(f=y ~ z + x1 + x2, emmvar="z",
 #' expnms = c('x1', 'x2'), data=dat4, q=5, family=binomial(), B=10))
 #' pointwisebound(qfit4, pointwiseref = 2, emmval = 0) # reverts to odds ratio
 #'
-pointwisebound <- function(x, alpha = 0.05, pointwiseref = 1, emmval=NULL, ...){
-  if(is.null(emmval)){
+pointwisebound <- function(x, alpha = 0.05, pointwiseref = 1, emmval = NULL, ...) {
+  if (is.null(emmval)) {
     stop("emmval must be specified (level of the modifier for which you would like results)")
   }
   UseMethod("pointwisebound")
@@ -168,45 +167,41 @@ pointwisebound <- function(x, alpha = 0.05, pointwiseref = 1, emmval=NULL, ...){
 
 
 #' @export
-pointwisebound.qgcompemmfit <- function (x, alpha = 0.05, pointwiseref = 1, emmval=NULL, ...)
-{
-  #if (x$bootstrap || inherits(x, "ziqgcompfit") || inherits(x,"survqgcompfit")) {
-    #stop("This function is only for qgcomp.emm.glm.noboot objects")
-  #}
-  link = x$fit$family$link
-  qvals = c(1:x$q)-1
-  designdf = as.data.frame(.makenewdesign(x, qvals, emmval=emmval)) # saturated design matrix
+pointwisebound.qgcompemmfit <- function(x, alpha = 0.05, pointwiseref = 1, emmval = NULL, ...) {
+  link <- x$fit$family$link
+  qvals <- c(1:x$q) - 1
+  designdf <- as.data.frame(.makenewdesign(x, qvals, emmval = emmval)) # saturated design matrix
 
-  vc = vcov(x)
-  coefnm = colnames(vc)
+  vc <- vcov(x)
+  coefnm <- colnames(vc)
   cfi <- gsub("psi1|mixture", "q", coefnm)
-  for(int in 2:5) cfi <- gsub(paste0("psi",int), paste0("q^",int, ""), cfi)
+  for (int in 2:5) cfi <- gsub(paste0("psi", int), paste0("q^", int, ""), cfi)
   cfi <- gsub("q\\^([2-5])", "I\\(q^\\1\\)", cfi)
   rownames(vc) <- colnames(vc) <- cfi
-  vcord = 1:dim(vc)[1]
-  designnm = names(designdf)
-  newnames = designnm
-  designord = numeric(length(vcord))
-  for(vci in vcord){
-    designord[vci] = match(cfi[vci], designnm)
-    if(is.na(designord[vci])){
-      subnms = gsub("([^:]+):([^:]+)", "\\2:\\1", designnm)
-      designord[vci] = match(cfi[vci], subnms)
-      newnames[vci] = subnms[vci]
+  vcord <- seq_len(dim(vc)[1])
+  designnm <- names(designdf)
+  newnames <- designnm
+  designord <- numeric(length(vcord))
+  for (vci in vcord) {
+    designord[vci] <- match(cfi[vci], designnm)
+    if (is.na(designord[vci])) {
+      subnms <- gsub("([^:]+):([^:]+)", "\\2:\\1", designnm)
+      designord[vci] <- match(cfi[vci], subnms)
+      newnames[vci] <- subnms[vci]
     }
   }
-  designdf = designdf[,designord]
-  names(designdf) = newnames
+  designdf <- designdf[, designord]
+  names(designdf) <- newnames
 
 
 
-  refrow = designdf[pointwiseref,]
-  nrows = nrow(designdf)
-  se.diff = numeric(nrows)
-  for(nr in seq_len(nrows)){
-    grad = as.numeric(designdf[nr,] - refrow)
-    #whichgrad = (grad!=0)
-    se.diff[nr] = se_comb2(names(grad), covmat = vc, grad)
+  refrow <- designdf[pointwiseref, ]
+  nrows <- nrow(designdf)
+  se.diff <- numeric(nrows)
+  for (nr in seq_len(nrows)) {
+    grad <- as.numeric(designdf[nr, ] - refrow)
+    #whichgrad = (grad!<-0)
+    se.diff[nr] <- se_comb2(names(grad), covmat = vc, grad)
   }
 
 
@@ -215,22 +210,22 @@ pointwisebound.qgcompemmfit <- function (x, alpha = 0.05, pointwiseref = 1, emmv
   isboot <- x$bootstrap
   isee <- inherits(x, "eeqgcompfit")
 
-  py = as.matrix(designdf) %*% coef(x) # actual predicted outcome (from msm in case of bootstrapped version)
-  if(!isboot & !isee){
-    res = switch(link,
-                 identity = .pointwise.ident(x$q, py, se.diff,alpha, pointwiseref),
-                 log = .pointwise.log(x$q, py, se.diff,alpha, pointwiseref),
-                 logit = .pointwise.logit(x$q, py, se.diff, alpha, pointwiseref))
+  py <- as.matrix(designdf) %*% coef(x) # actual predicted outcome (from msm in case of bootstrapped version)
+  if (!isboot && !isee) {
+    res <- switch(link,
+      identity = .pointwise.ident(x$q, py, se.diff, alpha, pointwiseref),
+      log = .pointwise.log(x$q, py, se.diff, alpha, pointwiseref),
+      logit = .pointwise.logit(x$q, py, se.diff, alpha, pointwiseref))
   }
-  if(isboot | isee){
-    #if(x$degree>1) stop("not implemented for non-linear fits")
-    link = x$msmfit$family$link
-    res = switch(link,
-                 identity = .pointwise.ident.boot(x$q, py, se.diff,alpha, pointwiseref),
-                 log = .pointwise.log.boot(x$q, py, se.diff,alpha, pointwiseref),
-                 logit = .pointwise.logit.boot(x$q, py, se.diff, alpha, pointwiseref))
+  if (isboot || isee) {
+    #if (x$degree>1) stop("not implemented for non-linear fits")
+    link <- x$msmfit$family$link
+    res <- switch(link,
+      identity = .pointwise.ident.boot(x$q, py, se.diff, alpha, pointwiseref),
+      log = .pointwise.log.boot(x$q, py, se.diff, alpha, pointwiseref),
+      logit = .pointwise.logit.boot(x$q, py, se.diff, alpha, pointwiseref))
   }
-  if(family(x)$family=="cox"){
+  if (family(x)$family=="cox") {
     names(res) = gsub("rr", "hr", names(res))
   }
   res$emm_level = emmval
@@ -245,35 +240,35 @@ pointwisebound.qgcompemmfit <- function (x, alpha = 0.05, pointwiseref = 1, emmv
 ###############################################################################
 
 
-.modelwise.lin <- function(q, py, se.diff, alpha, ll, ul){
+.modelwise.lin <- function(q, py, se.diff, alpha, ll, ul) {
   # mean, mean differences
-  data.frame(quantile= (seq_len(q)) - 1,
-             quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
-             hx = py,
-             m = py,
-             se.pw = se.diff, # standard error on link scale
-             ll.pw = py + qnorm(alpha/2) * se.diff,
-             ul.pw = py + qnorm(1-alpha/2) * se.diff,
-             ll.simul= ifelse(is.na(ll), NA, ll),
-             ul.simul=ifelse(is.na(ul), NA, ul)
+  data.frame(quantile = (seq_len(q)) - 1,
+    quantile.midpoint = ((seq_len(q)) - 1 + 0.5) / (q),
+    hx = py,
+    m = py,
+    se.pw = se.diff, # standard error on link scale
+    ll.pw = py + qnorm(alpha / 2) * se.diff,
+    ul.pw = py + qnorm(1 - alpha / 2) * se.diff,
+    ll.simul = ifelse(is.na(ll), NA, ll),
+    ul.simul = ifelse(is.na(ul), NA, ul)
   )
 }
 
-.modelwise.log <- function(q, py, se.diff, alpha, ll, ul){
+.modelwise.log <- function(q, py, se.diff, alpha, ll, ul) {
   # risk (expects log py, se.diff = se of log difference)
   data.frame(quantile= (seq_len(q)) - 1,
-             quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
-             hx = py, # log risk
-             r = exp(py), # risk
-             se.pw = se.diff, # standard error on link scale
-             ll.pw = exp(py + qnorm(alpha/2) * se.diff),# risk
-             ul.pw = exp(py + qnorm(1-alpha/2) * se.diff), # risk
-             ll.simul= ifelse(is.na(ll), NA, exp(ll)),
-             ul.simul=ifelse(is.na(ul), NA, exp(ul))
+    quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
+    hx = py, # log risk
+    r = exp(py), # risk
+    se.pw = se.diff, # standard error on link scale
+    ll.pw = exp(py + qnorm(alpha / 2) * se.diff), # risk
+    ul.pw = exp(py + qnorm(1 - alpha / 2) * se.diff), # risk
+    ll.simul = ifelse(is.na(ll), NA, exp(ll)),
+    ul.simul = ifelse(is.na(ul), NA, exp(ul))
   )
 }
 
-.modelwise.logit <- function(q, py, se.diff, alpha, ll, ul){
+.modelwise.logit <- function(q, py, se.diff, alpha, ll, ul) {
   # odds
   data.frame(quantile= (seq_len(q)) - 1,
              quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
@@ -339,7 +334,7 @@ pointwisebound.qgcompemmfit <- function (x, alpha = 0.05, pointwiseref = 1, emmv
 #' set.seed(50)
 # linear model, binary modifier
 #' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
-#'                   z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
+#'                   z=rbinom(50, 1, 0.5), r=rbinom(50, 1, 0.5))
 #' (qfit <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2, emmvar="z",
 #'                            expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian()))
 #' (qfit2 <- qgcomp.emm.glm.boot(f=y ~ z + x1 + x2, emmvar="z",
@@ -350,7 +345,7 @@ pointwisebound.qgcompemmfit <- function (x, alpha = 0.05, pointwiseref = 1, emmv
 #' # logistic model
 #' set.seed(200)
 #' dat2 <- data.frame(y=rbinom(200, 1, 0.3), x1=runif(200), x2=runif(200),
-#'                   z=rbinom(200,1,0.5))
+#'                   z=rbinom(200, 1, 0.5))
 #' (qfit3 <- qgcomp.emm.glm.boot(f=y ~ z + x1 + x2, emmvar="z",
 #'                           degree = 1,
 #'                           expnms = c('x1', 'x2'), data=dat2, q=4, rr = FALSE, family=binomial()))
@@ -363,15 +358,15 @@ pointwisebound.qgcompemmfit <- function (x, alpha = 0.05, pointwiseref = 1, emmv
 #' # categorical modifier
 #' set.seed(50)
 #' dat3 <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
-#'    z=sample(0:2, 50,replace=TRUE), r=rbinom(50,1,0.5))
+#'    z=sample(0:2, 50, replace=TRUE), r=rbinom(50, 1, 0.5))
 #' dat3$z = as.factor(dat3$z)
 #' (qfit4 <- qgcomp.emm.glm.boot(f=y ~ z + x1 + x2, emmvar="z",
 #'                           degree = 1,
 #'                           expnms = c('x1', 'x2'), data=dat3, q=4, family=gaussian()))
 #' modelbound(qfit4, emmval=2)
 #' }
-modelbound <- function(x, emmval=NULL, alpha=0.05, pwonly=FALSE, ...){
-  if(is.null(emmval)){
+modelbound <- function(x, emmval = NULL, alpha = 0.05, pwonly = FALSE, ...) {
+  if (is.null(emmval)) {
     stop("emmval must be specified (level of the modifier for which you would like results)")
   }
   UseMethod("modelbound")
@@ -379,64 +374,56 @@ modelbound <- function(x, emmval=NULL, alpha=0.05, pwonly=FALSE, ...){
 
 
 #' @export
-modelbound.qgcompemmfit <- function(x, emmval=NULL, alpha=0.05, pwonly=FALSE, ...){
+modelbound.qgcompemmfit <- function(x, emmval = NULL, alpha = 0.05, pwonly = FALSE, ...) {
   isboot <- x$bootstrap
   isee <- inherits(x, "eeqgcompfit")
   issurv <- inherits(x, "survqgcompfit")
 
-  if(!isboot & !isee || issurv){
+  if (!isboot && !isee || issurv) {
     stop("This function does not work with this type of qgcomp fit")
   }
-  #if(x$degree>1) stop("not implemented for non-linear fits")
-  #link = x$fit$family$link
-  link = x$msmfit$family$link
-    qvals = c(1:x$q)-1
-    designmat = .makenewdesign(x, qvals, emmval=emmval)
-    #as.matrix(designmat) %*% coef(x$msmfit) # expected given new design matrix
-    if(x$bootstrap){
-      coef.boot = x$bootsamps
-    }
-    else if(!x$bootstrap){
-      coef.fixed = coef(x)
-      coef.vcov = vcov(x)
-      # samples from the sampling distribution, rather than the bootstrap distribution
-      coef.boot = t(.rmvnorm(5000, coef.fixed, coef.vcov))
-      #t(designmat %*% coef.boot)
-    }
-    ypred <- t(designmat %*% coef.boot) # linearpredictor at each bootstrap rep, given new design matrix
-    #
-    #py = tapply(x$y.expectedmsm, x$index, mean)
-    py <- as.numeric(designmat %*% coef(x))
-    ycovmat = cov(ypred) # covariance at specific value of emmval
-    #  ycovmat = x$cov.yhat # bootstrap covariance matrix of E(y|x) from MSM
-    pw.vars = diag(ycovmat)
-
-  if(!pwonly){
-    boot.err = t(coef.boot - coef(x))
-    iV = solve(qr(vcov(x), tol=1e-20))
-    chi.boots = vapply(seq_len(nrow(boot.err)), function(i) boot.err[i,] %*% iV %*% boot.err[i,], 0.0)
-    chicrit = qchisq(1-alpha, length(x$coef))
-    C.set = t(coef.boot[,which(chi.boots<chicrit)])
-    fx = function(coef){
-      reps = designmat %*% coef
-    }
-    fullset = apply(C.set, 1, fx)
-    ll = apply(fullset, 1, min)
-    ul = apply(fullset, 1, max)
-  } else{
-    ll=NA
-    ul=NA
+  link <- x$msmfit$family$link
+  qvals <- c(1:x$q) - 1
+  designmat <- .makenewdesign(x, qvals, emmval = emmval)
+  if (x$bootstrap) {
+    coef_boot <- x$bootsamps
+  } else if (!x$bootstrap) {
+    coef.fixed <- coef(x)
+    coef.vcov <- vcov(x)
+    # samples from the sampling distribution
+    # rather than the bootstrap distribution
+    coef_boot <- t(.rmvnorm(5000, coef.fixed, coef.vcov))
   }
-  res = switch(link,
-               identity = .modelwise.lin(x$q, py, sqrt(pw.vars), alpha, ll, ul),
-               log =      .modelwise.log(x$q, py, sqrt(pw.vars), alpha, ll, ul),
-               logit =  .modelwise.logit(x$q, py, sqrt(pw.vars), alpha, ll, ul)
-               #,
-               #zi = .modelwise.zi(x$q, py, NULL, alpha, ll, ul, bootY)
+  # linearpredictor at each bootstrap rep, given new design matrix
+  ypred <- t(designmat %*% coef_boot)
+  py <- as.numeric(designmat %*% coef(x))
+  ycovmat <- cov(ypred) # covariance at specific value of emmval
+  pw_vars <- diag(ycovmat)
+
+  if (!pwonly) {
+    boot_err <- t(coef_boot - coef(x))
+    inv_var <- solve(qr(vcov(x), tol = 1e-20))
+    chi_boots <- vapply(seq_len(nrow(boot_err)), function(i) boot_err[i, ] %*% inv_var %*% boot_err[i, ], 0.0)
+    chicrit <- qchisq(1 - alpha, length(x$coef))
+    c_set <- t(coef_boot[, which(chi_boots < chicrit)])
+    fx <- function(coef) {
+      designmat %*% coef
+    }
+    fullset <- apply(c_set, 1, fx)
+    ll <- apply(fullset, 1, min)
+    ul <- apply(fullset, 1, max)
+  } else {
+    ll <- NA
+    ul <- NA
+  }
+  res <- switch(link,
+    identity = .modelwise.lin(x$q, py, sqrt(pw_vars), alpha, ll, ul),
+    log =      .modelwise.log(x$q, py, sqrt(pw_vars), alpha, ll, ul),
+    logit =  .modelwise.logit(x$q, py, sqrt(pw_vars), alpha, ll, ul)
   )
-  fix = which(names(res)=="hx")
-  names(res)[fix] = "linpred"
-  res$emm_level = emmval
-  attr(res, "link") = link
+  fix <- which(names(res)=="hx")
+  names(res)[fix] <- "linpred"
+  res$emm_level <- emmval
+  attr(res, "link") <- link
   res
 }

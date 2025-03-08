@@ -63,18 +63,18 @@ Simulate continuous (normally distributed errors), binary (logistic function), o
 set.seed(50)
 qdat = simdata_quantized_emm(
   outcomtype="continuous",
-  n=10000, corr=c(.9,.3,0,0), mainterms=c(1,1,0,0), prodterms=c(1,1,0,0),
+  n=10000, corr=c(.9, .3, 0, 0), mainterms=c(1, 1, 0, 0), prodterms=c(1, 1, 0, 0),
   q = 8
 )
 cor(qdat)
 qdat = simdata_quantized_emm(
   outcomtype="continuous",
-  n=10000, corr=c(-.9,.3,0,0), mainterms=c(1,2,0,0), prodterms=c(1,1,0,0),
+  n=10000, corr=c(-.9, .3, 0, 0), mainterms=c(1, 2, 0, 0), prodterms=c(1, 1, 0, 0),
   q = 4
 )
 cor(qdat)
 table(qdat$x1)
-qgcomp.emm.glm.noboot(y~x1+x2+x3+x4,expnms = c("x1", "x2", "x3", "x4"), emmvar = "z", data=qdat)
+qgcomp.emm.glm.noboot(y~x1+x2+x3+x4, expnms = c("x1", "x2", "x3", "x4"), emmvar = "z", data=qdat)
 }
 \seealso{
 \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp.noboot}}

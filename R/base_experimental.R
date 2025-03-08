@@ -1,14 +1,14 @@
 #' @export
-predict.qgcompemmfit <- function(object, expnms=NULL, newdata=NULL, type="response", ...){
+predict.qgcompemmfit <- function(object, expnms=NULL, newdata=NULL, type="response", ...) {
   message("Experimental feature, not validated")
-  if(is.null(newdata)){
+  if (is.null(newdata)) {
     pred <- predict(object$fit, type=type, ...)
   }
-  if(!is.null(newdata)){
-    if(is.null(expnms[1])) expnms = object$expnms # testing
-    oldZ = object$fit$data[,object$call$emmvar]
+  if (!is.null(newdata)) {
+    if (is.null(expnms[1])) expnms = object$expnms # testing
+    oldZ = object$fit$data[, object$call$emmvar]
     oldl = length(oldZ)
-    zdata = zproc(c(oldZ,newdata[,object$call$emmvar]))
+    zdata = zproc(c(oldZ, newdata[, object$call$emmvar]))
     #emmvars = names(zdata)
     newdata = cbind(newdata, zdata[-seq_len(oldl)])
     newqdata <- quantize(newdata, expnms, q=NULL, object$breaks)$data
@@ -17,20 +17,20 @@ predict.qgcompemmfit <- function(object, expnms=NULL, newdata=NULL, type="respon
   return(pred)
 }
 
-predictmsm <- function (object, ...)
+predictmsm <- function(object, ...)
   UseMethod("predictmsm")
 
 #' @export
-predictmsm.qgcompemmfit <- function(object, expnms=NULL, newdata=NULL, type="response", ...){
+predictmsm.qgcompemmfit <- function(object, expnms=NULL, newdata=NULL, type="response", ...) {
   message("Experimental feature, not validated")
-  if(is.null(newdata)){
+  if (is.null(newdata)) {
     pred <- predict(object$msmfit, type=type, ...)
   }
-  if(!is.null(newdata)){
-    if(is.null(expnms[1])) expnms = object$expnms # testing
-    oldZ = object$fit$data[,object$call$emmvar]
+  if (!is.null(newdata)) {
+    if (is.null(expnms[1])) expnms = object$expnms # testing
+    oldZ = object$fit$data[, object$call$emmvar]
     oldl = length(oldZ)
-    zdata = zproc(c(oldZ,newdata[,object$call$emmvar]))
+    zdata = zproc(c(oldZ, newdata[, object$call$emmvar]))
     #emmvars = names(zdata)
     newdata = cbind(newdata, zdata[-seq_len(oldl)])
     newqdata <- quantize(newdata, expnms, q=NULL, object$breaks)$data
@@ -41,21 +41,21 @@ predictmsm.qgcompemmfit <- function(object, expnms=NULL, newdata=NULL, type="res
 
 
 
-qgcomp.survcurve.boot <- function(x, ...){
+qgcomp.survcurve.boot <- function(x, ...) {
   stop("Not yet implemented")
   namespaceImport("survival")
   rootdat <- as.data.frame(x$fit$x)
   psidat <- data.frame(psi=0)
-  rootfun <- function(idx, df){
-    df[,x$expnms] <- idx
+  rootfun <- function(idx, df) {
+    df[, x$expnms] <- idx
     df
   }
-  rootfun2 <- function(idx, df){
-    df[,"psi"] <- idx
-    df[,"psi1"] <- idx
-    df[,"psi2"] <- idx^2
-    df[,"psi3"] <- idx^3
-    df[,"psi4"] <- idx^4
+  rootfun2 <- function(idx, df) {
+    df[, "psi"] <- idx
+    df[, "psi1"] <- idx
+    df[, "psi2"] <- idx^2
+    df[, "psi3"] <- idx^3
+    df[, "psi4"] <- idx^4
     df
   }
   newmarg = lapply(0:(x$q-1), rootfun2, df=psidat)
@@ -66,7 +66,7 @@ qgcomp.survcurve.boot <- function(x, ...){
   gcompobj = survival::survfit(x$fit, newdata=conddf)
   #
   mdfl = lapply(seq_len(x$q), function(zz) with(survival::survfit(x$msmfit, newdata=newmarg[[zz]]), data.frame(time=time, surv=surv, q=zz)))
-  cdfl = lapply(seq_len(x$q), function(zz) with(survival::survfit(x$fit, newdata=newcond[[zz]][1,]), data.frame(time=time, surv=surv, q=zz)))
+  cdfl = lapply(seq_len(x$q), function(zz) with(survival::survfit(x$fit, newdata=newcond[[zz]][1, ]), data.frame(time=time, surv=surv, q=zz)))
   mdfq = do.call(rbind, mdfl)
   cdfq = do.call(rbind, cdfl)
   mdf = with(msmobj, data.frame(time=time, surv=apply(surv, 1, mean)))
@@ -80,7 +80,7 @@ qgcomp.survcurve.boot <- function(x, ...){
 }
 
 # TODO: move to qgcomp
-anova.eeqgcompfit = function (object, ..., dispersion = NULL, test = NULL)
+anova.eeqgcompfit = function(object, ..., dispersion = NULL, test = NULL)
   #' @exportS3Method stats::anova
 {
   # based on geepack:::anova.geeglm
@@ -89,7 +89,7 @@ anova.eeqgcompfit = function (object, ..., dispersion = NULL, test = NULL)
     rep(FALSE, length(dotargs))
   else (names(dotargs) != "")
   if (any(named))
-    warning("The following arguments to anova.glm(..) are invalid and dropped: ",
+    warning("The following arguments to anova(..) are invalid and dropped: ",
             paste(deparse(dotargs[named]), collapse = ", "))
   dotargs <- dotargs[!named]
   is.eefit <- unlist(lapply(dotargs, function(x) inherits(x, "eeqgcompfit")))
@@ -103,7 +103,7 @@ anova.eeqgcompfit = function (object, ..., dispersion = NULL, test = NULL)
 }
 
 # TODO: move to qgcomp
-anova.eeqgcompfitlist <- function (object, ..., dispersion = NULL, test = NULL)
+anova.eeqgcompfitlist <- function(object, ..., dispersion = NULL, test = NULL)
   #' @exportS3Method stats::anova
 {
   responses <- as.character(lapply(object, function(x) {
@@ -128,8 +128,7 @@ anova.eeqgcompfitlist <- function (object, ..., dispersion = NULL, test = NULL)
 }
 
 # TODO: move to qgcomp
-anovaqgcompgee <- function (m1, m2, ...)
-{
+anovaqgcompgee <- function(m1, m2, ...) {
   mm1 <- model.matrix(m1)
   mm2 <- model.matrix(m2)
   P1 <- mm1 %*% solve(t(mm1) %*% mm1) %*% t(mm1)
@@ -154,10 +153,10 @@ anovaqgcompgee <- function (m1, m2, ...)
     m2emm = m2$call$emmvar
     mf1 <- paste(paste(formula(m1))[c(2, 1, 3)], collapse = " ")
     mf2 <- paste(paste(formula(m2))[c(2, 1, 3)], collapse = " ")
-    if(!any(is.null(m1$expnms))) mf1 = paste0(mf1, ", expnms: ", paste(m1$expnms, collapse=","))
-    if(!any(is.null(m2$expnms))) mf2 = paste0(mf2, ", expnms: ", paste(m2$expnms, collapse=","))
-    if(!any(is.null(m1emm))) mf1 = paste0(mf1, ", EMM: ", m1emm)
-    if(!any(is.null(m2emm))) mf2 = paste0(mf2, ", EMM: ", m2emm)
+    if (!any(is.null(m1$expnms))) mf1 = paste0(mf1, ", expnms: ", paste(m1$expnms, collapse=", "))
+    if (!any(is.null(m2$expnms))) mf2 = paste0(mf2, ", expnms: ", paste(m2$expnms, collapse=", "))
+    if (!any(is.null(m1emm))) mf1 = paste0(mf1, ", EMM: ", m1emm)
+    if (!any(is.null(m2emm))) mf2 = paste0(mf2, ", EMM: ", m2emm)
 
 
     mm <- cbind(mm2, mm1)
@@ -195,13 +194,13 @@ anovaqgcompgee <- function (m1, m2, ...)
 
 
 # TODO: move to qgcomp
-model.matrix.eeqgcompfit <- function(object, ...){
+model.matrix.eeqgcompfit <- function(object, ...) {
   #' @exportS3Method stats::model.matrix
   object$fit$X
 }
 
 # TODO: move to qgcomp
-formula.eeqgcompfit <- function(x, ...){
+formula.eeqgcompfit <- function(x, ...) {
   #' @exportS3Method stats::formula
   x$call$f
 }

@@ -1,6 +1,6 @@
 
 
-getstratweights <- function(x, emmval=1.0, ...){
+getstratweights <- function(x, emmval=1.0, ...) {
   #' @title Calculate weights at a set value of effect measure modifier
   #'
   #' @description A standard qgcomp fit with effect measure modification
@@ -24,30 +24,36 @@ getstratweights <- function(x, emmval=1.0, ...){
   #' @examples
   #' set.seed(1231)
   #' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
-  #'   z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
+  #'   z=rbinom(50, 1, 0.5), r=rbinom(50, 1, 0.5))
   #' (qfit <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2, emmvar="z",
   #'   expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
   #' getstratweights(qfit, emmval = 0)
   #' weights1 = getstratweights(qfit, emmval = 1)
   #' weights1$pos.weights
-  if(x$bootstrap) stop("This method does not work for bootstrapped fits. If using a linear parameterization, then weights can be estimated using non-bootstrapped methods.")
+  if (x$bootstrap || inherits(x, "eeqgcompfit"))
+    stop("This method does not work for bootstrapped fits. If using a linear parameterization, then weights can be estimated using non-bootstrapped methods.")
 
   #fit <- x$fit
-  zvar = x$fit$data[,x$call$emmvar]
-  if(!is.factor(zvar)){
+  zvar = x$fit$data[, x$call$emmvar, drop=TRUE]
+  #zdata = zproc(zvar, znm = emmvar)
+  #emmvars = names(zdata)
+
+  if (!is.factor(zvar)) {
     wcoef1 <-
       x$fit$coefficients[x$expnms] +
       x$fit$coefficients[x$intterms]*emmval
   }
-  if(is.factor(zvar)){
-    whichlevels = zproc(zvar[which(zvar==emmval)][1], znm = x$call$emmvar)
+  if (is.factor(zvar)) {
+    emmvalf = factor(emmval, levels = levels(zvar))
+    whichlevels = zproc(emmvalf, znm = x$call$emmvar)
+    #whichlevels = zproc(zvar[which(zvar==emmval)][1], znm = x$call$emmvar)
     whichvar = names(whichlevels)[which(whichlevels==1)]
     whichintterms = NULL
-    if(length(whichvar)>0) whichintterms = grep(whichvar, x$intterms, value = TRUE)
+    if (length(whichvar)>0) whichintterms = grep(whichvar, x$intterms, value = TRUE)
     # select only the involved indicator terms
     wcoef1 <-
       x$fit$coefficients[x$expnms]
-    if(!is.null(whichintterms))
+    if (!is.null(whichintterms))
       wcoef1 <-
       wcoef1 +
       x$fit$coefficients[whichintterms]

@@ -61,7 +61,7 @@ Proceedings of the Winter Simulation Conference, 2005.. IEEE, 2005.
 \dontrun{
 set.seed(50)
 dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
-                  z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
+                  z=rbinom(50, 1, 0.5), r=rbinom(50, 1, 0.5))
 (qfit <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2, emmvar="z",
                            expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian()))
 (qfit2 <- qgcomp.emm.glm.boot(f=y ~ z + x1 + x2, emmvar="z",
@@ -72,7 +72,7 @@ dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
 # logistic model
 set.seed(200)
 dat2 <- data.frame(y=rbinom(200, 1, 0.3), x1=runif(200), x2=runif(200),
-                  z=rbinom(200,1,0.5))
+                  z=rbinom(200, 1, 0.5))
 (qfit3 <- qgcomp.emm.glm.boot(f=y ~ z + x1 + x2, emmvar="z",
                           degree = 1,
                           expnms = c('x1', 'x2'), data=dat2, q=4, rr = FALSE, family=binomial()))
@@ -85,7 +85,7 @@ modelbound(qfit3b)
 # categorical modifier
 set.seed(50)
 dat3 <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
-   z=sample(0:2, 50,replace=TRUE), r=rbinom(50,1,0.5))
+   z=sample(0:2, 50, replace=TRUE), r=rbinom(50, 1, 0.5))
 dat3$z = as.factor(dat3$z)
 (qfit4 <- qgcomp.emm.glm.boot(f=y ~ z + x1 + x2, emmvar="z",
                           degree = 1,

@@ -34,7 +34,7 @@ be of interest with more general exposures.
 \examples{
 library(qgcompint)
 n = 500
-dat <- data.frame(y=rbinom(n,1,0.5), cd=runif(n), pb=runif(n),
+dat <- data.frame(y=rbinom(n, 1, 0.5), cd=runif(n), pb=runif(n),
                   raceth=factor(sample(c("WNH", "BNH", "AMIND"), n, replace=TRUE),
                           levels = c("BNH", "WNH", "AMIND")))
 (qfit <- qgcomp.emm.glm.noboot(f=y ~cd + pb, emmvar="raceth",

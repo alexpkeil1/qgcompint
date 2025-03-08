@@ -13,6 +13,7 @@ vignette: >
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+## Introduction
 
 Quantile g-computation (qgcomp) is a special case of g-computation used for estimating joint exposure response curves for a set of continuous exposures. The base package `qgcomp` allows one to estimate conditional or marginal joint-exposure response curves. Because this approach developed within the field of "exposure mixtures" the set of exposures of interest are referred to here as "the mixture." `qgcompint` builds on `qgcomp` by incorporating statistical interaction (product terms) between binary, categorical, or continuous covariates and the mixture.
 
@@ -21,19 +22,19 @@ Say we have an outcome $Y$, some exposures $\mathbb{X}$, a "modifier" or a covar
 
 The basic model of quantile g-computation is a joint marginal structural model given by
 
-\[
-\mathbb{E}(Y^{\mathbf{X}_q} | M, \mathbf{Z,\psi,\eta}) = g(\psi_0 + \psi_1 S_q + \psi_2 M + \psi_3 M\times S_q +  \mathbf{\eta Z})
-\]
+$$
+\mathbb{E}(Y^{\mathbf{X}_q} || M, \mathbf{Z, \psi, \eta}) = g(\psi_0 + \psi_1 S_q + \psi_2 M + \psi_3 M\times S_q +  \mathbf{\eta Z})
+$$
 
 where $g(\cdot)$ is a link function in a generalized linear model (e.g. the inverse logit function in the case of a logistic model for the probability that $Y=1$), $\psi_0$ is the model intercept, $\mathbf{\eta}$ is a set of model coefficients for the covariates and $S_q$ is an "index" that represents a joint value of exposures. The joint exposure has a "main effect" at the referent value of $M$ given by $\psi_1$, $\psi_2$ represents the association (or set of associations for categorical $M$) between the modifier and the outcome, and $\psi_3$ is a product terms (or set of product terms for categorical $M$) that represent the deviation of the exposure response for $S_q$ from the main effect for each one unit increase in $M$. The magnitude of $\psi_3$ can be used to estimate the extent of statistical interaction on the model scale, sometimes referred to as effect measure modification.
 
-Quantile g-computation (by default) transforms all exposures $\mathbf{X}$ into $\mathbf{X}_q$, which are "scores" taking on discrete values 0,1,2,etc. representing a categorical "bin" of exposure. By default, there are four bins with evenly spaced quantile cutpoints for each exposure, so ${X}_q=0$ means that $X$ was below the observed 25th percentile for that exposure. The index $S_q$ represents all exposures being set to the same value (again, by default, discrete values 0,1,2,3). Thus, *the parameter $\psi_1$ quantifies the expected change in the outcome, given a one quantile increase in all exposures simultaneously,* possibly adjusted for $\mathbf{Z}$. 
+Quantile g-computation (by default) transforms all exposures $\mathbf{X}$ into $\mathbf{X}_q$, which are "scores" taking on discrete values 0, 1, 2, etc. representing a categorical "bin" of exposure. By default, there are four bins with evenly spaced quantile cutpoints for each exposure, so ${X}_q=0$ means that $X$ was below the observed 25th percentile for that exposure. The index $S_q$ represents all exposures being set to the same value (again, by default, discrete values 0, 1, 2, 3). Thus, *the parameter $\psi_1$ quantifies the expected change in the outcome, given a one quantile increase in all exposures simultaneously, * possibly adjusted for $\mathbf{Z}$. 
 
-There are nuances to this particular model form that are available in the `qgcompint` package which will be explored below. There exists one special case of quantile g-computation that leads to fast fitting: linear/additive exposure effects. Here we simulate "pre-quantized" data where the exposures $X_1, X_2, ..., X_7$ can only take on values of 0,1,2,3 in equal proportions. The model underlying the outcomes is given by the linear regression:
+There are nuances to this particular model form that are available in the `qgcompint` package which will be explored below. There exists one special case of quantile g-computation that leads to fast fitting: linear/additive exposure effects. Here we simulate "pre-quantized" data where the exposures $X_1, X_2, ..., X_7$ can only take on values of 0, 1, 2, 3 in equal proportions. The model underlying the outcomes is given by the linear regression:
 
-\[
-\mathbb{E}(Y | \mathbf{X}, M,\beta,\psi,\eta) = \beta_0 + \beta_1 X_1 + ...  + \beta_7 X_7 + \psi_2 M +\eta_9 X_1\times M, ..., +\eta_{15} X_7\times M
-\]
+$$
+\mathbb{E}(Y || \mathbf{X}, M, \beta, \psi, \eta) = \beta_0 + \beta_1 X_1 + ...  + \beta_7 X_7 + \psi_2 M +\eta_9 X_1\times M, ..., +\eta_{15} X_7\times M
+$$
 
 
 with the true values of $\beta$ given by:
@@ -44,14 +45,14 @@ bn = c(
   paste0("psi_", 2),
   paste0("eta_", 1:7))
 bv = c(0,
-  c(0.8,0.6,0.3,-0.3,-0.3,-0.3, 0),
+  c(0.8, 0.6, 0.3, -0.3, -0.3, -0.3, 0),
   0,
-  c(1.0,0.0,0.0,0.0,0.2,0.2,0.2))
+  c(1.0, 0.0, 0.0, 0.0, 0.2, 0.2, 0.2))
 
 dt = data.frame(value=bv, row.names = bn)
 print(dt)
 ```
-In this example $X_1$ is positively correlated with $X_2-X_4$ ($\rho=0.8,0.6,0.3$) and negatively correlated with $X_5-X_7$ ($\rho=-0.3-0.3,-0.3$). In this setting, the parameter $\psi_1$ will equal the sum of the $\beta_1-\beta_7$ coefficients (0.8), $\psi_2$ is given directly by the data generation model (0.0), and $\psi_3$ will equal the sum of the $\eta$ coefficients (1.6). Simulating data to fit this model is available within a the `simdata_quantized_emm` function in the qgcompint package. Here, we simulate data using a binary modifier and inspect the correlation matrix to see that the estimated correlation matrix is approximately the same as the correlation of the data generation mechanism. These will converge in large sample sizes, but for a sample size of 200, the estimated coefficients will differ from those we simulate under due to random variation (set the sample size to 10000 in this example to confirm).
+In this example $X_1$ is positively correlated with $X_2-X_4$ ($\rho=0.8, 0.6, 0.3$) and negatively correlated with $X_5-X_7$ ($\rho=-0.3-0.3, -0.3$). In this setting, the parameter $\psi_1$ will equal the sum of the $\beta_1-\beta_7$ coefficients (0.8), $\psi_2$ is given directly by the data generation model (0.0), and $\psi_3$ will equal the sum of the $\eta$ coefficients (1.6). Simulating data to fit this model is available within a the `simdata_quantized_emm` function in the qgcompint package. Here, we simulate data using a binary modifier and inspect the correlation matrix to see that the estimated correlation matrix is approximately the same as the correlation of the data generation mechanism. These will converge in large sample sizes, but for a sample size of 200, the estimated coefficients will differ from those we simulate under due to random variation (set the sample size to 10000 in this example to confirm).
 
 
 ```{r intro_gen, include=TRUE}
@@ -61,33 +62,33 @@ In this example $X_1$ is positively correlated with $X_2-X_4$ ($\rho=0.8,0.6,0.3
   outcometype="continuous",
 # sample size
   n = 300,
-# correlation between x1 and x2,x3,...
-  corr=c(0.8,0.6,0.3,-0.3,-0.3,-0.3),    
+# correlation between x1 and x2, x3, ...
+  corr=c(0.8, 0.6, 0.3, -0.3, -0.3, -0.3),
 # model intercept
   b0=0,
-# linear model coefficients for x1,x2,... at referent level of interacting variable
-  mainterms=c(0.3,-0.1,0.1,0.0,0.3,0.1,0.1), 
-# linear model coefficients for product terms between x1,x2,... and interacting variable  
-  prodterms = c(1.0,0.0,0.0,0.0,0.2,0.2,0.2),
+# linear model coefficients for x1, x2, ... at referent level of interacting variable
+  mainterms=c(0.3, -0.1, 0.1, 0.0, 0.3, 0.1, 0.1),
+# linear model coefficients for product terms between x1, x2, ... and interacting variable  
+  prodterms = c(1.0, 0.0, 0.0, 0.0, 0.2, 0.2, 0.2),
 # type of interacting variable
-  ztype = "binary",                        
+  ztype = "binary",
 # number of levels of exposure
-  q = 4,                                   
+  q = 4,
 # residual variance of y
   yscale = 2.0                            
 )
 names(dat1)[which(names(dat1)=="z")] = "M"
 
-print("data")
+## data
 head(dat1)
-print("modifier")
+## modifier
 table(dat1$M)
-print("outcome")
+## outcome
 summary(dat1$y)
-print("exposure correlation")
-cor(dat1[,paste0("x",1:7)])
+## exposure correlation
+cor(dat1[, paste0("x", 1:7)])
 ```
-### fitting a model with a modifier
+## Basics: fitting a model with a modifier
 
 Here we see that qgcomp (via the function `qgcomp.emm.glm.noboot`) estimates a $\psi_1$ fairly close to 0.8 (estimate = 0.7) (again, as we increase sample size, the estimated value will be expected to become increasingly close to the true value). The product term 'M:mixture' is the $\psi_3$ parameter noted above, which is also fairly close to the true value of 1.6 (estimate = 1.7).
 
@@ -96,13 +97,13 @@ For binary modifiers, `qgcomp.emm.glm.noboot` will also estimate the joint effec
 ```{r first_step_fit, include=TRUE}
 qfit1 <- qgcomp.emm.glm.noboot(y~x1+x2+x3+x4+x5+x6+x7,
   data = dat1,
-  expnms = paste0("x",1:7),
+  expnms = paste0("x", 1:7),
   emmvar = "M",
   q = 4)
 qfit1
 ```
 
-### getting bounds for pointwise comparisons
+## Basics: getting bounds for pointwise comparisons
 
 As in `qgcomp` you can estimate pointwise comparisons along the joint regression line. Here we estimate them at both values of $M$ (via the `emmval` parameter).
 ```{r first_step_bound, include=TRUE}
@@ -110,171 +111,249 @@ pointwisebound(qfit1, emmval=0)
 pointwisebound(qfit1, emmval=1)
 ```
 
-# plotting weights (weights are at referent level of modifier)
+## Basics: plotting weights (weights are at referent level of modifier)
 
 For `qgcomp.emm.glm.noboot` fits, a set of "weights" will be given that are interpreted as the proportion of a "partial" effect for each variable. That is, $\psi_1$ will represent the joint effect of multiple exposures, some of which will have independent effects that are positive, and some will have negative independent effects. For example, the "negative partial effect" is simply the sum of all of the negative independent effects (this is only given for a model in which all exposures are included via linear terms and no interactions among exposures occur). These weights are conditional on the fitted model, and so are not "estimates" per se and will not have associated confidence intervals. Nonetheless, the weights are useful for interpretation of the joint effect.
 
 Notably, with product terms in the model for the joint effect, a different set of weights will be generated at every value of the modifier. Here, we can plot the weights at M=0 and M=1.
-```{r first_step_plot, include=TRUE, fig.width=5,fig.height=4, fig.cap=paste("Weights for M =", 0:1)}
+```{r first_step_plot, include=TRUE, fig.width=5, fig.height=4, fig.cap=paste("Weights for M =", 0:1)}
 plot(qfit1, emmval=0)
 plot(qfit1, emmval=1)
 ```
 
 
-# bootstrapping
+## Basics: bootstrapping
 For non-linear qgcomp fits, or to get marginal estimates of the exposure-response curve (i.e. conditional only on the modifier), we can use the `qgcomp.emm.boot` function. Here we just repeat the original fit, which yields similar evidence that there is substantial statistical interaction on the additive scale, so that we would expect the joint exposure effect estimate to be greater for M=1 than for M=0, which corroborates the fit above (the point estimates are identical, as expected in this case due to no non-modifier covariates, so this is not a surprise).
 ```{r first_step_boot, include=TRUE}
 qfit1b <- qgcomp.emm.boot(y~x1+x2+x3+x4+x5+x6+x7,
   data=dat1,
-  expnms = paste0("x",1:7),
+  expnms = paste0("x", 1:7),
   emmvar = "M",
   q = 4)
 qfit1b
 ```
 
-#### plotting
-```{r first_step_boot_plot, include=TRUE, fig.width=6,fig.height=4, fig.cap=paste("Pointwise comparisons for M =", 0:1)}
+#### plotting bootstrapped fits (plotting predictions)
+```{r first_step_boot_plot, include=TRUE, fig.width=6, fig.height=4, fig.cap=paste("Pointwise comparisons for M =", 0:1)}
 plot(qfit1b, emmval=0)
 plot(qfit1b, emmval=1)
 ```
 
-#### plotting with same y axis
+#### overlay plots of predictions at multiple modifier levels with same y axis
 Visually, it's easier to compare two plots with the same y-axis. Here we can see that the joint regression curve is steeper at M=1 than it is at M=0
-```{r first_step_boot_plot_scale, include=TRUE, fig.width=6,fig.height=4, fig.cap=paste("Pointwise comparisons (same scale) for M =", 0:1)}
+```{r first_step_boot_plot_scale, include=TRUE, fig.width=6, fig.height=4, fig.cap=paste("Pointwise comparisons (same scale) for M =", 0:1)}
 p1 <- plot(qfit1b, emmval=0, suppressprint = TRUE)
 p2 <- plot(qfit1b, emmval=1, suppressprint = TRUE)
-p1 + ggplot2::coord_cartesian(ylim=c(0,10))
-p2 + ggplot2::coord_cartesian(ylim=c(0,10))
+p1 + ggplot2::coord_cartesian(ylim=c(0, 10))
+p2 + ggplot2::coord_cartesian(ylim=c(0, 10))
 ```
 
-# Estimating equations
-Another approach to non-linear qgcomp fits, or to get marginal estimates of the exposure-response curve (i.e. conditional only on the modifier), we can use the `qgcomp.emm.glm.ee` function. Here we just repeat the analysis with the bootstrapped fit, which yields similar evidence that there is substantial statistical interaction on the additive scale, so that we would expect the joint exposure effect estimate to be greater for M=1 than for M=0, which corroborates the fit above (the point estimates are identical, as expected in this case due to no non-modifier covariates, so this is not a surprise).
+## Basics: Estimating equations
+Another approach to non-linear qgcomp fits, or to get marginal estimates of the exposure-response curve (i.e. conditional only on the modifier), we can use the `qgcomp.emm.glm.ee` function. This approach uses estimating equation methodology for fitting. Estimating equation methodology also underlies GEE (generalized estimating equation) methods, which are frequently employed in longitudinal data analysis because they can yield appropriate standard errors for clustered data. In `qgcomp.emm.glm.ee`, the standard errors are also cluster robust (as long as the id variable is specified), but it can also be used to obtain non-linear fits in the same way that the bootstrapped estimator is above. Relative to the bootstrapped estimator, the estimating equations estimator will be less computationally intensive and will yield standard errors that are not subject to simulation error (and thus will be more repeatable). In general, the estimating equation method should be preferable for many of the cases in which one might be considering the bootstrapped estimator. Because standard errors are estimated differently, you will see differences in confidence intervals between `qgcomp.emm.glm.ee` and `qgcomp.emm.glm.noboot` even when the models are otherwise identical.
+
+Here we just repeat the analysis with the bootstrapped fit, which yields similar evidence that there is substantial statistical interaction on the additive scale, so that we would expect the joint exposure effect estimate to be greater for M=1 than for M=0, which corroborates the fit above (the point estimates are identical, as expected in this case due to no non-modifier covariates, so this is not a surprise).
 ```{r first_step_ee, include=TRUE}
 qfit1ee <- qgcomp.emm.glm.ee(y~x1+x2+x3+x4+x5+x6+x7,
   data=dat1,
-  expnms = paste0("x",1:7),
+  expnms = paste0("x", 1:7),
   emmvar = "M",
   q = 4)
 qfit1b
 ```
 
-#### plotting
-```{r first_step_ee_plot, include=TRUE, fig.width=6,fig.height=4, fig.cap=paste("Pointwise comparisons for M =", 0:1)}
+#### plotting predictions from estimating equation fits
+```{r first_step_ee_plot, include=TRUE, fig.width=6, fig.height=4, fig.cap=paste("Pointwise comparisons for M =", 0:1)}
 plot(qfit1ee, emmval=0)
 plot(qfit1ee, emmval=1)
 ```
 
-#### plotting with same y axis
+#### overlay plots of predictions from estimating equation fits at multiple modifier levels with same y axis
 Visually, it's easier to compare two plots with the same y-axis. Here we can see that the joint regression curve is steeper at M=1 than it is at M=0
-```{r first_step_ee_plot_scale, include=TRUE, fig.width=6,fig.height=4, fig.cap=paste("Pointwise comparisons (same scale) for M =", 0:1)}
+```{r first_step_ee_plot_scale, include=TRUE, fig.width=6, fig.height=4, fig.cap=paste("Pointwise comparisons (same scale) for M =", 0:1)}
 p1 <- plot(qfit1ee, emmval=0, suppressprint = TRUE)
 p2 <- plot(qfit1ee, emmval=1, suppressprint = TRUE)
-p1 + ggplot2::coord_cartesian(ylim=c(0,10))
-p2 + ggplot2::coord_cartesian(ylim=c(0,10))
+p1 + ggplot2::coord_cartesian(ylim=c(0, 10))
+p2 + ggplot2::coord_cartesian(ylim=c(0, 10))
 ```
 
 
-### categorical modifier, binary outcome
+## Basics: categorical modifier, binary outcome
 Now we can simulate data under a categorical modifier, and the `simdata_quantized_emm` function will pick some convenient defaults. We will also use a binary outcome with N=300 to allow that use of a categorical modifier with a rare binary outcome will be subject to low power and potential for bootstrapping to fail due to empty strata in some bootstrap samples.
 
 #### Simulated data defaults
-Here is a good place to note that `simdata_quantized_emm` is provided mainly as a learning tool. While it could potentially be used for simulations in a scientific publication, it likely has too many defaults that are not user controllable that may be useful to be able to change. Some of the underlying code that may serve as inspiration for more comprehensive simulations can be explored via the "hidden" (non-exported) functions `qgcompint:::.quantized_design_emm`,`qgcompint:::.dgm_quantized_linear_emm`,  `qgcompint:::.dgm_quantized_logistic_emm`, and `qgcompint:::.dgm_quantized_survival_emm`.
+Here is a good place to note that `simdata_quantized_emm` is provided mainly as a learning tool. While it could potentially be used for simulations in a scientific publication, it likely has too many defaults that are not user controllable that may be useful to be able to change. Some of the underlying code that may serve as inspiration for more comprehensive simulations can be explored via the "hidden" (non-exported) functions `qgcompint:::.quantized_design_emm`, `qgcompint:::.dgm_quantized_linear_emm`, `qgcompint:::.dgm_quantized_logistic_emm`, and `qgcompint:::.dgm_quantized_survival_emm`.
 ```{r catmod_gen, include=TRUE}
  set.seed(23)
  dat2 <- simdata_quantized_emm(
   outcometype="logistic",
 # sample size
   n = 300,
-# correlation between x1 and x2,x3,...
-  corr=c(0.6,0.5,0.3,-0.3,-0.3,0.0),    
+# correlation between x1 and x2, x3, ...
+  corr=c(0.6, 0.5, 0.3, -0.3, -0.3, 0.0),
 # model intercept
   b0=-2,
-# linear model coefficients for x1,x2,... at referent level of interacting variable
-  mainterms=c(0.1,-0.1,0.1,0.0,0.1,0.1,0.1), 
-# linear model coefficients for product terms between x1,x2,... and interacting variable  
-  prodterms = c(0.2,0.0,0.0,0.0,0.2,-0.2,0.2),
+# linear model coefficients for x1, x2, ... at referent level of interacting variable
+  mainterms=c(0.1, -0.1, 0.1, 0.0, 0.1, 0.1, 0.1),
+# linear model coefficients for product terms between x1, x2, ... and interacting variable  
+  prodterms = c(0.2, 0.0, 0.0, 0.0, 0.2, -0.2, 0.2),
 # type of interacting variable
-  ztype = "categorical",                        
+  ztype = "categorical",
 # number of levels of exposure
-  q = 4,                                   
+  q = 4,
 # residual variance of y
   yscale = 2.0                            
 )
 
-print("data")
+## data
 head(dat2)
-print("modifier")
+## modifier
 table(dat2$z)
-print("outcome")
+## outcome
 table(dat2$y)
-print("exposure correlation")
-cor(dat2[,paste0("x",1:7)])
+## exposure correlation
+cor(dat2[, paste0("x", 1:7)])
 ```
 
-### wrong way to fit
+#### The wrong way to include categorical modifiers
 Below is one way to fit `qgcomp.emm.glm.noboot` with a categorical modifier that exactly follows the previous code. This approach to categorical modifiers is incorrect, in this case, due to the format of these data. Note if you fit the model like this, where your categorical modifier is not the proper data type, `qgcomp.emm.glm.noboot` will assume you have a continuous modifier.
 ```{r cat_mod_fit_wrong, include=TRUE}
 qfit.wrong <- qgcomp.emm.glm.noboot(y~x1+x2+x3+x4+x5+x6+x7,
   data = dat2,
-  expnms = paste0("x",1:7),
+  expnms = paste0("x", 1:7),
   emmvar = "z",
   q = 4, family=binomial())
 qfit.wrong
 ```
 
-### The right way to fit with categorical modifier (use `as.factor()`)
+#### The right way to include categorical modifiers (use `as.factor()`)
 Instead, you should convert each categorical modifier to a "factor" prior to fitting the model. Here you can see the output for both the non-bootstrapped fit and the fit with bootstrapped confidence intervals (since there are no other covariates in the model, these two approaches estimate the same marginal effect and parameter log-odds ratio estimates will be identical). Here we see that we get a unique interaction term and main effect for each level of the modifier z.
 ```{r cat_mod_fit, include=TRUE}
 dat2$zfactor = as.factor(dat2$z)
 # using asymptotic-based confidence intervals
 qfit2 <- qgcomp.emm.glm.noboot(y~x1+x2+x3+x4+x5+x6+x7,
   data = dat2,
-  expnms = paste0("x",1:7),
+  expnms = paste0("x", 1:7),
   emmvar = "zfactor",
   q = 4, family=binomial())
 # using bootstrap based confidence intervals (estimate a)
 set.seed(12312)
 qfit2b <- qgcomp.emm.boot(y~x1+x2+x3+x4+x5+x6+x7,
   data = dat2,
-  expnms = paste0("x",1:7),
+  expnms = paste0("x", 1:7),
   emmvar = "zfactor",
   q = 4, family=binomial(), rr = FALSE)
 qfit2
 qfit2b
 ```
 
-### getting bounds for pointwise comparisons
+#### getting bounds for pointwise comparisons with categorical modifiers
 Here are some miscellaneous functions for getting point estimates and bounds for various comparisons at specific values of the modifier.
-```{r cat_mod_bound, include=TRUE,fig.width=5,fig.height=4}
-print("output the weights at Z=0")
+```{r cat_mod_bound, include=TRUE, fig.width=5, fig.height=4}
+## output the weights at Z=0
 getstratweights(qfit2, emmval=0)
-print("output pointwise comparisons at Z=0")
+## output pointwise comparisons at Z=0
 pointwisebound(qfit2, emmval=0)
-print("plot weights at Z=0")
+## plot weights at Z=0
 plot(qfit2, emmval=0)
 
-print("output stratum specific joint effect estimate for the mixture at Z=2")
+## output stratum specific joint effect estimate for the mixture at Z=2
 print(getstrateffects(qfit2, emmval=2))
-print("output the weights at Z=2")
+## output the weights at Z=2
 print(getstratweights(qfit2, emmval=2))
-print("output pointwise comparisons at Z=2")
+## output pointwise comparisons at Z=2
 pointwisebound(qfit2, emmval=2)
 plot(qfit2, emmval=2)
 
-print("output stratum specific joint effect estimate for the mixture at Z=2 from bootstrapped fit")
+## output stratum specific joint effect estimate for the mixture at Z=2 from bootstrapped fit
 print(getstrateffects(qfit2b, emmval=2))
-print("output pointwise comparisons at Z=2 from bootstrapped fit")
+## output pointwise comparisons at Z=2 from bootstrapped fit
 print(pointwisebound(qfit2b, emmval=2))
-print("output modelwise confidence bounds at Z=2 from bootstrapped fit")
+## output modelwise confidence bounds at Z=2 from bootstrapped fit
 print(modelbound(qfit2b, emmval=2))
 
-print("Plot pointwise comparisons at Z=2 from bootstrapped fit")
+## Plot pointwise comparisons at Z=2 from bootstrapped fit
 plot(qfit2b, emmval=2)
 
 ```
 
 
-# Continuous modifiers
+#### global tests of interaction for categorical modifiers
+It is possible to obtain a global test of (no) interaction for a multi-level modifier using the `qgcomp` package and the `anova` function. You need to fit a model without interaction (via `qgcomp`) and then with interaction. The test is done on the "underlying" conditional model corresponding to the original data, rather than the marginal structural model. The methods for `qgcomp.glm.[no]boot` and `qgcomp.emm.glm.[no]boot` utilize the `anova.glm` function from the `stats` package (note the slightly different specification), while the methods for `qgcomp.glm.ee` and `qgcomp.emm.glm.ee` use `anova.geeglm` function methods from the `geepack` R package. Both tests return similar (not identical) results.
+```{r cat_mod_boundtest, include=TRUE, fig.width=5, fig.height=4}
+dat2$zfactor = as.factor(dat2$z)
+catfitoverall <- qgcomp.glm.noboot(y~x1+x2+x3+x4+x5+x6+x7,
+  data = dat2,
+  expnms = paste0("x", 1:7),
+  q = 4, family=binomial())
+catfitemm <- qgcomp.emm.glm.noboot(y~x1+x2+x3+x4+x5+x6+x7,
+  data = dat2,
+  expnms = paste0("x", 1:7),
+  emmvar = "zfactor",
+  q = 4, family=binomial())
+
+catfitoverallee <- qgcomp.glm.ee(y~x1+x2+x3+x4+x5+x6+x7,
+  data = dat2,
+  expnms = paste0("x", 1:7),
+  q = 4, family=binomial())
+catfitemmee <- qgcomp.emm.glm.ee(y~x1+x2+x3+x4+x5+x6+x7,
+  data = dat2,
+  expnms = paste0("x", 1:7),
+  emmvar = "zfactor",
+  q = 4, family=binomial(), rr=FALSE)
+
+
+anova(catfitoverall$fit, catfitemm$fit, test = "Chisq")
+anova(catfitemmee, catfitoverallee)
+
+```
+
+# Basics: Non-numerical factor modifiers
+
+As above, non-numerical modifiers must be coded as factors. These are straightforward, and this example follows with no commentary.
+```{r catmod_gen_letter, include=TRUE}
+ set.seed(23)
+ dat3 <- simdata_quantized_emm(
+  outcometype="continuous",
+  n = 300,
+  corr=c(0.6, 0.5, 0.3, -0.3, -0.3, 0.0),
+  b0=-2,
+  mainterms=c(0.1, -0.1, 0.1, 0.0, 0.1, 0.1, 0.1),
+  prodterms = c(0.2, 0.0, 0.0, 0.0, 0.2, -0.2, 0.2),
+  ztype = "categorical",
+  q = 4,
+  yscale = 2.0                            
+)
+
+dat3$zletter = as.factor(with(dat3, ifelse(z==0, "a", ifelse(z==1, "b", "c"))))
+with(dat3, table(z, zletter))
+
+qfit_letter <- qgcomp.emm.glm.noboot(y~x1+x2+x3+x4+x5+x6+x7,
+  data = dat3,
+  expnms = paste0("x", 1:7),
+  emmvar = "zletter",
+  q = 4, family=gaussian())
+
+qfit_letteree <- qgcomp.emm.glm.ee(y~x1+x2+x3+x4+x5+x6+x7,
+  data = dat3,
+  expnms = paste0("x", 1:7),
+  emmvar = "zletter",
+  q = 4, family=gaussian())
+
+print(qfit_letter)
+print(qfit_letteree)
+## output stratum specific joint effect estimate for the mixture at Zletter="a"
+print(getstrateffects(qfit_letter, emmval="a"))
+print(getstrateffects(qfit_letteree, emmval="a"))
+## output the weights at Z=2
+print(getstratweights(qfit_letter, emmval="a"))
+
+## output predictions at Zletter="b"
+print(pointwisebound(qfit_letter, emmval="b", pointwiseref = 1))
+print(pointwisebound(qfit_letteree, emmval="b", pointwiseref = 1))
+
+```
+
+# Basics: Continuous modifiers
 Here we simulate some data, similar to prior datasets, where we use a continuous modifier.
 ```{r contmod_gen, include=TRUE}
  set.seed(23)
@@ -282,18 +361,18 @@ Here we simulate some data, similar to prior datasets, where we use a continuous
   outcometype="continuous",
 # sample size
   n = 100,
-# correlation between x1 and x2,x3,...
-  corr=c(0.8,0.6,0.3,-0.3,-0.3,-0.3),    
+# correlation between x1 and x2, x3, ...
+  corr=c(0.8, 0.6, 0.3, -0.3, -0.3, -0.3),
 # model intercept
   b0=-2,
-# linear model coefficients for x1,x2,... at referent level of interacting variable
-  mainterms=c(0.3,-0.1,0.1,0.0,0.3,0.1,0.1), 
-# linear model coefficients for product terms between x1,x2,... and interacting variable  
-  prodterms = c(1.0,0.0,0.0,0.0,0.2,0.2,0.2),
+# linear model coefficients for x1, x2, ... at referent level of interacting variable
+  mainterms=c(0.3, -0.1, 0.1, 0.0, 0.3, 0.1, 0.1),
+# linear model coefficients for product terms between x1, x2, ... and interacting variable  
+  prodterms = c(1.0, 0.0, 0.0, 0.0, 0.2, 0.2, 0.2),
 # type of interacting variable
-  ztype = "continuous",                        
+  ztype = "continuous",
 # number of levels of exposure
-  q = 4,                                   
+  q = 4,
 # residual variance of y
   yscale = 2.0                            
 )
@@ -302,19 +381,19 @@ names(dat3)[which(names(dat3)=="z")] = "CoM"
 head(dat3)
 summary(dat3$CoM)
 summary(dat3$y)
-cor(dat3[,paste0("x",1:7)])
+cor(dat3[, paste0("x", 1:7)])
 ```
 
 ```{r cont_mod_fit, include=TRUE}
 qfit3 <- qgcomp.emm.glm.noboot(y~x1+x2+x3+x4+x5+x6+x7,
   data = dat3,
-  expnms = paste0("x",1:7),
+  expnms = paste0("x", 1:7),
   emmvar = "CoM",
   q = 4)
 qfit3
 qfit3b <- qgcomp.emm.boot(y~x1+x2+x3+x4+x5+x6+x7,
   data = dat3,
-  expnms = paste0("x",1:7),
+  expnms = paste0("x", 1:7),
   emmvar = "CoM",
   q = 4)
 qfit3b
@@ -323,50 +402,50 @@ qfit3b
 
 ### Getting point wise comparisons at specific values of a continuous confounder
 Point-wise comparisons are available for non-bootstrapped fits
-```{r cont_mod_bound, include=TRUE,fig.width=5,fig.height=4}
-print("output/plot the weights at CoM=0")
+```{r cont_mod_bound, include=TRUE, fig.width=5, fig.height=4}
+## output/plot the weights at CoM=0")
 getstratweights(qfit3, emmval=0)
 plot(qfit3, emmval=0)
 
-print("output stratum specific joint effect estimate for the mixture at CoM=0")
+## output stratum specific joint effect estimate for the mixture at CoM=0
 print(getstrateffects(qfit3, emmval=0))
 
-print("output pointwise comparisons at CoM=0")
+## output pointwise comparisons at CoM=0
 print(pointwisebound(qfit3, emmval=0))
 
 
-print("output/plot the weights at the 80%ile of CoM")
+## output/plot the weights at the 80%ile of CoM
 getstratweights(qfit3, emmval=quantile(dat3$CoM, .8))
 plot(qfit3, emmval=quantile(dat3$CoM, .8))
 
 
-print("output stratum specific joint effect estimate for the mixture at the 80%ile of CoM")
+## output stratum specific joint effect estimate for the mixture at the 80%ile of CoM
 print(getstrateffects(qfit3, emmval=quantile(dat3$CoM, .8)))
 
-print("output pointwise comparisons at at the 80%ile of CoM")
+## output pointwise comparisons at at the 80%ile of CoM
 print(pointwisebound(qfit3, emmval=quantile(dat3$CoM, .8)))
 
 ```
 Point-wise comparisons are variably available for bootstrapped fits (work in progress)
-```{r cont_mod_bound_boot, include=TRUE,fig.width=5,fig.height=4}
-print("plot the pointwise effects at CoM=0")
+```{r cont_mod_bound_boot, include=TRUE, fig.width=5, fig.height=4}
+## plot the pointwise effects at CoM=0
 plot(qfit3b, emmval=0)
 
-print("output stratum specific joint effect estimate for the mixture at CoM=0")
+## output stratum specific joint effect estimate for the mixture at CoM=0
 print(getstrateffects(qfit3b, emmval=0))
 
-print("output pointwise comparisons at CoM=0")
+## output pointwise comparisons at CoM=0
 print(pointwisebound(qfit3b, emmval=0))
 
 
-print("plot the pointwise effects at the 80%ile of CoM")
+## plot the pointwise effects at the 80%ile of CoM
 plot(qfit3b, emmval=quantile(dat3$CoM, .8))
 
 
-print("output stratum specific joint effect estimate for the mixture at the 80%ile of CoM")
+## output stratum specific joint effect estimate for the mixture at the 80%ile of CoM
 print(getstrateffects(qfit3b, emmval=quantile(dat3$CoM, .8)))
 
-print("output pointwise comparisons at at the 80%ile of CoM")
+## output pointwise comparisons at at the 80%ile of CoM
 print(pointwisebound(qfit3b, emmval=quantile(dat3$CoM, .8)))
 
 ```
@@ -377,13 +456,13 @@ Non-linear joint effects of a mixture will tend to occur when independent effect
 ```{r cont_mod_nlfit, include=TRUE}
 qfit3bnl <- qgcomp.emm.glm.boot(y~x1+x2+x3+x4+x5+x6+x7 + x1*(x2 + x3 + x4 + x5 + x6 +x7),
   data = dat3,
-  expnms = paste0("x",1:7),
+  expnms = paste0("x", 1:7),
   emmvar = "CoM",
   q = 8, degree= 2)
 
 qfit3bnlee <- qgcomp.emm.glm.ee(y~x1+x2+x3+x4+x5+x6+x7 + x1*(x2 + x3 + x4 + x5 + x6 +x7),
   data = dat3,
-  expnms = paste0("x",1:7),
+  expnms = paste0("x", 1:7),
   emmvar = "CoM",
   q = 8, degree= 2)
 
@@ -393,7 +472,7 @@ qfit3bnlee
 
 
 Some effect estimation tools are not all enabled for non-linear fits and will produce an error. However, as with previous fits, we can estimate pointwise differences along the quantiles, and plot the marginal structural model regression line at various values of the joint quantized exposures. Here you can see that the regression line is expected to be steeper at higher levels of the modifier, as in previous fits. We can explictly ask for model confidence bands (which are given by the `modelbound` function), which pull in confidence limits for the regression line based on the bootstrap distribution of estimates.
-```{r cont_mod_nl_plot_base, include=TRUE, fig.width=6,fig.height=4}
+```{r cont_mod_nl_plot_base, include=TRUE, fig.width=6, fig.height=4}
 print(pointwisebound(qfit3bnl, emmval=-1))
 print(pointwisebound(qfit3bnl, emmval=-1))
 print(pointwisebound(qfit3bnl, emmval=1))
@@ -402,15 +481,15 @@ plot(qfit3bnl, emmval=1, modelband=TRUE, pointwiseref=4)
 ```
 
 We can look at this fit another way, too, by plotting predictions from the marginal structural model at all observed values of the modifier, which gives a more complete picture of the model than the plots at single values of the modifier. We can create smoothed scatter plot lines (LOESS) at binned values of the modifier to informally look at how the regression line might change over values of the modifier. We can approximate the effect (point estimate only) at a specific value of z by plotting a smooth fit limited a narrow range of the modifier (< -1 or > 1). Here we see that the joint effect of exposures does appear to differ across values of the modifier, but there is little suggestion of non-linearity at either low or high values of the modifier. This informal assessment agrees with intuition based on the estimated coefficients and the standard plots from the `qgcompint` package.
-```{r cont_mod_nl_plot, include=TRUE, fig.width=6,fig.height=4}
+```{r cont_mod_nl_plot, include=TRUE, fig.width=6, fig.height=4}
 library(ggplot2)
 plotdata = data=data.frame(q=qfit3bnl$index, ey=qfit3bnl$y.expected, modifier=qfit3bnl$emmvar.msm)
 ggplot() + 
          geom_point(aes(x=q, y=ey, color=modifier), data=plotdata) + 
-         geom_point(aes(x=q, y=ey), color="purple", data=plotdata[plotdata$modifier>1,], pch=1, cex=3) + 
-         geom_smooth(aes(x=q, y=ey), se=FALSE, color="purple", data=plotdata[plotdata$modifier>1,], method = 'loess', formula='y ~ x') + 
-         geom_smooth(aes(x=q, y=ey), se=FALSE, color="red", data=plotdata[plotdata$modifier < -1,], method = 'loess', formula='y ~ x') + 
-         geom_point(aes(x=q, y=ey), color="red", data=plotdata[plotdata$modifier < -1,], pch=1, cex=3) + 
+         geom_point(aes(x=q, y=ey), color="purple", data=plotdata[plotdata$modifier>1, ], pch=1, cex=3) + 
+         geom_smooth(aes(x=q, y=ey), se=FALSE, color="purple", data=plotdata[plotdata$modifier>1, ], method = 'loess', formula='y ~ x') + 
+         geom_smooth(aes(x=q, y=ey), se=FALSE, color="red", data=plotdata[plotdata$modifier < -1, ], method = 'loess', formula='y ~ x') + 
+         geom_point(aes(x=q, y=ey), color="red", data=plotdata[plotdata$modifier < -1, ], pch=1, cex=3) + 
   theme_classic() + 
   labs(y="Expected outcome", x="Quantile score value (0 to q-1)") + 
   scale_color_continuous(name="Value\nof\nmodifier")
@@ -426,18 +505,18 @@ As with standard `qgcomp`, the `qgcompint` package allows assessment of effect m
   outcometype="survival",
 # sample size
   n = 200,
-# correlation between x1 and x2,x3,...
-  corr=c(0.8,0.6,0.3,-0.3,-0.3,-0.3),    
+# correlation between x1 and x2, x3, ...
+  corr=c(0.8, 0.6, 0.3, -0.3, -0.3, -0.3),
 # model intercept
   b0=-2,
-# linear model coefficients for x1,x2,... at referent level of interacting variable
-  mainterms=c(0.0,-0.1,0.1,0.0,0.3,0.1,0.1), 
-# linear model coefficients for product terms between x1,x2,... and interacting variable  
-  prodterms = c(0.1,0.0,0.0,0.0,-0.2,-0.2,-0.2),
+# linear model coefficients for x1, x2, ... at referent level of interacting variable
+  mainterms=c(0.0, -0.1, 0.1, 0.0, 0.3, 0.1, 0.1),
+# linear model coefficients for product terms between x1, x2, ... and interacting variable  
+  prodterms = c(0.1, 0.0, 0.0, 0.0, -0.2, -0.2, -0.2),
 # type of interacting variable
-  ztype = "categorical",                        
+  ztype = "categorical",
 # number of levels of exposure
-  q = 4,                                   
+  q = 4,
 # residual variance of y
   yscale = 2.0                            
 )
@@ -447,14 +526,14 @@ summary(dat4$zfactor)
 summary(dat4$time)
 table(dat4$d) # 30 censored
 
-cor(dat4[,paste0("x",1:7)])
+cor(dat4[, paste0("x", 1:7)])
 ```
 
 Fitting a Cox model with a fully linear/additive specification is very similar to other `qgcomp` "noboot" models, and the same plots/weight estimation/effect estimation functions work on these objects. For now, bootstrapped versions of this model are not available.
 ```{r survival, include=TRUE}
 qfit4 <- qgcomp.emm.cox.noboot(survival::Surv(time, d)~x1+x2+x3+x4+x5+x6+x7,
   data = dat4,
-  expnms = paste0("x",1:7),
+  expnms = paste0("x", 1:7),
   emmvar = "zfactor",
   q = 4)
 

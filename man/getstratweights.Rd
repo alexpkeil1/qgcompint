@@ -27,7 +27,7 @@ This function can be used to estimate weights at arbitrary levels of the modifie
 \examples{
 set.seed(1231)
 dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50),
-  z=rbinom(50,1,0.5), r=rbinom(50,1,0.5))
+  z=rbinom(50, 1, 0.5), r=rbinom(50, 1, 0.5))
 (qfit <- qgcomp.emm.glm.noboot(f=y ~ z + x1 + x2, emmvar="z",
   expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian()))
 getstratweights(qfit, emmval = 0)
