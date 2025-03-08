@@ -280,6 +280,7 @@ plot(qfit2b, emmval=2)
 #### global tests of interaction for categorical modifiers
 It is possible to obtain a global test of (no) interaction for a multi-level modifier using the `qgcomp` package and the `anova` function. You need to fit a model without interaction (via `qgcomp`) and then with interaction. The test is done on the "underlying" conditional model corresponding to the original data, rather than the marginal structural model. The methods for `qgcomp.glm.[no]boot` and `qgcomp.emm.glm.[no]boot` utilize the `anova.glm` function from the `stats` package (note the slightly different specification), while the methods for `qgcomp.glm.ee` and `qgcomp.emm.glm.ee` use `anova.geeglm` function methods from the `geepack` R package. Both tests return similar (not identical) results.
 ```{r cat_mod_boundtest, include=TRUE, fig.width=5, fig.height=4}
+library("qgcomp")
 dat2$zfactor = as.factor(dat2$z)
 catfitoverall <- qgcomp.glm.noboot(y~x1+x2+x3+x4+x5+x6+x7,
   data = dat2,

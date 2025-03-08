@@ -82,7 +82,7 @@
   coefnm <- names(coef(x))
   cfi <- coefnm[which(tolower(coefnm) != "(intercept)")]
   cfi <- gsub("psi([0-9])", "I(q^\\1)", cfi)
-  cfi <- gsub("mixture([\\^0-9]{0, 2})", "I(q\\1)", cfi)
+  cfi <- gsub("mixture([\\^0-9]{0,2})", "I(q\\1)", cfi)
   cfi <- gsub("mixture", "q", cfi)
   cfi <- gsub("I\\(q\\)|I\\(q\\^1\\)", "q", cfi)
   cfi <- c(ifelse(x$hasintercept, "~1", "~-1"), cfi)

@@ -27,18 +27,22 @@ dat$zspace <- ifelse(dat$z==1, "cat1", dat$zspace)
 
 dat$zspace2 = as.factor(dat$zspace)
 # testing with character
-qfit1 <- qgcomp.emm.glm.noboot(y~x1+x2,
+res = try(qfit1 <- qgcomp.emm.glm.noboot(y~x1+x2,
                            data = dat,
                            expnms = paste0("x", 1:2),
                            emmvar = "zspace",
-                           q = 4)
+                           q = 4))
+
+if (!inherits(res, "try-error"))
+  stop("Didn't catch character error")
+
 # testing with factor
 qfit2 <- qgcomp.emm.glm.noboot(y~x1+x2,
                            data = dat,
                            expnms = paste0("x", 1:2),
                            emmvar = "zspace2",
                            q = 4)
-qfit1
+
 qfit2
 
 # testing tibble (not included in package dependencies, so commenting out)
