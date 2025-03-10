@@ -13,7 +13,34 @@ vignette: >
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-## Introduction
+
+## Table of Contents
+1. [Introduction](#sec-intro)
+2. [Basics: fitting a model with a modifier](#sec-basics)
+3. [Basics: getting bounds for pointwise comparisons](#sec-bounds)
+4. [Basics: plotting weights](#sec-weightplot)
+5. [Basics: bootstrapping](#sec-bootstrap)
+    - Plotting bootstrapped fits (plotting predictions)(#subsec-bootstrap-plot)
+    - Overlay plots of predictions at multiple modifier levels(#subsec-bootstrap-overlay)
+6. [Basics: Estimating equations](#sec-esteq)
+    - Plotting predictions from estimating equation fits (plotting predictions)(#subsec-esteq-plot)
+    - Overlay plots of predictions at multiple modifier levels(#subsec-bootstrap-overlay)
+7. [Basics: categorical modifier, binary outcome](#sec-catmodbin)
+    - The wrong way to include categorical modifiers (plotting predictions)(#subsec-catmodbin-wrong)
+    - The right way to include categorical modifiers(#subsec-catmodbin-right)
+    - Bounds for pointwise comparisons with categorical modifier(#subsec-catmodbin-bounds)
+    - Overlay plots of predictions at multiple modifier levels(#subsec-catmodbin-overlay)
+    - Global tests of interaction for categorical modifiers(#subsec-catmodbin-test)
+8. [Basics: Non-numerical factor modifiers](#sec-nonnum)
+9. [Basics: Continuous modifiers](#sec-cont)
+    - Pointwise comparisons at specific values of a continuous confounder)(#subsec-cont-point)
+    - Pointwise comparisons in bootstrapped fits (work in progress)(#subsec-cont-boot)
+10. [Non-linear fits](#sec-nonlin)    
+11. [Survival analysis](#sec-surv)    
+12. [Frequently asked questions](#sec-fac)
+13. [Acknowledgments](#ack)
+
+## Introduction<a name="sec-intro"></a>
 
 Quantile g-computation (qgcomp) is a special case of g-computation used for estimating joint exposure response curves for a set of continuous exposures. The base package `qgcomp` allows one to estimate conditional or marginal joint-exposure response curves. Because this approach developed within the field of "exposure mixtures" the set of exposures of interest are referred to here as "the mixture." `qgcompint` builds on `qgcomp` by incorporating statistical interaction (product terms) between binary, categorical, or continuous covariates and the mixture.
 
@@ -88,7 +115,7 @@ summary(dat1$y)
 ## exposure correlation
 cor(dat1[, paste0("x", 1:7)])
 ```
-## Basics: fitting a model with a modifier
+## Basics: fitting a model with a modifier<a name="sec-basics"></a>
 
 Here we see that qgcomp (via the function `qgcomp.emm.glm.noboot`) estimates a $\psi_1$ fairly close to 0.8 (estimate = 0.7) (again, as we increase sample size, the estimated value will be expected to become increasingly close to the true value). The product term 'M:mixture' is the $\psi_3$ parameter noted above, which is also fairly close to the true value of 1.6 (estimate = 1.7).
 
@@ -103,7 +130,7 @@ qfit1 <- qgcomp.emm.glm.noboot(y~x1+x2+x3+x4+x5+x6+x7,
 qfit1
 ```
 
-## Basics: getting bounds for pointwise comparisons
+## Basics: getting bounds for pointwise comparisons<a name="sec-bounds"></a>
 
 As in `qgcomp` you can estimate pointwise comparisons along the joint regression line. Here we estimate them at both values of $M$ (via the `emmval` parameter).
 ```{r first_step_bound, include=TRUE}
@@ -111,7 +138,7 @@ pointwisebound(qfit1, emmval=0)
 pointwisebound(qfit1, emmval=1)
 ```
 
-## Basics: plotting weights (weights are at referent level of modifier)
+## Basics: plotting weights (weights are at referent level of modifier)<a name="sec-weightplot"></a>
 
 For `qgcomp.emm.glm.noboot` fits, a set of "weights" will be given that are interpreted as the proportion of a "partial" effect for each variable. That is, $\psi_1$ will represent the joint effect of multiple exposures, some of which will have independent effects that are positive, and some will have negative independent effects. For example, the "negative partial effect" is simply the sum of all of the negative independent effects (this is only given for a model in which all exposures are included via linear terms and no interactions among exposures occur). These weights are conditional on the fitted model, and so are not "estimates" per se and will not have associated confidence intervals. Nonetheless, the weights are useful for interpretation of the joint effect.
 
@@ -122,7 +149,7 @@ plot(qfit1, emmval=1)
 ```
 
 
-## Basics: bootstrapping
+## Basics: bootstrapping<a name="sec-bootstrap"></a>
 For non-linear qgcomp fits, or to get marginal estimates of the exposure-response curve (i.e. conditional only on the modifier), we can use the `qgcomp.emm.boot` function. Here we just repeat the original fit, which yields similar evidence that there is substantial statistical interaction on the additive scale, so that we would expect the joint exposure effect estimate to be greater for M=1 than for M=0, which corroborates the fit above (the point estimates are identical, as expected in this case due to no non-modifier covariates, so this is not a surprise).
 ```{r first_step_boot, include=TRUE}
 qfit1b <- qgcomp.emm.boot(y~x1+x2+x3+x4+x5+x6+x7,
@@ -133,22 +160,33 @@ qfit1b <- qgcomp.emm.boot(y~x1+x2+x3+x4+x5+x6+x7,
 qfit1b
 ```
 
-#### plotting bootstrapped fits (plotting predictions)
+#### Plotting bootstrapped fits (plotting predictions)<a name="subsec-bootstrap-plot"></a>
 ```{r first_step_boot_plot, include=TRUE, fig.width=6, fig.height=4, fig.cap=paste("Pointwise comparisons for M =", 0:1)}
 plot(qfit1b, emmval=0)
 plot(qfit1b, emmval=1)
 ```
 
-#### overlay plots of predictions at multiple modifier levels with same y axis
+#### Overlay plots of predictions at multiple modifier levels <a name="subsec-bootstrap-overlay"></a>
 Visually, it's easier to compare two plots with the same y-axis. Here we can see that the joint regression curve is steeper at M=1 than it is at M=0
 ```{r first_step_boot_plot_scale, include=TRUE, fig.width=6, fig.height=4, fig.cap=paste("Pointwise comparisons (same scale) for M =", 0:1)}
-p1 <- plot(qfit1b, emmval=0, suppressprint = TRUE)
-p2 <- plot(qfit1b, emmval=1, suppressprint = TRUE)
-p1 + ggplot2::coord_cartesian(ylim=c(0, 10))
-p2 + ggplot2::coord_cartesian(ylim=c(0, 10))
+library(ggplot2) # need to explicitly call ggplot
+pp0ee = plot(qfit1b, emmval=0, suppressprint=TRUE, geom_only=TRUE)
+pp1ee = plot(qfit1b, emmval=1, suppressprint=TRUE, geom_only=TRUE)
+# relabel the plots uisn
+pp0ee$point$data$col = "M=0"
+pp1ee$point$data$col = "M=1"
+pp0ee$errorbar$data$col = "M=0"
+pp1ee$errorbar$data$col = "M=1"
+# jitter along the x axis so the points do not overlap
+pp0ee$point$data$x = pp0ee$point$data$x - 0.01 
+pp1ee$point$data$x = pp1ee$point$data$x + 0.01 
+pp0ee$errorbar$data$x = pp0ee$errorbar$data$x - 0.01 
+pp1ee$errorbar$data$x = pp1ee$errorbar$data$x + 0.01 
+
+ggplot() + pp0ee + pp1ee + scale_color_brewer(name="")
 ```
 
-## Basics: Estimating equations
+## Basics: Estimating equations<a name="sec-esteq"></a>
 Another approach to non-linear qgcomp fits, or to get marginal estimates of the exposure-response curve (i.e. conditional only on the modifier), we can use the `qgcomp.emm.glm.ee` function. This approach uses estimating equation methodology for fitting. Estimating equation methodology also underlies GEE (generalized estimating equation) methods, which are frequently employed in longitudinal data analysis because they can yield appropriate standard errors for clustered data. In `qgcomp.emm.glm.ee`, the standard errors are also cluster robust (as long as the id variable is specified), but it can also be used to obtain non-linear fits in the same way that the bootstrapped estimator is above. Relative to the bootstrapped estimator, the estimating equations estimator will be less computationally intensive and will yield standard errors that are not subject to simulation error (and thus will be more repeatable). In general, the estimating equation method should be preferable for many of the cases in which one might be considering the bootstrapped estimator. Because standard errors are estimated differently, you will see differences in confidence intervals between `qgcomp.emm.glm.ee` and `qgcomp.emm.glm.noboot` even when the models are otherwise identical.
 
 Here we just repeat the analysis with the bootstrapped fit, which yields similar evidence that there is substantial statistical interaction on the additive scale, so that we would expect the joint exposure effect estimate to be greater for M=1 than for M=0, which corroborates the fit above (the point estimates are identical, as expected in this case due to no non-modifier covariates, so this is not a surprise).
@@ -161,23 +199,35 @@ qfit1ee <- qgcomp.emm.glm.ee(y~x1+x2+x3+x4+x5+x6+x7,
 qfit1b
 ```
 
-#### plotting predictions from estimating equation fits
+#### Plotting predictions from estimating equation fits (plotting predictions)<a name="subsec-esteq-plot"></a>
 ```{r first_step_ee_plot, include=TRUE, fig.width=6, fig.height=4, fig.cap=paste("Pointwise comparisons for M =", 0:1)}
 plot(qfit1ee, emmval=0)
 plot(qfit1ee, emmval=1)
 ```
 
-#### overlay plots of predictions from estimating equation fits at multiple modifier levels with same y axis
+#### Overlay plots of predictions at multiple modifier levels<a name="subsec-esteq-overlay"></a>
 Visually, it's easier to compare two plots with the same y-axis. Here we can see that the joint regression curve is steeper at M=1 than it is at M=0
 ```{r first_step_ee_plot_scale, include=TRUE, fig.width=6, fig.height=4, fig.cap=paste("Pointwise comparisons (same scale) for M =", 0:1)}
-p1 <- plot(qfit1ee, emmval=0, suppressprint = TRUE)
-p2 <- plot(qfit1ee, emmval=1, suppressprint = TRUE)
-p1 + ggplot2::coord_cartesian(ylim=c(0, 10))
-p2 + ggplot2::coord_cartesian(ylim=c(0, 10))
+library(ggplot2) # need to explicitly call ggplot
+pp0ee = plot(qfit1ee, emmval=0, suppressprint=TRUE, geom_only=TRUE)
+pp1ee = plot(qfit1ee, emmval=1, suppressprint=TRUE, geom_only=TRUE)
+# relabel the plots uisn
+pp0ee$point$data$col = "M=0"
+pp1ee$point$data$col = "M=1"
+pp0ee$errorbar$data$col = "M=0"
+pp1ee$errorbar$data$col = "M=1"
+# jitter along the x axis so the points do not overlap
+pp0ee$point$data$x = pp0ee$point$data$x - 0.01 
+pp1ee$point$data$x = pp1ee$point$data$x + 0.01 
+pp0ee$errorbar$data$x = pp0ee$errorbar$data$x - 0.01 
+pp1ee$errorbar$data$x = pp1ee$errorbar$data$x + 0.01 
+
+ggplot() + pp0ee + pp1ee + scale_color_brewer(name="")
 ```
 
 
-## Basics: categorical modifier, binary outcome
+## Basics: categorical modifier, binary outcome<a name="sec-catmodbin"></a>
+
 Now we can simulate data under a categorical modifier, and the `simdata_quantized_emm` function will pick some convenient defaults. We will also use a binary outcome with N=300 to allow that use of a categorical modifier with a rare binary outcome will be subject to low power and potential for bootstrapping to fail due to empty strata in some bootstrap samples.
 
 #### Simulated data defaults
@@ -214,7 +264,8 @@ table(dat2$y)
 cor(dat2[, paste0("x", 1:7)])
 ```
 
-#### The wrong way to include categorical modifiers
+#### The wrong way to include categorical modifiers<a name="subsec-catmodbin-wrong"></a>
+
 Below is one way to fit `qgcomp.emm.glm.noboot` with a categorical modifier that exactly follows the previous code. This approach to categorical modifiers is incorrect, in this case, due to the format of these data. Note if you fit the model like this, where your categorical modifier is not the proper data type, `qgcomp.emm.glm.noboot` will assume you have a continuous modifier.
 ```{r cat_mod_fit_wrong, include=TRUE}
 qfit.wrong <- qgcomp.emm.glm.noboot(y~x1+x2+x3+x4+x5+x6+x7,
@@ -225,7 +276,8 @@ qfit.wrong <- qgcomp.emm.glm.noboot(y~x1+x2+x3+x4+x5+x6+x7,
 qfit.wrong
 ```
 
-#### The right way to include categorical modifiers (use `as.factor()`)
+#### The right way to include categorical modifiers (use `as.factor()`)<a name="subsec-catmodbin-right"></a>
+
 Instead, you should convert each categorical modifier to a "factor" prior to fitting the model. Here you can see the output for both the non-bootstrapped fit and the fit with bootstrapped confidence intervals (since there are no other covariates in the model, these two approaches estimate the same marginal effect and parameter log-odds ratio estimates will be identical). Here we see that we get a unique interaction term and main effect for each level of the modifier z.
 ```{r cat_mod_fit, include=TRUE}
 dat2$zfactor = as.factor(dat2$z)
@@ -241,12 +293,21 @@ qfit2b <- qgcomp.emm.boot(y~x1+x2+x3+x4+x5+x6+x7,
   data = dat2,
   expnms = paste0("x", 1:7),
   emmvar = "zfactor",
+  B = 10, # set higher when using in real data
+  q = 4, family=binomial(), rr = FALSE)
+# using estimating equation based confidence intervals (estimate ee)
+set.seed(12312)
+qfit2ee <- qgcomp.emm.ee(y~x1+x2+x3+x4+x5+x6+x7,
+  data = dat2,
+  expnms = paste0("x", 1:7),
+  emmvar = "zfactor",
   q = 4, family=binomial(), rr = FALSE)
 qfit2
 qfit2b
+qfit2ee
 ```
 
-#### getting bounds for pointwise comparisons with categorical modifiers
+#### Bounds for pointwise comparisons with categorical modifiers<a name="subsec-catmodbin-bounds"></a>
 Here are some miscellaneous functions for getting point estimates and bounds for various comparisons at specific values of the modifier.
 ```{r cat_mod_bound, include=TRUE, fig.width=5, fig.height=4}
 ## output the weights at Z=0
@@ -277,7 +338,31 @@ plot(qfit2b, emmval=2)
 ```
 
 
-#### global tests of interaction for categorical modifiers
+#### Overlay plots of predictions at multiple modifier levels<a name="subsec-catmodbin-overlay"></a>
+Visually, it's easier to compare predictions across all levels of the EMM variable  on the same plot.
+```{r first_step_ee_plot_scalecat, include=TRUE, fig.width=6, fig.height=4, fig.cap=paste("Pointwise comparisons (same scale) for M =", 0:1)}
+library(ggplot2) # need to explicitly call ggplot
+pp0ee = plot(qfit2ee, emmval=0, suppressprint=TRUE, geom_only=TRUE)
+pp1ee = plot(qfit2ee, emmval=1, suppressprint=TRUE, geom_only=TRUE)
+pp2ee = plot(qfit2ee, emmval=2, suppressprint=TRUE, geom_only=TRUE)
+# relabel the plots uisn
+pp0ee$point$data$col = "Z=0"
+pp1ee$point$data$col = "Z=1"
+pp2ee$point$data$col = "Z=2"
+pp0ee$errorbar$data$col = "Z=0"
+pp1ee$errorbar$data$col = "Z=1"
+pp2ee$errorbar$data$col = "Z=2"
+# jitter along the x axis so the points do not overlap
+pp0ee$point$data$x = pp0ee$point$data$x - 0.01 
+pp2ee$point$data$x = pp2ee$point$data$x + 0.01 
+pp0ee$errorbar$data$x = pp0ee$errorbar$data$x - 0.01 
+pp2ee$errorbar$data$x = pp2ee$errorbar$data$x + 0.01 
+
+ggplot() + pp0ee + pp1ee + pp2ee + scale_color_brewer(name="")
+```
+
+#### Global tests of interaction for categorical modifiers<a name="subsec-catmodbin-test"></a>
+
 It is possible to obtain a global test of (no) interaction for a multi-level modifier using the `qgcomp` package and the `anova` function. You need to fit a model without interaction (via `qgcomp`) and then with interaction. The test is done on the "underlying" conditional model corresponding to the original data, rather than the marginal structural model. The methods for `qgcomp.glm.[no]boot` and `qgcomp.emm.glm.[no]boot` utilize the `anova.glm` function from the `stats` package (note the slightly different specification), while the methods for `qgcomp.glm.ee` and `qgcomp.emm.glm.ee` use `anova.geeglm` function methods from the `geepack` R package. Both tests return similar (not identical) results.
 ```{r cat_mod_boundtest, include=TRUE, fig.width=5, fig.height=4}
 library("qgcomp")
@@ -308,7 +393,8 @@ anova(catfitemmee, catfitoverallee)
 
 ```
 
-# Basics: Non-numerical factor modifiers
+## Basics: Non-numerical factor modifiers<a name="sec-nonnum"></a>
+
 
 As above, non-numerical modifiers must be coded as factors. These are straightforward, and this example follows with no commentary.
 ```{r catmod_gen_letter, include=TRUE}
@@ -354,7 +440,7 @@ print(pointwisebound(qfit_letteree, emmval="b", pointwiseref = 1))
 
 ```
 
-# Basics: Continuous modifiers
+## Basics: Continuous modifiers<a name="sec-cont"></a>
 Here we simulate some data, similar to prior datasets, where we use a continuous modifier.
 ```{r contmod_gen, include=TRUE}
  set.seed(23)
@@ -384,7 +470,7 @@ summary(dat3$CoM)
 summary(dat3$y)
 cor(dat3[, paste0("x", 1:7)])
 ```
-
+Fits are done as in the previous example (here they are shown without any further commentary)
 ```{r cont_mod_fit, include=TRUE}
 qfit3 <- qgcomp.emm.glm.noboot(y~x1+x2+x3+x4+x5+x6+x7,
   data = dat3,
@@ -396,13 +482,24 @@ qfit3b <- qgcomp.emm.boot(y~x1+x2+x3+x4+x5+x6+x7,
   data = dat3,
   expnms = paste0("x", 1:7),
   emmvar = "CoM",
+  B=10,
   q = 4)
 qfit3b
+qfit3ee <- qgcomp.emm.ee(y~x1+x2+x3+x4+x5+x6+x7,
+  data = dat3,
+  expnms = paste0("x", 1:7),
+  emmvar = "CoM",
+  q = 4)
+qfit3ee
 ```
 
 
-### Getting point wise comparisons at specific values of a continuous confounder
-Point-wise comparisons are available for non-bootstrapped fits
+#### Stratified effects, weights, and pointwise effect comparisons at specific values of a continuous confounder<a name="subsec-contppoint"></a>
+
+- Weights can be obtained for any valid value of the modifier and are available for non-bootstrapped fits.
+- Stratified effects can be obtained for any valid value of the modifier and are available for any fit
+- Point-wise comparisons are also available for any fit. These estimate the predicted outcome as well as confidence intervals for a contrast with a specified level of the joint exposure (here the second lowest quartile group)
+
 ```{r cont_mod_bound, include=TRUE, fig.width=5, fig.height=4}
 ## output/plot the weights at CoM=0")
 getstratweights(qfit3, emmval=0)
@@ -424,34 +521,48 @@ plot(qfit3, emmval=quantile(dat3$CoM, .8))
 print(getstrateffects(qfit3, emmval=quantile(dat3$CoM, .8)))
 
 ## output pointwise comparisons at at the 80%ile of CoM
-print(pointwisebound(qfit3, emmval=quantile(dat3$CoM, .8)))
+print(pointwisebound(qfit3, emmval=quantile(dat3$CoM, .8), pointwiseref = 2))
 
 ```
-Point-wise comparisons are variably available for bootstrapped fits (work in progress)
-```{r cont_mod_bound_boot, include=TRUE, fig.width=5, fig.height=4}
-## plot the pointwise effects at CoM=0
-plot(qfit3b, emmval=0)
 
+Stratified effects and pointwise comparisons can also be made with bootstrapped/estimating equation fits.
+```{r cont_mod_bound_boot, include=TRUE, fig.width=5, fig.height=4}
 ## output stratum specific joint effect estimate for the mixture at CoM=0
-print(getstrateffects(qfit3b, emmval=0))
+#print(getstrateffects(qfit3b, emmval=0)) # commmented out to reduce output
+print(getstrateffects(qfit3ee, emmval=0))
 
 ## output pointwise comparisons at CoM=0
-print(pointwisebound(qfit3b, emmval=0))
-
-
-## plot the pointwise effects at the 80%ile of CoM
-plot(qfit3b, emmval=quantile(dat3$CoM, .8))
-
+#print(pointwisebound(qfit3b, emmval=0)) # commmented out to reduce output
+print(pointwisebound(qfit3ee, emmval=0))
 
 ## output stratum specific joint effect estimate for the mixture at the 80%ile of CoM
-print(getstrateffects(qfit3b, emmval=quantile(dat3$CoM, .8)))
+#print(getstrateffects(qfit3b, emmval=quantile(dat3$CoM, .8))) # commmented out to reduce output
+print(getstrateffects(qfit3ee, emmval=quantile(dat3$CoM, .8)))
 
 ## output pointwise comparisons at at the 80%ile of CoM
-print(pointwisebound(qfit3b, emmval=quantile(dat3$CoM, .8)))
+#print(pointwisebound(qfit3b, emmval=quantile(dat3$CoM, .8))) # commmented out to reduce output
+print(pointwisebound(qfit3ee, emmval=quantile(dat3$CoM, .8)))
+
+## plot the pointwise effects at CoM=0 (compare bootstrap with estimating equations approach)
+## note that the bootstrapped version is not valid because of only using 10 bootstrap iterations
+ppb <- plot(qfit3b, emmval=0, suppressprint = TRUE, geom_only = TRUE)
+ppee <- plot(qfit3ee, emmval=0, suppressprint = TRUE, geom_only = TRUE)
+
+ppb$point$data$col = "Bootstrap"
+ppb$errorbar$data$col = "Bootstrap"
+ppee$point$data$col = "EE"
+ppee$errorbar$data$col = "EE"
+
+ppee$point$data$x = ppee$point$data$x + 0.01
+ppee$errorbar$data$x = ppee$errorbar$data$x + 0.01
+
+
+ggplot() + ppb + ppee + scale_color_grey(name="Pointwise estimates, 95% CI")
 
 ```
 
-# Non-linear fits
+## Non-linear fits<a name="sec-nonlin"></a>
+
 Non-linear joint effects of a mixture will tend to occur when independent effects of individual exposures are non-linear or when there is interaction on the model scale between exposures. Here is a toy example of allowing a quadratic overall joint effect with an underlying set of interaction terms between x1 and all other exposures. q is set to 8 for this example for reasons described in the `qgcomp` package vignette. This approach adds an interaction term for both the "main effect" of the mixture and the squared term of the mixture. The coefficients can be intererpreted as any other quadratic/interaction terms (which is to say, with some difficulty). Informally, the CoM:mixture^2 term can be interpreted as the magnitude of the change in the non-linearity of the slope due to a one unit increase in the continuous modifier. Both the bootstrapped and estimating equations formulations can be used to fit non-linear models, with the estimating equations approaches being preferred for computational efficiency.
 
 ```{r cont_mod_nlfit, include=TRUE}
@@ -459,6 +570,7 @@ qfit3bnl <- qgcomp.emm.glm.boot(y~x1+x2+x3+x4+x5+x6+x7 + x1*(x2 + x3 + x4 + x5 +
   data = dat3,
   expnms = paste0("x", 1:7),
   emmvar = "CoM",
+  B = 10, # set higher in practice
   q = 8, degree= 2)
 
 qfit3bnlee <- qgcomp.emm.glm.ee(y~x1+x2+x3+x4+x5+x6+x7 + x1*(x2 + x3 + x4 + x5 + x6 +x7),
@@ -474,17 +586,17 @@ qfit3bnlee
 
 Some effect estimation tools are not all enabled for non-linear fits and will produce an error. However, as with previous fits, we can estimate pointwise differences along the quantiles, and plot the marginal structural model regression line at various values of the joint quantized exposures. Here you can see that the regression line is expected to be steeper at higher levels of the modifier, as in previous fits. We can explictly ask for model confidence bands (which are given by the `modelbound` function), which pull in confidence limits for the regression line based on the bootstrap distribution of estimates.
 ```{r cont_mod_nl_plot_base, include=TRUE, fig.width=6, fig.height=4}
-print(pointwisebound(qfit3bnl, emmval=-1))
-print(pointwisebound(qfit3bnl, emmval=-1))
-print(pointwisebound(qfit3bnl, emmval=1))
-plot(qfit3bnl, emmval=-1, modelband=TRUE, pointwiseref=4)
-plot(qfit3bnl, emmval=1, modelband=TRUE, pointwiseref=4)
+print(pointwisebound(qfit3bnlee, emmval=-1))
+print(pointwisebound(qfit3bnlee, emmval=-1))
+print(pointwisebound(qfit3bnlee, emmval=1))
+plot(qfit3bnlee, emmval=-1, modelband=TRUE, pointwiseref=4)
+plot(qfit3bnlee, emmval=1, modelband=TRUE, pointwiseref=4)
 ```
 
 We can look at this fit another way, too, by plotting predictions from the marginal structural model at all observed values of the modifier, which gives a more complete picture of the model than the plots at single values of the modifier. We can create smoothed scatter plot lines (LOESS) at binned values of the modifier to informally look at how the regression line might change over values of the modifier. We can approximate the effect (point estimate only) at a specific value of z by plotting a smooth fit limited a narrow range of the modifier (< -1 or > 1). Here we see that the joint effect of exposures does appear to differ across values of the modifier, but there is little suggestion of non-linearity at either low or high values of the modifier. This informal assessment agrees with intuition based on the estimated coefficients and the standard plots from the `qgcompint` package.
 ```{r cont_mod_nl_plot, include=TRUE, fig.width=6, fig.height=4}
 library(ggplot2)
-plotdata = data=data.frame(q=qfit3bnl$index, ey=qfit3bnl$y.expected, modifier=qfit3bnl$emmvar.msm)
+plotdata = data=data.frame(q=qfit3bnlee$index, ey=qfit3bnlee$y.expected, modifier=qfit3bnlee$emmvar.msm)
 ggplot() + 
          geom_point(aes(x=q, y=ey, color=modifier), data=plotdata) + 
          geom_point(aes(x=q, y=ey), color="purple", data=plotdata[plotdata$modifier>1, ], pch=1, cex=3) + 
@@ -498,7 +610,7 @@ ggplot() +
 
 ```
 
-# Survival analysis
+## Survival analysis<a name="sec-surv"></a>
 As with standard `qgcomp`, the `qgcompint` package allows assessment of effect measure modification for a Cox proportional hazards model. The `simdata_quantized_emm` function allows simulation of right censored survival data.
 ```{r survmod_gen, include=TRUE}
  set.seed(23)
@@ -547,6 +659,41 @@ pointwisebound(qfit4, emmval=1)
 
 
 
-### Multiple modifiers
+## Frequently asked questions <a name="sec-fac"></a>
+
+#### How does qgcomp/qgcompint address collinearity
+In general, t does so by asking a question that is typically not adversely impacted by high correlation/near/full non-collinearity. When possible, some methods allow the option "Bayes=TRUE," which does perform some very light regularization and can overcome perfect collinearity in a way that allows estimation of the overall effect of exposure, but the independent effects (scaled effects, or weights) will still be subject to issues like variance inflation. 
+
+#### Is there an upper limit in terms of the number of variables I can include?
+It depends. Qgcomp/qgcompint is not generally suited for problems when the number of predictors exceeds the sample size. If you try the method, it works, and you obtain reasonable narrow confidence intervals, then the method has been able to handle that number of exposures. Package authors would advocate that if you are working with a problem where the number of predictors exceeds the sample size and are wondering about this package, that you seek out a statistician with experience in those problems that can point out the challenges in such analyses.
+
+
+#### Why are estimating equation methods and bootstrapping both used? Is one preferable?
+Anything in this package that is available via bootstrapping is also available for the (newer) estimating equation approaches in this package. If your goal is just to estimate parameters, then the estimating equation approaches may be preferable because they are less computationally burdensome and prone to fewer errors like simulation error that may not be in every researcher's area of expertise for diagnosis.
+
+
+#### Why isn't <method> available in this package even though it is in the `qgcomp` package?
+Developer time. If you see a method in the `qgcomp` package that you would like to see in this package and could make a good use-case for. Please contact the package developer/maintainer.
+
+
+#### How do I use multiple modifiers?
 There is currently no simple way to implement multiple, simultaneous modifiers in the `qgcompint` package. For binary/categorical modifiers, it is straightforward to create a single modifier with distinct value for every unique combination of the modifiers. 
+
+#### See also
+The faq in the `qgcomp` package vignettes
+
+## References
+#### Original quantile g-computation paper
+
+Alexander P. Keil, Jessie P. Buckley, Katie M. O'Brien, Kelly K. Ferguson, Shanshan Zhao,Alexandra J. White. A quantile-based g-computation approach to addressing the effects of exposure mixtures. <https://doi.org/10.1289/EHP5838> 
+
+#### First paper to use qgcompint
+
+Stevens, D.R., Bommarito, P.A., Keil, A.P., McElrath, T.F., Trasande, L., Barrett, E.S., Bush, N.R., Nguyen, R.H., Sathyanarayana, S., Swan, S. and Ferguson, K.K., 2022. Urinary phthalate metabolite mixtures in pregnancy and fetal growth: findings from the infant development and the environment study. Environment international, 163, p.107235.
+
+
+## Acknowledgments<a name="ack"></a>
+
+The development of this package was supported by NIH Grant RO1ES02953101 and the NIH intramural research program. Invaluable code testing has been performed by Danielle Stephens and Juwel Rana, among others.
+
 

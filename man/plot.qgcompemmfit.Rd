@@ -4,7 +4,7 @@
 \alias{plot.qgcompemmfit}
 \title{Default plotting method for a qgcompfit object}
 \usage{
-\method{plot}{qgcompemmfit}(x, emmval = NULL, suppressprint = FALSE, ...)
+\method{plot}{qgcompemmfit}(x, emmval = NULL, suppressprint = FALSE, geom_only = FALSE, ...)
 }
 \arguments{
 \item{x}{"qgcompfit" object from \code{qgcomp.noboot}, \code{qgcomp.boot},
@@ -14,10 +14,18 @@
 
 \item{suppressprint}{If TRUE, suppresses the plot, rather than printing it
 by default (it can be saved as a ggplot2 object (or list of ggplot2 objects if x is from a zero-
-inflated model) and used programmatically)
+inflated model) and used programmatically)}
+
+\item{geom_only}{If TRUE, returns only the geometry (i.e. does not contain the entire plot object). Used for overlays. Only used for \code{.ee} and \code{.boot} methods.
 (default = FALSE)}
 
-\item{...}{unused}
+\item{...}{Arguments (listed below ) to underlying functions :
+\itemize{
+\item pointwisebars: (boot/ee only) If TRUE (default), adds 95\% error bars for pointwise comparisons of E(Y|joint exposure) to the smooth regression line plot
+\item modelfitline: (boot/ee only) If TRUE (FALSE=default), adds fitted (MSM) regression line of E(Y|joint exposure) to the smooth regression line plot
+\item modelband: (boot/ee only) If TRUE (FALSE=default), adds 95\% prediction bands for E(Y|joint exposure) (the MSM fit)
+\item flexfit:  (boot/ee only) if TRUE (FALSE=default), adds flexible interpolation of predictions from underlying (conditional) model
+}}
 }
 \value{
 If suppressprint=FALSE, then this function prints a plot specific to a "qgcompemmfit" object.

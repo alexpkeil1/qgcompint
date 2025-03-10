@@ -1,7 +1,18 @@
 
 # qgcompint: quantile g-computation with statistical interaction
 
-# v0.10.2
+# v0.11.0
+## Major changes
+- Major change to underlying plotting code to allow output of geometries
+
+## Minor changes
+- Documentation improvements
+- Re-worked vignette
+
+## Bug fixes
+- major, rare: fixed an issue with formula interpretation for complex formulas with nested interaction terms
+
+# v0.10.0
 ## Major changes
 - added non-linearity for estimating equation methods
 - added plotting and bounds for estimating equation methods
@@ -11,7 +22,7 @@
 - Documentation improvements
 
 ## Bug fixes
-- major, rare: fixed an issue with formula interpretation for complex formulas with nested interaction terms
+- n/a
 
 
 # v0.9.0
