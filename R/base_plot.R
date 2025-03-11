@@ -72,7 +72,7 @@
               method = "gam", formula = y ~ s(x, k=length(table(yexp))-1, bs = "cs"),
               data=data.frame(y=(yexp)/(1-yexp), x=(yexp+0.5)/max(yexp+1)))
   }
-  list(line=ret)
+  list(smooth=ret)
 }
 
 

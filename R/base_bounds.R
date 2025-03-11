@@ -193,8 +193,6 @@ pointwisebound.qgcompemmfit <- function(x, alpha = 0.05, pointwiseref = 1, emmva
   designdf <- designdf[, designord]
   names(designdf) <- newnames
 
-
-
   refrow <- designdf[pointwiseref, ]
   nrows <- nrow(designdf)
   se.diff <- numeric(nrows)
@@ -203,9 +201,6 @@ pointwisebound.qgcompemmfit <- function(x, alpha = 0.05, pointwiseref = 1, emmva
     #whichgrad = (grad!<-0)
     se.diff[nr] <- se_comb2(names(grad), covmat = vc, grad)
   }
-
-
-  #x$fit$data
   #####
   isboot <- x$bootstrap
   isee <- inherits(x, "eeqgcompfit")
