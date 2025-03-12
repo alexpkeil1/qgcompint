@@ -277,8 +277,6 @@
 #'
 #' @details
 #' The `...` argument calls underlying plot functions, with arguments given here (similar to the plot function in the `qgcomp` package)
-#' \describe{
-#' }
 #' @return
 #'
 #' If suppressprint=FALSE, then this function prints a plot specific to a "qgcompemmfit" object.

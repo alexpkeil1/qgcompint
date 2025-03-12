@@ -63,8 +63,6 @@ every exposure')
 }
 \details{
 The \code{...} argument calls underlying plot functions, with arguments given here (similar to the plot function in the \code{qgcomp} package)
-\describe{
-}
 }
 \examples{
 set.seed(50)
