@@ -94,7 +94,7 @@
 }
 
 
-#' Estimating pointwise comparisons for qgcompint fits
+#' Estimating pointwise comparisons for qgcompemmfit objects
 #' @description
 #' Calculates: expected outcome (on the link scale), mean difference (link scale) and the standard error of the mean difference (link scale) for pointwise comparisons
 #' @details The comparison of interest following a qgcomp fit is often comparisons of model predictions at various values of the joint-exposures (e.g. expected outcome at all exposures at the 1st quartile vs. the 3rd quartile). The expected outcome at a given joint exposure and at a given level of non-exposure covariates (W) is given as E(Y|S, W=w), where S takes on integer values 0 to q-1. Thus, comparisons are of the type E(Y|S=s, W=w) - E(Y|S=s2, W=w) where s and s2 are two different values of the joint exposures (e.g. 0 and 2). This function yields E(Y|S, W=w) as well as E(Y|S=s, W=w) - E(Y|S=p, W=w) where s is any value of S and p is the value chosen via "pointwise ref" - e.g. for binomial variables this will equal the risk/ prevalence difference at all values of S, with the referent category S=p-1. For the non-boostrapped version of quantile g-computation (under a linear model)

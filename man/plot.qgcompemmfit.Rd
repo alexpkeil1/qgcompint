@@ -2,13 +2,25 @@
 % Please edit documentation in R/base_plot.R
 \name{plot.qgcompemmfit}
 \alias{plot.qgcompemmfit}
-\title{Default plotting method for a qgcompfit object}
+\title{Default plotting method for a qgcompemmfit object}
 \usage{
-\method{plot}{qgcompemmfit}(x, emmval = NULL, suppressprint = FALSE, geom_only = FALSE, ...)
+\method{plot}{qgcompemmfit}(
+  x,
+  emmval = NULL,
+  suppressprint = FALSE,
+  geom_only = FALSE,
+  modelband = FALSE,
+  flexfit = FALSE,
+  modelfitline = FALSE,
+  pointwisebars = TRUE,
+  pointwiseref = 1,
+  alpha = 0.05,
+  ...
+)
 }
 \arguments{
-\item{x}{"qgcompfit" object from \code{qgcomp.noboot}, \code{qgcomp.boot},
-\code{qgcomp.cox.noboot}, \code{qgcomp.cox.boot}, \code{qgcomp.zi.noboot} or \code{qgcomp.zi.boot} functions}
+\item{x}{"qgcompemmfit" object from \code{qgcomp.emm.glm.noboot}, \code{qgcomp.emm.glm.boot},
+\code{qgcomp.emm.glm.ee}, or \code{qgcomp.emm.cox.noboot} functions}
 
 \item{emmval}{fixed value for effect measure modifier at which pointwise comparisons are calculated}
 
@@ -19,13 +31,19 @@ inflated model) and used programmatically)}
 \item{geom_only}{If TRUE, returns only the geometry (i.e. does not contain the entire plot object). Used for overlays. Only used for \code{.ee} and \code{.boot} methods.
 (default = FALSE)}
 
-\item{...}{Arguments (listed below ) to underlying functions :
-\itemize{
-\item pointwisebars: (boot/ee only) If TRUE (default), adds 95\% error bars for pointwise comparisons of E(Y|joint exposure) to the smooth regression line plot
-\item modelfitline: (boot/ee only) If TRUE (FALSE=default), adds fitted (MSM) regression line of E(Y|joint exposure) to the smooth regression line plot
-\item modelband: (boot/ee only) If TRUE (FALSE=default), adds 95\% prediction bands for E(Y|joint exposure) (the MSM fit)
-\item flexfit:  (boot/ee only) if TRUE (FALSE=default), adds flexible interpolation of predictions from underlying (conditional) model
-}}
+\item{modelband}{(boot/ee only) If TRUE (FALSE=default), adds 95\% prediction bands for E(Y|joint exposure) (the MSM fit)}
+
+\item{flexfit}{(boot/ee only) if TRUE (FALSE=default), adds flexible interpolation of predictions from underlying (conditional) model}
+
+\item{modelfitline}{(boot/ee only) If TRUE (FALSE=default), adds fitted (MSM) regression line of E(Y|joint exposure) to the smooth regression line plot}
+
+\item{pointwisebars}{(boot/ee only) If TRUE (TRUE=default), adds 95\% error bars for pointwise comparisons of E(Y|joint exposure) to the smooth regression line plot}
+
+\item{pointwiseref}{(boot/ee only) integer (0=default): which category of exposure (from 1 to q) should serve as the referent category for pointwise comparisons? (default=1)}
+
+\item{alpha}{alpha level for all confidence intervals}
+
+\item{...}{Arguments (listed under ``details'' ) to underlying functions:}
 }
 \value{
 If suppressprint=FALSE, then this function prints a plot specific to a "qgcompemmfit" object.
@@ -35,12 +53,18 @@ If bootstrapping is used, it will print a joint regression line for all exposure
 If suppressprint=TRUE, then this function returns a "gg" (regression line) or "gtable" (butterfly plot) object (from ggplot2 package or gtable/grid packages), which can be used to print a ggplot figure and modify either of the above figures (see example below)
 }
 \description{
-Plot a quantile g-computation object. For qgcomp.noboot, this function will
-create a butterfly plot of weights. For qgcomp.boot, this function will create
+Plot a quantile g-computation object from qgcompint.
+For qgcomp.emm.glm.noboot, this function will create a butterfly plot of
+weights. For qgcomp.emm.glm.boot and qgcomp.emm.glm.ee, this function will create
 a box plot with smoothed line overlaying that represents a non-parametric
 fit of a model to the expected outcomes in the population at each quantile
-of the joint exposures (e.g. '1' represents 'at the first quantile for
+of the joint exposures (e.g. '0' represents 'at the lowest quantile for
 every exposure')
+}
+\details{
+The \code{...} argument calls underlying plot functions, with arguments given here (similar to the plot function in the \code{qgcomp} package)
+\describe{
+}
 }
 \examples{
 set.seed(50)
@@ -104,5 +128,5 @@ grid.draw(pp3)
 }
 }
 \seealso{
-\code{\link[qgcomp]{qgcomp.noboot}}, \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
+\code{\link[qgcompint]{qgcomp.emm.glm.noboot}}, \code{\link[qgcompint]{qgcomp.emm.glm.boot}},  \code{\link[qgcompint]{qgcomp.emm.glm.ee}}, \code{\link[qgcompint]{qgcomp.emm.cox.noboot}}
 }

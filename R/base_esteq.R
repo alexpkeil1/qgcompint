@@ -19,7 +19,7 @@
   Y = model.response(data)
   Xint = as.matrix(do.call(rbind, lapply(intvals, function(x) {data[, expnms] = x; model.matrix(f, data)})))
 
-  Xmsm = .msmdesign(Xint, expnms, degree, X, emmvar, emmvars, intvals, hasintercept)
+  Xmsm = .msmdesign(Xint, expnms, degree, X, emmvar, emmvars, intvals, hasintercept)$X
 
   binlink = ifelse(rr, "logitlog", "logit")
   FUN <- switch(fam,
@@ -35,6 +35,7 @@
   )
   FUN(theta=theta, Y=Y, X=X, Xint=Xint, Xmsm=Xmsm, weights=weights, offset=offset, delta=-Inf, ...)
 }
+
 
 .msmdesign <- function(Xint, expnms, degree, modframe, emmvar, emmvars, intvals, hasintercept) {
   Xmsm = poly(Xint[, expnms[1]], degree=1, raw=TRUE) # intercept and constant exposure, degree not needed here
@@ -62,6 +63,7 @@
   class(newmsmform) <- "formula"
   msmvars = get_all_vars(newmsmform, data=msmdf) # variables before being processed by model.frame
   Xmsm = model.matrix(newmsmform, msmvars)
+  list(f=newmsmform, X=Xmsm)
 }
 
 
@@ -97,13 +99,13 @@
 #' Qgcomp.boot can be used for this, which will use bootstrap
 #' sampling of clusters/individuals to estimate cluster-appropriate standard
 #' errors via bootstrapping.
-#' @param weights "case weights" - passed to the "weight" argument of
+#' @param weights "case weights" or sampling weights - a vector of weights representing the contribution of each observation to the overall fit
 #' @param offset Model offset term on individual basis: not yet implemented
 #' \code{\link[stats]{glm}} or \code{\link[arm]{bayesglm}}
 #' @param alpha alpha level for confidence limit calculation
 #' @param rr (logical, default=TRUE) estimate a risk ratio from the MSM when using an underlying logistic model
 #' @param degree polynomial degree for non-linearity of MSM (values other than 1 are not supported, currently)
-#' @param includeX (logical, default=TRUE) include data in the output?
+#' @param includeX (logical, default=TRUE) include design matrixes in the output?
 #' @param verbose (logical, default=TRUE) include informative messages
 #' @param errcheck (logical, default=TRUE) include some basic error checking. Slightly
 #' faster if set to false (but be sure you understand risks)
@@ -348,12 +350,14 @@ qgcomp.emm.glm.ee <- function(
   #Xint = as.matrix(do.call(rbind, lapply(intvals, function(x) {mf2 = modframe; mf2[, expnms] = x; model.matrix(newform, model.frame(newform, data=mf2))}))) # works in non-linear setting
   Xint = as.matrix(model.matrix(newform, do.call(rbind, lapply(intvals, function(x) {mf2 = basevars; mf2[, expnms] = x; model.frame(newform, data=mf2)})))) # works in non-linear setting
 
-  Xmsm = .msmdesign(Xint, expnms, degree, modframe, emmvar, emmvars, intvals, hasintercept)
+  msmfX = .msmdesign(Xint, expnms, degree, modframe, emmvar, emmvars, intvals, hasintercept)
+  msmf = msmfX$f
+  #msmfX$X
 
   # point estimates
   #.esteq_qgc(parminits, family=family, Y=Y, X=X, Xint=Xint, Xmsm=Xmsm, weights=qdata$weights, rr=FALSE)
   np = ncol(X)
-  npmsm = ncol(Xmsm)
+  npmsm = ncol(msmfX$X)
 
   startvals <- function(family, Y, X, np, npmsm, offset=0) {
     fam = family$family
@@ -367,9 +371,9 @@ qgcomp.emm.glm.ee <- function(
   }
   parminits = startvals(family, Y, X, np, npmsm)
   #.esteq_qgc(parminits, family=family, Y=Y, X=X, Xint=Xint, Xmsm=Xmsm, weights=qdata$weights, rr=FALSE)
-  eqfit <- rootSolve::multiroot(.esteq_qgc, start=parminits, family=family, Y=Y, X=X, Xint=Xint, Xmsm=Xmsm, weights=qdata$weights, rr=rr, offset=qdata$offset__, delta=delta)
+  eqfit <- rootSolve::multiroot(.esteq_qgc, start=parminits, family=family, Y=Y, X=X, Xint=Xint, Xmsm=msmfX$X, weights=qdata$weights, rr=rr, offset=qdata$offset__, delta=delta)
   # "bread" of the sandwich covariance
-  A = numDeriv::jacobian(func=.esteq_qgc, x=eqfit$root, family=family, Y=Y, X=X, Xint=Xint, Xmsm=Xmsm, weights=qdata$weights, method="Richardson", rr=rr, offset=qdata$offset__, delta=delta)
+  A = numDeriv::jacobian(func=.esteq_qgc, x=eqfit$root, family=family, Y=Y, X=X, Xint=Xint, Xmsm=msmfX$X, weights=qdata$weights, method="Richardson", rr=rr, offset=qdata$offset__, delta=delta)
   #
 
   # "meat" of the sandwich covariance
@@ -397,7 +401,7 @@ qgcomp.emm.glm.ee <- function(
   nobs <- dim(qdata)[1]
   covmat <- fullcovmat[msmidx, msmidx, drop=FALSE]
   seb <- sqrt(diag(covmat))
-  cnms = colnames(Xmsm)#c(paste0("psi", seq_len(length(msmidx)-1)))
+  cnms = colnames(msmfX$X)#c(paste0("psi", seq_len(length(msmidx)-1)))
   cnms[which(cnms == "mixture")] = "psi1"
   allest = eqfit$root
   names(allest) <- c(colnames(X), cnms)
@@ -448,10 +452,10 @@ qgcomp.emm.glm.ee <- function(
   }
 
   fit = list(formula = newform, est=allest[condidx], vcov=fullcovmat[condidx, condidx], family=family, type="conditional", data = qdata)
-  msmfit = list(est=allest[msmidx], vcov=fullcovmat[msmidx, msmidx], family=msmfamily, type="msm")
+  msmfit = list(formula = msmf, est=allest[msmidx], vcov=fullcovmat[msmidx, msmidx], family=msmfamily, type="msm")
   if (includeX) {
     fit$X = X
-    msmfit$X = Xmsm
+    msmfit$X = msmfX$X
   }
 
   attr(fit, "class") <- c("eefit", attr(fit, "class"))

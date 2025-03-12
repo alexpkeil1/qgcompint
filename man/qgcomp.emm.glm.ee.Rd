@@ -70,7 +70,7 @@ Qgcomp.boot can be used for this, which will use bootstrap
 sampling of clusters/individuals to estimate cluster-appropriate standard
 errors via bootstrapping.}
 
-\item{weights}{"case weights" - passed to the "weight" argument of}
+\item{weights}{"case weights" or sampling weights - a vector of weights representing the contribution of each observation to the overall fit}
 
 \item{offset}{Model offset term on individual basis: not yet implemented
 \code{\link[stats]{glm}} or \code{\link[arm]{bayesglm}}}
@@ -81,7 +81,7 @@ errors via bootstrapping.}
 
 \item{degree}{polynomial degree for non-linearity of MSM (values other than 1 are not supported, currently)}
 
-\item{includeX}{(logical, default=TRUE) include data in the output?}
+\item{includeX}{(logical, default=TRUE) include design matrixes in the output?}
 
 \item{verbose}{(logical, default=TRUE) include informative messages}
 

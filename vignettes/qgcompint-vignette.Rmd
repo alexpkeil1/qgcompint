@@ -20,21 +20,21 @@ knitr::opts_chunk$set(echo = TRUE)
 3. [Basics: getting bounds for pointwise comparisons](#sec-bounds)
 4. [Basics: plotting weights](#sec-weightplot)
 5. [Basics: bootstrapping](#sec-bootstrap)
-    - Plotting bootstrapped fits (plotting predictions)(#subsec-bootstrap-plot)
-    - Overlay plots of predictions at multiple modifier levels(#subsec-bootstrap-overlay)
+    - [Plotting bootstrapped fits (plotting predictions)](#subsec-bootstrap-plot)
+    - [Overlay plots of predictions at multiple modifier levels](#subsec-bootstrap-overlay)
 6. [Basics: Estimating equations](#sec-esteq)
-    - Plotting predictions from estimating equation fits (plotting predictions)(#subsec-esteq-plot)
-    - Overlay plots of predictions at multiple modifier levels(#subsec-bootstrap-overlay)
+    - [Plotting predictions from estimating equation fits (plotting predictions)](#subsec-esteq-plot)
+    - [Overlay plots of predictions at multiple modifier levels](#subsec-bootstrap-overlay)
 7. [Basics: categorical modifier, binary outcome](#sec-catmodbin)
-    - The wrong way to include categorical modifiers (plotting predictions)(#subsec-catmodbin-wrong)
-    - The right way to include categorical modifiers(#subsec-catmodbin-right)
-    - Bounds for pointwise comparisons with categorical modifier(#subsec-catmodbin-bounds)
-    - Overlay plots of predictions at multiple modifier levels(#subsec-catmodbin-overlay)
-    - Global tests of interaction for categorical modifiers(#subsec-catmodbin-test)
+    - [The wrong way to include categorical modifiers](plotting predictions)(#subsec-catmodbin-wrong)
+    - [The right way to include categorical modifiers](#subsec-catmodbin-right)
+    - [Bounds for pointwise comparisons with categorical modifier](#subsec-catmodbin-bounds)
+    - [Overlay plots of predictions at multiple modifier levels](#subsec-catmodbin-overlay)
+    - [Global tests of interaction for categorical modifiers](#subsec-catmodbin-test)
 8. [Basics: Non-numerical factor modifiers](#sec-nonnum)
 9. [Basics: Continuous modifiers](#sec-cont)
-    - Pointwise comparisons at specific values of a continuous confounder)(#subsec-cont-point)
-    - Pointwise comparisons in bootstrapped fits (work in progress)(#subsec-cont-boot)
+    - [Pointwise comparisons at specific values of a continuous confounder)](#subsec-cont-point)
+    - [Pointwise comparisons in bootstrapped fits (work in progress)](#subsec-cont-boot)
 10. [Non-linear fits](#sec-nonlin)    
 11. [Survival analysis](#sec-surv)    
 12. [Frequently asked questions](#sec-fac)
@@ -167,23 +167,36 @@ plot(qfit1b, emmval=1)
 ```
 
 #### Overlay plots of predictions at multiple modifier levels <a name="subsec-bootstrap-overlay"></a>
-Visually, it's easier to compare two plots with the same y-axis. Here we can see that the joint regression curve is steeper at M=1 than it is at M=0
+Visually, it's easier to compare two plots with the same y-axis. Here we can see that the joint regression curve is steeper at M=1 than it is at M=0. You will get some notes from ggplot2 about replacing scales, which can be 
+ignored or suppressed using `suppressMessages(print( <ggplot statements > ))`. Visually, you can see substantial evidence for interaction due to the diverging slopes and non-overlapping confidence intervals.
 ```{r first_step_boot_plot_scale, include=TRUE, fig.width=6, fig.height=4, fig.cap=paste("Pointwise comparisons (same scale) for M =", 0:1)}
 library(ggplot2) # need to explicitly call ggplot
-pp0ee = plot(qfit1b, emmval=0, suppressprint=TRUE, geom_only=TRUE)
-pp1ee = plot(qfit1b, emmval=1, suppressprint=TRUE, geom_only=TRUE)
-# relabel the plots uisn
-pp0ee$point$data$col = "M=0"
-pp1ee$point$data$col = "M=1"
-pp0ee$errorbar$data$col = "M=0"
-pp1ee$errorbar$data$col = "M=1"
+pp0b = plot(qfit1b, emmval=0, suppressprint=TRUE, geom_only=TRUE, 
+             pointwisebars=TRUE, modelfitline=FALSE, modelband=FALSE)
+pp1b = plot(qfit1b, emmval=1, suppressprint=TRUE, geom_only=TRUE, 
+             pointwisebars=TRUE, modelfitline=FALSE, modelband=FALSE)
+# relabel the plots by directly modifying the ggplot2 geometries.
+# "col" is a column that sets the color
+# "point" and "errorbar" are names given to ggplot2::geom_point and 
+# ggplot2::geom_error bar geometries
+pp0b$point$data$col = "M=0"
+pp1b$point$data$col = "M=1"
+pp0b$errorbar$data$col = "M=0"
+pp1b$errorbar$data$col = "M=1"
 # jitter along the x axis so the points do not overlap
-pp0ee$point$data$x = pp0ee$point$data$x - 0.01 
-pp1ee$point$data$x = pp1ee$point$data$x + 0.01 
-pp0ee$errorbar$data$x = pp0ee$errorbar$data$x - 0.01 
-pp1ee$errorbar$data$x = pp1ee$errorbar$data$x + 0.01 
+pp0b$point$data$x = pp0b$point$data$x - 0.01 
+pp1b$point$data$x = pp1b$point$data$x + 0.01 
+pp0b$errorbar$data$x = pp0b$errorbar$data$x - 0.01 
+pp1b$errorbar$data$x = pp1b$errorbar$data$x + 0.01 
 
-ggplot() + pp0ee + pp1ee + scale_color_brewer(name="")
+
+
+suppressMessages(print(
+  ggplot() + pp0b + pp1b + scale_colour_viridis_d(name="") + 
+    labs(title="Bootstrap approach")
+))
+
+
 ```
 
 ## Basics: Estimating equations<a name="sec-esteq"></a>
@@ -196,22 +209,21 @@ qfit1ee <- qgcomp.emm.glm.ee(y~x1+x2+x3+x4+x5+x6+x7,
   expnms = paste0("x", 1:7),
   emmvar = "M",
   q = 4)
-qfit1b
+qfit1ee
 ```
 
 #### Plotting predictions from estimating equation fits (plotting predictions)<a name="subsec-esteq-plot"></a>
-```{r first_step_ee_plot, include=TRUE, fig.width=6, fig.height=4, fig.cap=paste("Pointwise comparisons for M =", 0:1)}
-plot(qfit1ee, emmval=0)
-plot(qfit1ee, emmval=1)
-```
 
-#### Overlay plots of predictions at multiple modifier levels<a name="subsec-esteq-overlay"></a>
-Visually, it's easier to compare two plots with the same y-axis. Here we can see that the joint regression curve is steeper at M=1 than it is at M=0
-```{r first_step_ee_plot_scale, include=TRUE, fig.width=6, fig.height=4, fig.cap=paste("Pointwise comparisons (same scale) for M =", 0:1)}
-library(ggplot2) # need to explicitly call ggplot
-pp0ee = plot(qfit1ee, emmval=0, suppressprint=TRUE, geom_only=TRUE)
-pp1ee = plot(qfit1ee, emmval=1, suppressprint=TRUE, geom_only=TRUE)
-# relabel the plots uisn
+Here we skip to overlaying the two plots
+```{r first_step_ee_plot, include=TRUE, fig.width=6, fig.height=4, fig.cap=paste("Pointwise comparisons for M =", 0:1)}
+pp0ee = plot(qfit1b, emmval=0, suppressprint=TRUE, geom_only=TRUE, 
+             pointwisebars=TRUE, modelfitline=FALSE, modelband=FALSE)
+pp1ee = plot(qfit1b, emmval=1, suppressprint=TRUE, geom_only=TRUE, 
+             pointwisebars=TRUE, modelfitline=FALSE, modelband=FALSE)
+# relabel the plots by directly modifying the ggplot2 geometries.
+# "col" is a column that sets the color
+# "point" and "errorbar" are names given to ggplot2::geom_point and 
+# ggplot2::geom_error bar geometries
 pp0ee$point$data$col = "M=0"
 pp1ee$point$data$col = "M=1"
 pp0ee$errorbar$data$col = "M=0"
@@ -222,7 +234,12 @@ pp1ee$point$data$x = pp1ee$point$data$x + 0.01
 pp0ee$errorbar$data$x = pp0ee$errorbar$data$x - 0.01 
 pp1ee$errorbar$data$x = pp1ee$errorbar$data$x + 0.01 
 
-ggplot() + pp0ee + pp1ee + scale_color_brewer(name="")
+
+
+suppressMessages(print(
+  ggplot() + pp0ee + pp1ee + scale_colour_viridis_d(name="") + 
+    labs(title="Estimating equations approach")
+))
 ```
 
 
@@ -339,26 +356,29 @@ plot(qfit2b, emmval=2)
 
 
 #### Overlay plots of predictions at multiple modifier levels<a name="subsec-catmodbin-overlay"></a>
-Visually, it's easier to compare predictions across all levels of the EMM variable  on the same plot.
+Visually, it's easier to compare predictions across all levels of the EMM variable  on the same plot. This plot looks at bounds on the marginal structural regression model line.
 ```{r first_step_ee_plot_scalecat, include=TRUE, fig.width=6, fig.height=4, fig.cap=paste("Pointwise comparisons (same scale) for M =", 0:1)}
 library(ggplot2) # need to explicitly call ggplot
-pp0ee = plot(qfit2ee, emmval=0, suppressprint=TRUE, geom_only=TRUE)
-pp1ee = plot(qfit2ee, emmval=1, suppressprint=TRUE, geom_only=TRUE)
-pp2ee = plot(qfit2ee, emmval=2, suppressprint=TRUE, geom_only=TRUE)
+pp0ee = plot(qfit2ee, emmval=0, suppressprint=TRUE, geom_only=TRUE, 
+             modelband=TRUE, pointwisebars=FALSE, modelfitline=TRUE)
+pp1ee = plot(qfit2ee, emmval=1, suppressprint=TRUE, geom_only=TRUE, 
+             modelband=TRUE, pointwisebars=FALSE, modelfitline=TRUE)
+pp2ee = plot(qfit2ee, emmval=2, suppressprint=TRUE, geom_only=TRUE, 
+             modelband=TRUE, pointwisebars=FALSE, modelfitline=TRUE)
 # relabel the plots uisn
-pp0ee$point$data$col = "Z=0"
-pp1ee$point$data$col = "Z=1"
-pp2ee$point$data$col = "Z=2"
-pp0ee$errorbar$data$col = "Z=0"
-pp1ee$errorbar$data$col = "Z=1"
-pp2ee$errorbar$data$col = "Z=2"
+pp0ee$line$data$col = "Z=0"
+pp1ee$line$data$col = "Z=1"
+pp2ee$line$data$col = "Z=2"
+pp0ee$ribbon$data$col = "Z=0"
+pp1ee$ribbon$data$col = "Z=1"
+pp2ee$ribbon$data$col = "Z=2"
 # jitter along the x axis so the points do not overlap
-pp0ee$point$data$x = pp0ee$point$data$x - 0.01 
-pp2ee$point$data$x = pp2ee$point$data$x + 0.01 
-pp0ee$errorbar$data$x = pp0ee$errorbar$data$x - 0.01 
-pp2ee$errorbar$data$x = pp2ee$errorbar$data$x + 0.01 
+pp0ee$line$data$x = pp0ee$line$data$x - 0.01 
+pp2ee$line$data$x = pp2ee$line$data$x + 0.01 
+pp0ee$ribbon$data$x = pp0ee$ribbon$data$x - 0.01 
+pp2ee$ribbon$data$x = pp2ee$ribbon$data$x + 0.01 
 
-ggplot() + pp0ee + pp1ee + pp2ee + scale_color_brewer(name="")
+ggplot() + pp0ee + pp1ee + pp2ee + scale_color_viridis_d(name="") + scale_fill_viridis_d(name="", alpha=0.25)
 ```
 
 #### Global tests of interaction for categorical modifiers<a name="subsec-catmodbin-test"></a>
@@ -435,8 +455,8 @@ print(getstrateffects(qfit_letteree, emmval="a"))
 print(getstratweights(qfit_letter, emmval="a"))
 
 ## output predictions at Zletter="b"
-print(pointwisebound(qfit_letter, emmval="b", pointwiseref = 1))
-print(pointwisebound(qfit_letteree, emmval="b", pointwiseref = 1))
+print(pointwisebound(qfit_letter, emmval="b", pointwiseref = 1, alpha=0.05))
+print(pointwisebound(qfit_letteree, emmval="b", pointwiseref = 1, alpha=0.05))
 
 ```
 
@@ -496,9 +516,9 @@ qfit3ee
 
 #### Stratified effects, weights, and pointwise effect comparisons at specific values of a continuous confounder<a name="subsec-contppoint"></a>
 
-- Weights can be obtained for any valid value of the modifier and are available for non-bootstrapped fits.
-- Stratified effects can be obtained for any valid value of the modifier and are available for any fit
-- Point-wise comparisons are also available for any fit. These estimate the predicted outcome as well as confidence intervals for a contrast with a specified level of the joint exposure (here the second lowest quartile group)
+  - Weights can be obtained for any valid value of the modifier and are available for non-bootstrapped fits.
+  - Stratified effects can be obtained for any valid value of the modifier and are available for any fit
+  - Point-wise comparisons are also available for any fit. These estimate the predicted outcome as well as confidence intervals for a contrast with a specified level of the joint exposure (here the second lowest quartile group)
 
 ```{r cont_mod_bound, include=TRUE, fig.width=5, fig.height=4}
 ## output/plot the weights at CoM=0")

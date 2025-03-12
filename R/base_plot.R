@@ -13,9 +13,10 @@
   ymin <- ymax <- v <- w <- y <- NULL
   modbounds = modelbound(x, emmval=emmval, pwonly = TRUE, alpha = alpha)
   ret = geom_ribbon(aes(x=x, ymin=ymin, ymax=ymax,
-                  fill="Model confidence band"),
+                  fill=col),
               data=data.frame(ymin=modbounds$ll.pw, ymax=modbounds$ul.pw,
-                              x=modbounds$quantile.midpoint))
+                              x=modbounds$quantile.midpoint,
+                              col = "Model confidence band"))
   list(ribbon=ret)
 }
 
@@ -41,9 +42,10 @@
     message("Too few observed values at emmval, suppressing smooth fit")
     ret = theme()
   } else{
-    ret = geom_smooth(aes(x=x, y=y, color="Smooth conditional fit"), se = FALSE,
+    ret = geom_smooth(aes(x=x, y=y, color=col), se = FALSE,
                 method = "gam", formula = y ~ s(x, k=length(table(ind))-1, bs = "cs"),
-                data=data.frame(y=yexp, x=(ind+0.5)/max(ind+1)))
+                data=data.frame(y=yexp, x=(ind+0.5)/max(ind+1),
+                                col="Smooth conditional fit"))
   }
   list(smooth=ret)
 }
@@ -68,9 +70,10 @@
     message("Too few observed values at emmval, suppressing smooth fit")
     ret = theme()
   } else{
-    ret = geom_smooth(aes(x=x, y=y, color="Smooth conditional fit"), se = FALSE,
+    ret = geom_smooth(aes(x=x, y=y, color=col), se = FALSE,
               method = "gam", formula = y ~ s(x, k=length(table(yexp))-1, bs = "cs"),
-              data=data.frame(y=(yexp)/(1-yexp), x=(yexp+0.5)/max(yexp+1)))
+              data=data.frame(y=(yexp)/(1-yexp), x=(yexp+0.5)/max(yexp+1),
+                              col="Smooth conditional fit"))
   }
   list(smooth=ret)
 }
@@ -95,8 +98,8 @@
     message("Too few observed values at emmval, suppressing linear fit")
     ret = theme()
   } else{
-    ret = geom_line(aes(x=x, y=y, color="MSM fit"),
-            data=data.frame(y=yexp, x=(ind+0.5)/max(ind+1)))
+    ret = geom_line(aes(x=x, y=y, color=col),
+            data=data.frame(y=yexp, x=(ind+0.5)/max(ind+1), col="MSM fit"))
   }
   list(line=ret)
 }
@@ -121,8 +124,9 @@
     message("Too few observed values at emmval, suppressing linear fit")
     ret = theme()
   } else{
-    ret = geom_line(aes(x=x, y=y, color="MSM fit"),
-            data=data.frame(y=(yexp/(1-yexp)), x=(ind+0.5)/max(ind+1)))
+    ret = geom_line(aes(x=x, y=y, color=col),
+            data=data.frame(y=(yexp/(1-yexp)), x=(ind+0.5)/max(ind+1),
+                            col="MSM fit"))
   }
   list(line=ret)
 }
@@ -244,23 +248,37 @@
 
 
 
-#' @title Default plotting method for a qgcompfit object
+#' @title Default plotting method for a qgcompemmfit object
 #'
-#' @description Plot a quantile g-computation object. For qgcomp.noboot, this function will
-#' create a butterfly plot of weights. For qgcomp.boot, this function will create
+#' @description Plot a quantile g-computation object from qgcompint.
+#' For qgcomp.emm.glm.noboot, this function will create a butterfly plot of
+#' weights. For qgcomp.emm.glm.boot and qgcomp.emm.glm.ee, this function will create
 #' a box plot with smoothed line overlaying that represents a non-parametric
 #' fit of a model to the expected outcomes in the population at each quantile
-#' of the joint exposures (e.g. '1' represents 'at the first quantile for
+#' of the joint exposures (e.g. '0' represents 'at the lowest quantile for
 #' every exposure')
 #'
-#' @param x "qgcompfit" object from `qgcomp.noboot`, `qgcomp.boot`,
-#'   `qgcomp.cox.noboot`, `qgcomp.cox.boot`, `qgcomp.zi.noboot` or `qgcomp.zi.boot` functions
+#' @param x "qgcompemmfit" object from `qgcomp.emm.glm.noboot`, `qgcomp.emm.glm.boot`,
+#'   `qgcomp.emm.glm.ee`, or `qgcomp.emm.cox.noboot` functions
 #' @param emmval fixed value for effect measure modifier at which pointwise comparisons are calculated
 #' @param suppressprint If TRUE, suppresses the plot, rather than printing it
 #'   by default (it can be saved as a ggplot2 object (or list of ggplot2 objects if x is from a zero-
 #'   inflated model) and used programmatically)
 #' @param geom_only If TRUE, returns only the geometry (i.e. does not contain the entire plot object). Used for overlays. Only used for `.ee` and `.boot` methods.
 #'   (default = FALSE)
+#' @param pointwisebars (boot/ee only) If TRUE (TRUE=default), adds 95% error bars for pointwise comparisons of E(Y|joint exposure) to the smooth regression line plot
+#' @param modelfitline (boot/ee only) If TRUE (FALSE=default), adds fitted (MSM) regression line of E(Y|joint exposure) to the smooth regression line plot
+#' @param modelband (boot/ee only) If TRUE (FALSE=default), adds 95% prediction bands for E(Y|joint exposure) (the MSM fit)
+#' @param flexfit (boot/ee only) if TRUE (FALSE=default), adds flexible interpolation of predictions from underlying (conditional) model
+#' @param pointwiseref (boot/ee only) integer (0=default): which category of exposure (from 1 to q) should serve as the referent category for pointwise comparisons? (default=1)
+#' @param alpha alpha level for all confidence intervals
+#' @param ... Arguments (listed under ``details'' ) to underlying functions:
+#'
+#'
+#' @details
+#' The `...` argument calls underlying plot functions, with arguments given here (similar to the plot function in the `qgcomp` package)
+#' \describe{
+#' }
 #' @return
 #'
 #' If suppressprint=FALSE, then this function prints a plot specific to a "qgcompemmfit" object.
@@ -269,22 +287,12 @@
 #'
 #'  If suppressprint=TRUE, then this function returns a "gg" (regression line) or "gtable" (butterfly plot) object (from ggplot2 package or gtable/grid packages), which can be used to print a ggplot figure and modify either of the above figures (see example below)
 #'
-#' @param ... Arguments (listed below ) to underlying functions :
 #'
-#' * pointwisebars: (boot/ee only) If TRUE (default), adds 95% error bars for pointwise comparisons of E(Y|joint exposure) to the smooth regression line plot
 #'
-#' *  modelfitline: (boot/ee only) If TRUE (FALSE=default), adds fitted (MSM) regression line of E(Y|joint exposure) to the smooth regression line plot
-#'
-#' *   modelband: (boot/ee only) If TRUE (FALSE=default), adds 95% prediction bands for E(Y|joint exposure) (the MSM fit)
-#'
-#' *   flexfit:  (boot/ee only) if TRUE (FALSE=default), adds flexible interpolation of predictions from underlying (conditional) model
-#'
-# #' *  pointwiseref: (boot/ee only) integer (0=default): which category of exposure (from 1 to q) should serve as the referent category for pointwise comparisons? (default=1)
-#'
-#' @seealso \code{\link[qgcomp]{qgcomp.noboot}}, \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
+#' @seealso \code{\link[qgcompint]{qgcomp.emm.glm.noboot}}, \code{\link[qgcompint]{qgcomp.emm.glm.boot}},  \code{\link[qgcompint]{qgcomp.emm.glm.ee}}, \code{\link[qgcompint]{qgcomp.emm.cox.noboot}}
 #' @import ggplot2 grid gridExtra qgcomp
 #' @importFrom grDevices gray
-#' @export
+#' @exportS3Method base::plot
 #' @examples
 #' set.seed(50)
 #' # linear model, binary modifier
@@ -345,7 +353,7 @@
 #' pp3 = gtable::gtable_add_grob(pp2b, ggplot2::ggplotGrob(pp), t=1, l=1, r=2)
 #' grid.draw(pp3)
 #' }
-plot.qgcompemmfit <- function(x, emmval = NULL, suppressprint=FALSE, geom_only=FALSE, ...) {
+plot.qgcompemmfit <- function(x, emmval = NULL, suppressprint=FALSE, geom_only=FALSE, modelband=FALSE, flexfit=FALSE, modelfitline=FALSE, pointwisebars=TRUE, pointwiseref=1, alpha=0.05, ...) {
   if (is.null(emmval)) {
     stop("emmval must be specified (level of the modifier for which you would like results)")
   }
@@ -385,13 +393,13 @@ plot.qgcompemmfit <- function(x, emmval = NULL, suppressprint=FALSE, geom_only=F
     } else{
       # Cox model or standard GLM
       if (x$msmfit$family$family=='cox') p <-
-          .plot.boot.cox(p, x, ..., alpha=x$alpha, emmval=emmval)
+          .plot.boot.cox(p, x, modelband=modelband, flexfit=flexfit, modelfitline=modelfitline, pointwisebars=pointwisebars, pointwiseref=pointwiseref, alpha=alpha, ..., emmval=emmval)
       if (x$msmfit$family$family=='gaussian') p <-
-          .plot.boot.gaussian(p, x, ..., alpha=x$alpha, emmval=emmval)
+          .plot.boot.gaussian(p, x, modelband=modelband, flexfit=flexfit, modelfitline=modelfitline, pointwisebars=pointwisebars, pointwiseref=pointwiseref, alpha=alpha, ..., emmval=emmval)
       if (x$msmfit$family$family=='binomial') p <-
-          .plot.boot.binomial(p, x, ..., alpha=x$alpha, emmval=emmval)
+          .plot.boot.binomial(p, x, modelband=modelband, flexfit=flexfit, modelfitline=modelfitline, pointwisebars=pointwisebars, pointwiseref=pointwiseref, alpha=alpha, ..., emmval=emmval)
       if (x$msmfit$family$family=='poisson') p <-
-          .plot.boot.poisson(p, x, ..., alpha=x$alpha, emmval=emmval)
+          .plot.boot.poisson(p, x, modelband=modelband, flexfit=flexfit, modelfitline=modelfitline, pointwisebars=pointwisebars, pointwiseref=pointwiseref, alpha=alpha, ..., emmval=emmval)
     }
 
     p <- c(p, list(

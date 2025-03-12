@@ -2,7 +2,7 @@
 % Please edit documentation in R/base_bounds.R
 \name{pointwisebound}
 \alias{pointwisebound}
-\title{Estimating pointwise comparisons for qgcompint fits}
+\title{Estimating pointwise comparisons for qgcompemmfit objects}
 \usage{
 pointwisebound(x, alpha = 0.05, pointwiseref = 1, emmval = NULL, ...)
 }
