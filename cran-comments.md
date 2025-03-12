@@ -1,5 +1,6 @@
 ## Test environments
 * local R installation (MacOS 15.3), R 4.4.1
+* ubuntu 24.04 (github actions, release)
 * ubuntu 20.04 (github actions, release)
 * ubuntu 20.04 (github actions, devel)
 * win-latest (github actions, release)

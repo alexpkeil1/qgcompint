@@ -6,11 +6,11 @@ Authors@R:
     person(given = "Alexander",
            family = "Keil",
            role = c("aut", "cre"),
-           email = "akeil@unc.edu")
+           email = "alex.keil@nih.gov")
 Author: Alexander Keil [aut, cre]
-Maintainer: Alexander Keil <akeil@unc.edu>
-URL: https://github.com/alexpkeil1/qgcomp/
-BugReports: https://github.com/alexpkeil1/qgcomp/issues
+Maintainer: Alexander Keil <alex.keil@nih.gov>
+URL: https://github.com/alexpkeil1/qgcompint/
+BugReports: https://github.com/alexpkeil1/qgcompint/issues
 Description: G-computation for a set of time-fixed exposures
     with quantile-based basis functions, possibly under linearity and
     homogeneity assumptions. Effect measure modification in this method is a way
