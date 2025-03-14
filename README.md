@@ -1,4 +1,6 @@
 ## qgcompint: quantile g-computation with effect measure modification 
+[![R-CMD-check](https://github.com/alexpkeil1/qgcompint/workflows/R-CMD-check/badge.svg)](https://github.com/alexpkeil1/qgcompint/actions) [![](https://www.r-pkg.org:443/badges/version/qgcompint)](https://www.r-pkg.org:443/pkg/qgcompint) [![CRAN RStudio mirror downloads](https://cranlogs.r-pkg.org/badges/qgcompint)](https://www.r-pkg.org:443/pkg/qgcompint) 
+
 
 ## installation
 #### official release
@@ -67,6 +69,7 @@ vignette("qgcompint-vignette", package="qgcompint")
 ### Current package capabilities/limitations
 - Single modifiers only (e.g. interaction terms between a modifier and the mixture can only be estimated for a single modifier at a time). This also implies that no interaction terms between the modifier and other covariates can be considered.
 - Cox model: linear only specifications (i.e. linear effects of a mixture, but not covariates) 
+- Features missing relative to `qgcomp` package: zero inflated and hurdle models, multinomial models, tobit regression
 
 ### Interpretation
 - coefficients
