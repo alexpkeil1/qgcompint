@@ -99,7 +99,7 @@ pp2 = plot(qfit4, emmval=2, suppressprint=TRUE)
 pp1 + theme_linedraw() # can use with other ggplot functions
 
 # overlay (fussy to work with)
-#ppom <- ggplot_build(pp0 + pp1[2] + pp2[[2]] + scale_color_discrete(guide="none"))
+#ppom <- ggplot_build(pp0 + pp1[2] + pp2[[2]] + scale_color_discrete(guide="none")) # may work in older versions of ggplot
 ppom <- ggplot_build(pp0ee + pp1ee[2] + pp2ee[2] + scale_color_discrete(guide="none"))
 ppom$data[[1]]$colour <- ppom$data[[2]]$colour <- "gray40" # emmval = 0 -> dark gray
 ppom$data[[3]]$colour <- ppom$data[[4]]$colour <- "gray80" # emmval = 1 -> light gray
