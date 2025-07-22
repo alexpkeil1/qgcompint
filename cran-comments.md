@@ -1,5 +1,5 @@
 ## Test environments
-* local R installation (MacOS 15.3), R 4.4.1
+* local R installation (MacOS 15.5), R 4.4.2
 * ubuntu 24.04 (github actions, release)
 * ubuntu 20.04 (github actions, release)
 * ubuntu 20.04 (github actions, devel)
@@ -13,6 +13,5 @@
 * This is a new release.
 
 ## Developer comments
-* function additions for user needs
 * bug fixes
 
