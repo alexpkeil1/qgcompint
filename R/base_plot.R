@@ -327,7 +327,7 @@
 #'
 #' # overlay (fussy to work with)
 #' #ppom <- ggplot_build(pp0 + pp1[2] + pp2[[2]] + scale_color_discrete(guide="none"))
-#' ppom <- ggplot_build(pp0ee + pp1ee[2] + pp2ee[[2]] + scale_color_discrete(guide="none"))
+#' ppom <- ggplot_build(pp0ee + pp1ee[2] + pp2ee[2] + scale_color_discrete(guide="none"))
 #' ppom$data[[1]]$colour <- ppom$data[[2]]$colour <- "gray40" # emmval = 0 -> dark gray
 #' ppom$data[[3]]$colour <- ppom$data[[4]]$colour <- "gray80" # emmval = 1 -> light gray
 #' ppom$data[[5]]$colour <- ppom$data[[6]]$colour <- "black" # emmval = 2 -> black
