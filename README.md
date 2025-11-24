@@ -1,6 +1,7 @@
 ## qgcompint: quantile g-computation with effect measure modification 
-[![R-CMD-check](https://github.com/alexpkeil1/qgcompint/workflows/R-CMD-check/badge.svg)](https://github.com/alexpkeil1/qgcompint/actions) [![](https://www.r-pkg.org:443/badges/version/qgcompint)](https://www.r-pkg.org:443/pkg/qgcompint) [![CRAN RStudio mirror downloads](https://cranlogs.r-pkg.org/badges/qgcompint)](https://www.r-pkg.org:443/pkg/qgcompint) 
-
+<!-- badges: start   -->
+[![R-CMD-check](https://github.com/alexpkeil1/qgcompint/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/alexpkeil1/qgcompint/actions/workflows/R-CMD-check.yaml) [![](https://www.r-pkg.org:443/badges/version/qgcompint)](https://www.r-pkg.org:443/pkg/qgcompint) [![CRAN RStudio mirror downloads](https://cranlogs.r-pkg.org/badges/qgcompint)](https://www.r-pkg.org:443/pkg/qgcompint) 
+<!-- badges: end -->
 
 ## installation
 #### official release
