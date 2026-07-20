@@ -175,7 +175,8 @@ se_comb2 <- function(expnms, covmat, grad = NULL) {
 
 .devinstall <- function(...) {
   .qgc.require("devtools")
-  devtools::install_github("alexpkeil1/qgcompint", ...)
+  #devtools::install_github("alexpkeil1/qgcompint", ...)
+  pak::pak("alexpkeil1/qgcompint", ...)
 }
 
 

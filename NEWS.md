@@ -1,12 +1,12 @@
 
 # qgcompint: quantile g-computation with statistical interaction
 
-# v1.0.3
+# v1.0.4
 ## Major changes
 - None
 
 ## Minor changes
-- Documentation improvements
+- Modified `.devinstall` to address `devtools::install_github` deprecation 
 
 ## Bug fixes
 - Fixed scoping issue with "emmvar" that prevented calls with `emmvar` as a symbol
