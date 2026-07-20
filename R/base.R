@@ -291,6 +291,7 @@ qgcomp.emm.glm.noboot <- function(
     cov.yhat=NULL,
     alpha=alpha,
     call=origcall,
+    emmvar_value = emmvar,
     emmlev = emmlev,
     emmvals = allemmvals,
     hasintercept = hasintercept

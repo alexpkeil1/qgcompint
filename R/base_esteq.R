@@ -492,6 +492,7 @@ qgcomp.emm.glm.ee <- function(
     covmat.all_robust = fullcovmat,
     alpha=alpha,
     call=origcall,
+    emmvar_value = emmvar,
     emmlev = emmlev,
     emmvals = allemmvals,
     emmvar.msm = as.data.frame(msmfit$X)[, emmvars],

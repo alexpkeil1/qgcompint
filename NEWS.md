@@ -1,6 +1,17 @@
 
 # qgcompint: quantile g-computation with statistical interaction
 
+# v1.0.3
+## Major changes
+- None
+
+## Minor changes
+- Documentation improvements
+
+## Bug fixes
+- Fixed scoping issue with "emmvar" that prevented calls with `emmvar` as a symbol
+
+
 # v1.0.0
 ## Major changes
 - First fully stable release

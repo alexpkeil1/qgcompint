@@ -362,7 +362,12 @@ getstrateffects <- function(x, emmval=1.0, ...) {
   #addedintsord =  x$intterms  zvar = x$fit$data[, x$call$emmvar]
   #if (x$bootstrap) stop("This method does not work for bootstrapped fits. If using a linear parameterization, then stratified effects can be estimated using non-bootstrapped methods.")
   if (x$degree>1) stop("not implemented for non-linear fits")
-  zvar = x$fit$data[, x$call$emmvar]
+
+  if(!is.null(x$emmvar_value))
+    emmvar_value = x$emmvar_value
+  else emmvar_value = x$call$emmvar_value
+
+  zvar = x$fit$data[, emmvar_value]
   res = .calcstrateffects(x, emmval=emmval, zvar=zvar)
   class(res) <- "qgcompemmeffects"
   res
@@ -374,8 +379,12 @@ getstrateffects <- function(x, emmval=1.0, ...) {
   issurv <- inherits(x, "survqgcompfit")
   #x$call$emmvar
   whichintterms = x$intterms
+  if(!is.null(x$emmvar_value))
+    emmvar_value = x$emmvar_value
+  else emmvar_value = x$call$emmvar_value
+
   if (is.factor(zvar)) {
-    whichlevels = zproc(zvar[which(zvar==emmval)][1], znm = x$call$emmvar)
+    whichlevels = zproc(zvar[which(zvar==emmval)][1], znm = emmvar_value)
     whichvar = names(whichlevels)[which(whichlevels==1)]
     whichintterms = NULL
     if (length(whichvar)>0) whichintterms = grep(whichvar, x$intterms, value = TRUE)

@@ -465,6 +465,7 @@ qgcomp.emm.glm.boot <- function(
     cov.yhat=cov.yhat,
     alpha=alpha,
     call=origcall,
+    emmvar_value = emmvar,
     emmlev = emmlev,
     emmvals = allemmvals,
     hasintercept = hasintercept

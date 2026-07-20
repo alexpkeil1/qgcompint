@@ -33,8 +33,19 @@ getstratweights <- function(x, emmval=1.0, ...) {
   if (x$bootstrap || inherits(x, "eeqgcompfit"))
     stop("This method does not work for bootstrapped fits. If using a linear parameterization, then weights can be estimated using non-bootstrapped methods.")
 
+
+  if(!is.null(x$emmvar_value))
+    emmvar_value = x$emmvar_value
+  else emmvar_value = x$call$emmvar_value
+
   #fit <- x$fit
-  zvar = x$fit$data[, x$call$emmvar, drop=TRUE]
+  ####START TODO: TEMPORARY
+  #print(head(x$fit$data)) #TODO: TEMPORARY
+  #print(x$call$emmvar) #TODO: TEMPORARY
+  #zdata = zproc(zvar, znm = emmvar)
+  #print(head(zdata))
+  ####END TODO: TEMPORARY
+  zvar = x$fit$data[, emmvar_value, drop=TRUE]
   #zdata = zproc(zvar, znm = emmvar)
   #emmvars = names(zdata)
 
@@ -45,7 +56,7 @@ getstratweights <- function(x, emmval=1.0, ...) {
   }
   if (is.factor(zvar)) {
     emmvalf = factor(emmval, levels = levels(zvar))
-    whichlevels = zproc(emmvalf, znm = x$call$emmvar)
+    whichlevels = zproc(emmvalf, znm = emmvar_value)
     #whichlevels = zproc(zvar[which(zvar==emmval)][1], znm = x$call$emmvar)
     whichvar = names(whichlevels)[which(whichlevels==1)]
     whichintterms = NULL

@@ -252,6 +252,7 @@ qgcomp.emm.cox.noboot <- function(
     pval = c(pvalz, pvalz.prod),
     alpha=alpha,
     call=origcall,
+    emmvar_value = emmvar,
     emmlev = emmlev,
     emmvals = allemmvals,
     hasintercept = FALSE
