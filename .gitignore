@@ -8,3 +8,4 @@ vignettes/*.R
 vignettes/*.md
 vignettes/*.html
 cran-comments.md
+/revdep
