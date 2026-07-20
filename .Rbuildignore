@@ -7,3 +7,4 @@ inst/examples
 ^CRAN-RELEASE$
 ^\.github$
 ^CRAN-SUBMISSION$
+^revdep$
